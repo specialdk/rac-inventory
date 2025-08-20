@@ -1,0 +1,218 @@
+DashboardViews.tsx
+
+import React from 'react';
+import { Package, DollarSign, TrendingUp, ArrowDownRight, AlertCircle, RefreshCw } from 'lucide-react';
+import { useAppContext } from '../../context/AppContext';
+import { checkSupabaseConnection } from '../../lib/supabase';
+import { format, startOfMonth } from 'date-fns';
+import { toast } from 'react-hot-toast';
+
+const DashboardView: React.FC = () => {
+  const { 
+    products, 
+    currentStock,
+    stockMovements,
+    getProductName, 
+    getLocationName, 
+    getTotalInventoryValue 
+  } = useAppContext();
+  const [isCheckingConnection, setIsCheckingConnection] = React.useState(false);
+  const [connectionError, setConnectionError] = React.useState<string | null>(null);
+
+  const handleCheckConnection = async () => {
+    setIsCheckingConnection(true);
+    try {
+      const { success, message } = await checkSupabaseConnection();
+      if (!success) {
+        setConnectionError(message);
+        toast.error('Database connection failed');
+      } else {
+        setConnectionError(null);
+        toast.success('Connected to database');
+        window.location.reload(); // Refresh to reload data
+      }
+    } catch (error) {
+      setConnectionError('Failed to check connection');
+      toast.error('Connection check failed');
+    } finally {
+      setIsCheckingConnection(false);
+    }
+  };
+
+  // Calculate MTD metrics
+  const monthStart = format(startOfMonth(new Date()), 'yyyy-MM-dd');
+  const mtdMovements = stockMovements.filter(m => m.movement_date >= monthStart);
+  
+  const mtdProduction = mtdMovements
+    .filter(m => m.movement_type === 'PRODUCTION')
+    .reduce((sum, m) => sum + m.quantity, 0);
+    
+  const mtdSales = mtdMovements
+    .filter(m => m.movement_type === 'SALES')
+    .reduce((sum, m) => sum + Math.abs(m.quantity), 0);
+
+  // Get count of products with stock
+  const productsWithStock = new Set(
+    currentStock
+      .filter(stock => stock.current_quantity > 0)
+      .map(stock => stock.product_id)
+  ).size;
+
+  return (
+    <div className="space-y-6">
+      {/* Connection Status */}
+      {connectionError && (
+        <div className="bg-red-50 border-l-4 border-red-400 p-4 flex items-start justify-between">
+          <div className="flex items-start">
+            <AlertCircle className="h-5 w-5 text-red-400 mt-0.5" />
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800">Database Connection Error</h3>
+              <p className="mt-1 text-sm text-red-700">{connectionError}</p>
+              <p className="mt-1 text-sm text-red-700">Click "Reconnect" or check your Supabase connection.</p>
+            </div>
+          </div>
+          <button
+            onClick={handleCheckConnection}
+            disabled={isCheckingConnection}
+            className="ml-4 px-3 py-2 bg-red-100 text-red-800 rounded-md hover:bg-red-200 flex items-center gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${isCheckingConnection ? 'animate-spin' : ''}`} />
+            {isCheckingConnection ? 'Checking...' : 'Reconnect'}
+          </button>
+        </div>
+      )}
+
+      {/* No Data Warning */}
+      {!connectionError && currentStock.length === 0 && (
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+          <div className="flex">
+            <AlertCircle className="h-5 w-5 text-yellow-400 mt-0.5" />
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-yellow-800">No Data Available</h3>
+              <p className="mt-1 text-sm text-yellow-700">
+                If you're seeing this message, you may need to{' '}
+                <a
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleCheckConnection();
+                  }}
+                  className="font-medium underline hover:text-yellow-900"
+                >
+                  connect to Supabase
+                </a>
+                {' '}or check your database connection.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Key Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-orange-500">
+          <div className="flex items-center">
+            <Package className="h-8 w-8 text-orange-600" />
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">Products with Stock</p>
+              <p className="text-2xl font-bold text-gray-900">{productsWithStock}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-green-500">
+          <div className="flex items-center">
+            <DollarSign className="h-8 w-8 text-orange-600" />
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">Inventory Value</p>
+              <p className="text-2xl font-bold text-orange-600">${getTotalInventoryValue().toLocaleString()}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-yellow-500">
+          <div className="flex items-center">
+            <TrendingUp className="h-8 w-8 text-yellow-600" />
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">MTD Production</p>
+              <p className="text-2xl font-bold text-gray-900">{mtdProduction.toFixed(1)}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-purple-500">
+          <div className="flex items-center">
+            <ArrowDownRight className="h-8 w-8 text-purple-600" />
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">MTD Sales</p>
+              <p className="text-2xl font-bold text-gray-900">{mtdSales.toFixed(1)}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Current Stock Overview */}
+      <div className="bg-white rounded-lg shadow-sm">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900">Real-Time Stock Overview</h2>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stock Level</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Avg Cost</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Value</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {currentStock.map((stock) => {
+                const product = products.find(p => p.id === stock.product_id);
+                const status = product && stock.current_quantity <= product.min_stock_level ? 'LOW' : 'NORMAL';
+                
+                return (
+                  <tr key={stock.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">{getProductName(stock.product_id)}</div>
+                        <div className="text-sm text-gray-500">{product?.family_group}</div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {getLocationName(stock.location_id)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        status === 'LOW' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
+                      }`}>
+                        {stock.current_quantity.toFixed(1)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      ${stock.average_cost.toFixed(2)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      ${(stock.current_quantity * stock.average_cost).toLocaleString()}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        status === 'LOW' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
+                      }`}>
+                        {status}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default DashboardView;

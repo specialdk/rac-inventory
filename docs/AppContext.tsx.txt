@@ -1,0 +1,256 @@
+AppContext.tsx
+
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { toast } from 'react-hot-toast';
+import { 
+  getProducts, getLocations, getCustomers, getVehicles, getDrivers,
+  getCurrentStock, getStockMovements, getDashboardMetrics
+} from '../lib/api';
+import {
+  Product, Location, Customer, Vehicle, Driver,
+  CurrentStock, StockMovement
+} from '../lib/types';
+
+interface AppContextType {
+  // Data
+  products: Product[];
+  locations: Location[];
+  customers: Customer[];
+  vehicles: Vehicle[];
+  drivers: Driver[];
+  currentStock: CurrentStock[];
+  stockMovements: StockMovement[];
+  dashboardMetrics: {
+    productsCount: number;
+    totalInventoryValue: number;
+    lowStockCount: number;
+    activeVehiclesCount: number;
+  };
+  
+  // Loading states
+  isLoading: boolean;
+  
+  // Refresh functions
+  refreshProducts: () => Promise<void>;
+  refreshLocations: () => Promise<void>;
+  refreshCustomers: () => Promise<void>;
+  refreshVehicles: () => Promise<void>;
+  refreshDrivers: () => Promise<void>;
+  refreshCurrentStock: () => Promise<void>;
+  refreshStockMovements: () => Promise<void>;
+  refreshDashboardMetrics: () => Promise<void>;
+  refreshAll: () => Promise<void>;
+
+  // Helper functions
+  getProductName: (productId: number) => string;
+  getLocationName: (locationId: number) => string;
+  getCustomerName: (customerId: number) => string;
+  getDriverName: (driverId: number) => string;
+  getLowStockItems: () => CurrentStock[];
+  getTotalInventoryValue: () => number;
+}
+
+const AppContext = createContext<AppContextType | undefined>(undefined);
+
+export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  // State for entity data
+  const [products, setProducts] = useState<Product[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [drivers, setDrivers] = useState<Driver[]>([]);
+  const [currentStock, setCurrentStock] = useState<CurrentStock[]>([]);
+  const [stockMovements, setStockMovements] = useState<StockMovement[]>([]);
+  const [dashboardMetrics, setDashboardMetrics] = useState({
+    productsCount: 0,
+    totalInventoryValue: 0,
+    lowStockCount: 0,
+    activeVehiclesCount: 0
+  });
+  
+  // Loading state
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load initial data
+  useEffect(() => {
+    refreshAll();
+  }, []);
+
+  // Refresh functions
+  const refreshProducts = async () => {
+    try {
+      const data = await getProducts();
+      setProducts(data);
+    } catch (error) {
+      console.error('Error loading products:', error);
+      toast.error('Failed to load products');
+    }
+  };
+
+  const refreshLocations = async () => {
+    try {
+      const data = await getLocations();
+      setLocations(data);
+    } catch (error) {
+      console.error('Error loading locations:', error);
+      toast.error('Failed to load locations');
+    }
+  };
+
+  const refreshCustomers = async () => {
+    try {
+      const data = await getCustomers();
+      setCustomers(data);
+    } catch (error) {
+      console.error('Error loading customers:', error);
+      toast.error('Failed to load customers');
+    }
+  };
+
+  const refreshVehicles = async () => {
+    try {
+      const data = await getVehicles();
+      setVehicles(data);
+    } catch (error) {
+      console.error('Error loading vehicles:', error);
+      toast.error('Failed to load vehicles');
+    }
+  };
+
+  const refreshDrivers = async () => {
+    try {
+      const data = await getDrivers();
+      setDrivers(data);
+    } catch (error) {
+      console.error('Error loading drivers:', error);
+      toast.error('Failed to load drivers');
+    }
+  };
+
+  const refreshCurrentStock = async () => {
+    try {
+      const data = await getCurrentStock();
+      setCurrentStock(data);
+    } catch (error) {
+      console.error('Error loading current stock:', error);
+      toast.error('Failed to load current stock');
+    }
+  };
+
+  const refreshStockMovements = async () => {
+    try {
+      const data = await getStockMovements();
+      setStockMovements(data);
+    } catch (error) {
+      console.error('Error loading stock movements:', error);
+      toast.error('Failed to load stock movements');
+    }
+  };
+
+  const refreshDashboardMetrics = async () => {
+    try {
+      const metrics = await getDashboardMetrics();
+      setDashboardMetrics(metrics);
+    } catch (error) {
+      console.error('Error loading dashboard metrics:', error);
+      toast.error('Failed to load dashboard metrics');
+    }
+  };
+
+  const refreshAll = async () => {
+    setIsLoading(true);
+    try {
+      await Promise.all([
+        refreshProducts(),
+        refreshLocations(),
+        refreshCustomers(),
+        refreshVehicles(),
+        refreshDrivers(),
+        refreshCurrentStock(),
+        refreshStockMovements(),
+        refreshDashboardMetrics()
+      ]);
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+      toast.error('Failed to refresh data');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Helper functions
+  const getProductName = (productId: number) => {
+    const product = products.find(p => p.id === productId);
+    return product ? product.product_name : 'Unknown Product';
+  };
+
+  const getLocationName = (locationId: number) => {
+    const location = locations.find(l => l.id === locationId);
+    return location ? location.location_name : 'Unknown Location';
+  };
+
+  const getCustomerName = (customerId: number) => {
+    const customer = customers.find(c => c.id === customerId);
+    return customer ? customer.customer_name : 'Unknown Customer';
+  };
+
+  const getDriverName = (driverId: number) => {
+    const driver = drivers.find(d => d.id === driverId);
+    return driver ? `${driver.first_name} ${driver.last_name}` : 'Unassigned';
+  };
+
+  const getLowStockItems = () => {
+    return currentStock.filter(stock => {
+      const product = products.find(p => p.id === stock.product_id);
+      return product && stock.current_quantity <= product.min_stock_level;
+    });
+  };
+
+  const getTotalInventoryValue = () => {
+    return currentStock.reduce((total, item) => total + (item.current_quantity * item.average_cost), 0);
+  };
+
+  const value = {
+    // Data
+    products,
+    locations,
+    customers,
+    vehicles,
+    drivers,
+    currentStock,
+    stockMovements,
+    dashboardMetrics,
+    
+    // Loading state
+    isLoading,
+    
+    // Refresh functions
+    refreshProducts,
+    refreshLocations,
+    refreshCustomers,
+    refreshVehicles,
+    refreshDrivers,
+    refreshCurrentStock,
+    refreshStockMovements,
+    refreshDashboardMetrics,
+    refreshAll,
+
+    // Helper functions
+    getProductName,
+    getLocationName,
+    getCustomerName,
+    getDriverName,
+    getLowStockItems,
+    getTotalInventoryValue
+  };
+
+  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
+};
+
+export const useAppContext = () => {
+  const context = useContext(AppContext);
+  if (context === undefined) {
+    throw new Error('useAppContext must be used within an AppProvider');
+  }
+  return context;
+};

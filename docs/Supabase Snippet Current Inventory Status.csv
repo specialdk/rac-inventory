@@ -1,0 +1,129 @@
+table_name,column_name,data_type,is_nullable,column_default
+current_stock,id,bigint,NO,null
+current_stock,product_id,bigint,NO,null
+current_stock,location_id,bigint,NO,null
+current_stock,current_quantity,numeric,YES,0
+current_stock,average_cost,numeric,YES,0
+current_stock,total_value,numeric,YES,null
+current_stock,last_movement_date,date,YES,null
+current_stock,last_updated,timestamp with time zone,YES,CURRENT_TIMESTAMP
+customers,id,bigint,NO,null
+customers,customer_code,text,NO,null
+customers,customer_name,text,NO,null
+customers,contact_person,text,YES,null
+customers,phone,text,YES,null
+customers,email,text,YES,null
+customers,address,text,YES,null
+customers,abn_acn,text,YES,null
+customers,payment_terms,integer,YES,30
+customers,credit_limit,numeric,YES,0
+customers,active,boolean,YES,TRUE
+customers,created_at,timestamp with time zone,YES,CURRENT_TIMESTAMP
+customers,updated_at,timestamp with time zone,YES,CURRENT_TIMESTAMP
+drivers,id,bigint,NO,null
+drivers,driver_code,text,NO,null
+drivers,first_name,text,NO,null
+drivers,last_name,text,NO,null
+drivers,license_number,text,YES,null
+drivers,license_class,text,YES,null
+drivers,license_expiry,date,YES,null
+drivers,certifications,text,YES,null
+drivers,phone,text,YES,null
+drivers,status,text,YES,'ACTIVE'::text
+drivers,created_at,timestamp with time zone,YES,CURRENT_TIMESTAMP
+drivers,updated_at,timestamp with time zone,YES,CURRENT_TIMESTAMP
+locations,id,bigint,NO,null
+locations,location_code,text,NO,null
+locations,location_name,text,NO,null
+locations,location_type,text,NO,null
+locations,assigned_product_id,bigint,YES,null
+locations,capacity_tonnes,numeric,YES,0
+locations,description,text,YES,null
+locations,active,boolean,YES,TRUE
+locations,created_at,timestamp with time zone,YES,CURRENT_TIMESTAMP
+product_cost_history,id,bigint,NO,null
+product_cost_history,product_id,bigint,YES,null
+product_cost_history,snapshot_date,date,NO,null
+product_cost_history,average_cost,numeric,NO,null
+product_cost_history,total_quantity,numeric,NO,null
+product_cost_history,recorded_at,timestamp with time zone,YES,CURRENT_TIMESTAMP
+products,id,bigint,NO,null
+products,product_code,text,NO,null
+products,product_name,text,NO,null
+products,family_group,text,NO,null
+products,unit,text,YES,'tonnes'::text
+products,standard_cost,numeric,YES,0
+products,min_stock_level,numeric,YES,0
+products,max_stock_level,numeric,YES,0
+products,active,boolean,YES,TRUE
+products,created_at,timestamp with time zone,YES,CURRENT_TIMESTAMP
+products,updated_at,timestamp with time zone,YES,CURRENT_TIMESTAMP
+profiles,id,uuid,NO,gen_random_uuid()
+profiles,user_id,uuid,YES,null
+profiles,full_name,text,YES,null
+profiles,role,text,YES,null
+profiles,avatar_url,text,YES,null
+profiles,created_at,timestamp with time zone,YES,CURRENT_TIMESTAMP
+profiles,updated_at,timestamp with time zone,YES,CURRENT_TIMESTAMP
+stock_movements,id,bigint,NO,null
+stock_movements,movement_date,date,NO,null
+stock_movements,movement_type,text,NO,null
+stock_movements,product_id,bigint,NO,null
+stock_movements,location_id,bigint,NO,null
+stock_movements,quantity,numeric,NO,null
+stock_movements,unit_cost,numeric,NO,null
+stock_movements,total_value,numeric,YES,null
+stock_movements,reference_number,text,YES,null
+stock_movements,customer_id,bigint,YES,null
+stock_movements,vehicle_id,bigint,YES,null
+stock_movements,driver_id,bigint,YES,null
+stock_movements,docket_number,text,YES,null
+stock_movements,notes,text,YES,null
+stock_movements,created_by,text,YES,null
+stock_movements,created_at,timestamp with time zone,YES,CURRENT_TIMESTAMP
+stock_movements,original_movement_id,bigint,YES,null
+v_current_stock_summary,product_code,text,YES,null
+v_current_stock_summary,product_name,text,YES,null
+v_current_stock_summary,family_group,text,YES,null
+v_current_stock_summary,location_code,text,YES,null
+v_current_stock_summary,location_name,text,YES,null
+v_current_stock_summary,current_quantity,numeric,YES,null
+v_current_stock_summary,average_cost,numeric,YES,null
+v_current_stock_summary,total_value,numeric,YES,null
+v_current_stock_summary,min_stock_level,numeric,YES,null
+v_current_stock_summary,max_stock_level,numeric,YES,null
+v_current_stock_summary,stock_status,text,YES,null
+v_inventory_valuation,family_group,text,YES,null
+v_inventory_valuation,product_count,bigint,YES,null
+v_inventory_valuation,total_quantity,numeric,YES,null
+v_inventory_valuation,total_value,numeric,YES,null
+v_inventory_valuation,average_cost_per_tonne,numeric,YES,null
+v_location_assignments,location_code,text,YES,null
+v_location_assignments,location_name,text,YES,null
+v_location_assignments,location_type,text,YES,null
+v_location_assignments,capacity_tonnes,numeric,YES,null
+v_location_assignments,product_code,text,YES,null
+v_location_assignments,product_name,text,YES,null
+v_location_assignments,family_group,text,YES,null
+v_location_assignments,current_quantity,numeric,YES,null
+v_location_assignments,capacity_used_pct,numeric,YES,null
+v_location_assignments,description,text,YES,null
+v_location_assignments,status,text,YES,null
+v_product_cost_trends,product_code,text,YES,null
+v_product_cost_trends,product_name,text,YES,null
+v_product_cost_trends,family_group,text,YES,null
+v_product_cost_trends,snapshot_date,date,YES,null
+v_product_cost_trends,average_cost,numeric,YES,null
+v_product_cost_trends,total_quantity,numeric,YES,null
+vehicles,id,bigint,NO,null
+vehicles,vehicle_code,text,NO,null
+vehicles,registration,text,YES,null
+vehicles,vehicle_type,text,YES,null
+vehicles,capacity_tonnes,numeric,YES,null
+vehicles,status,text,YES,'ACTIVE'::text
+vehicles,last_service_date,date,YES,null
+vehicles,next_service_due,date,YES,null
+vehicles,driver_id,bigint,YES,null
+vehicles,active,boolean,YES,TRUE
+vehicles,created_at,timestamp with time zone,YES,CURRENT_TIMESTAMP
+vehicles,updated_at,timestamp with time zone,YES,CURRENT_TIMESTAMP

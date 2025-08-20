@@ -1,0 +1,52 @@
+Header.tsx
+
+import React from 'react';
+import { Package, Moon, Sun } from 'lucide-react';
+import { useAppContext } from '../../context/AppContext';
+import { useTheme } from '../../context/ThemeContext';
+import UserMenu from './UserMenu';
+
+const Header: React.FC = () => {
+  const { getTotalInventoryValue } = useAppContext();
+  const { isDarkMode, toggleDarkMode } = useTheme();
+  
+  return (
+    <div className={`shadow-sm border-b ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+      <div className="max-w-7xl mx-auto px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className={`text-2xl font-bold flex items-center gap-3 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+              <Package className="text-orange-600" />
+              Rirratjingu Mining Inventory System
+            </h1>
+            <p className={`mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              Quarry production and inventory management
+            </p>
+          </div>
+          <div className="flex items-center space-x-8">
+            <div className="text-right">
+            <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Total Inventory Value</p>
+            <p className="text-2xl font-bold text-green-600">
+              ${getTotalInventoryValue().toLocaleString()}
+            </p>
+            </div>
+            <button
+              onClick={toggleDarkMode}
+              className={`p-2 rounded-lg ${
+                isDarkMode 
+                  ? 'bg-gray-700 hover:bg-gray-600 text-yellow-400' 
+                  : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
+              }`}
+              aria-label="Toggle dark mode"
+            >
+              {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </button>
+            <UserMenu />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Header;

@@ -1,0 +1,310 @@
+EntitiesView.tsx
+
+import React, { useState } from 'react';
+import { Plus } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import EntityTable from '../common/EntityTable';
+import Modal from '../ui/Modal';
+import { useAppContext } from '../../context/AppContext';
+import ProductForm from './forms/ProductForm';
+import LocationForm from './forms/LocationForm';
+import CustomerForm from './forms/CustomerForm';
+import VehicleForm from './forms/VehicleForm';
+import DriverForm from './forms/DriverForm';
+import UserForm from './forms/UserForm';
+import { deleteProduct, deleteLocation, deleteCustomer, deleteVehicle, deleteDriver } from '../../lib/api';
+import { supabase } from '../../lib/supabase';
+import { useEffect } from 'react';
+
+interface EntityViewProps {
+  entityType: 'Products' | 'Locations' | 'Customers' | 'Vehicles' | 'Drivers' | 'Users';
+}
+
+const deleteUser = async (id: string) => {
+  const { error } = await supabase
+    .from('profiles')
+    .delete()
+    .eq('id', id);
+  
+  if (error) throw error;
+};
+
+const EntityView: React.FC<EntityViewProps> = ({ entityType }) => {
+  const { 
+    products, 
+    locations, 
+    customers, 
+    vehicles, 
+    drivers,
+    getProductName,
+    getDriverName,
+    refreshProducts,
+    refreshLocations,
+    refreshCustomers,
+    refreshVehicles,
+    refreshDrivers
+  } = useAppContext();
+  
+  const [showForm, setShowForm] = useState(false);
+  const [editingItem, setEditingItem] = useState<any | null>(null);
+  const [users, setUsers] = useState<any[]>([]);
+
+  // Load users when component mounts or entityType changes
+  useEffect(() => {
+    if (entityType === 'Users') {
+      loadUsers();
+    }
+  }, [entityType]);
+
+  const loadUsers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      setUsers(data || []);
+    } catch (error) {
+      console.error('Error loading users:', error);
+      toast.error('Failed to load users');
+    }
+  };
+  // Define columns for each entity type
+  const getColumns = () => {
+    switch (entityType) {
+      case 'Products':
+        return [
+          { key: 'product_code', label: 'Code' },
+          { key: 'product_name', label: 'Name' },
+          { key: 'family_group', label: 'Family' },
+          { key: 'standard_cost', label: 'Cost', format: (val: number) => `$${val.toFixed(2)}` },
+          { key: 'min_stock_level', label: 'Min Stock', format: (val: number) => `${val} tonnes` },
+          { key: 'max_stock_level', label: 'Max Stock', format: (val: number) => `${val} tonnes` },
+          { key: 'unit', label: 'Unit' }
+        ];
+      case 'Locations':
+        return [
+          { key: 'location_code', label: 'Code' },
+          { key: 'location_name', label: 'Name' },
+          { key: 'location_type', label: 'Type' },
+          { key: 'capacity_tonnes', label: 'Capacity', format: (val: number) => `${val} tonnes` },
+          { key: 'assigned_product_id', label: 'Assigned Product', format: (val: number) => val ? getProductName(val) : 'None' }
+        ];
+      case 'Customers':
+        return [
+          { key: 'customer_code', label: 'Code' },
+          { key: 'customer_name', label: 'Name' },
+          { key: 'contact_person', label: 'Contact' },
+          { key: 'phone', label: 'Phone' },
+          { key: 'payment_terms', label: 'Terms', format: (val: number) => `${val} days` },
+          { key: 'credit_limit', label: 'Credit Limit', format: (val: number) => `$${val.toLocaleString()}` }
+        ];
+      case 'Vehicles':
+        return [
+          { key: 'vehicle_code', label: 'Code' },
+          { key: 'registration', label: 'Registration' },
+          { key: 'vehicle_type', label: 'Type' },
+          { key: 'capacity_tonnes', label: 'Capacity', format: (val: number) => `${val} tonnes` },
+          { key: 'status', label: 'Status' },
+          { key: 'driver_id', label: 'Driver', format: (val: number) => val ? getDriverName(val) : 'Unassigned' }
+        ];
+      case 'Drivers':
+        return [
+          { key: 'driver_code', label: 'Code' },
+          { key: 'first_name', label: 'First Name' },
+          { key: 'last_name', label: 'Last Name' },
+          { key: 'license_class', label: 'License' },
+          { key: 'phone', label: 'Phone' },
+          { key: 'status', label: 'Status' }
+        ];
+      case 'Users':
+        return [
+          { key: 'full_name', label: 'Full Name' },
+          { key: 'role', label: 'Role' },
+          { key: 'created_at', label: 'Created', format: (val: string) => val ? new Date(val).toLocaleDateString() : '' }
+        ];
+      default:
+        return [];
+    }
+  };
+
+  // Get data for the current entity type
+  const getData = () => {
+    switch (entityType) {
+      case 'Products': return products;
+      case 'Locations': return locations;
+      case 'Customers': return customers;
+      case 'Vehicles': return vehicles;
+      case 'Drivers': return drivers;
+      case 'Users': return users;
+      default: return [];
+    }
+  };
+
+  // Handle delete action for each entity type
+  const handleDelete = async (id: number) => {
+    try {
+      switch (entityType) {
+        case 'Products':
+          await deleteProduct(id);
+          await refreshProducts();
+          break;
+        case 'Locations':
+          await deleteLocation(id);
+          await refreshLocations();
+          break;
+        case 'Customers':
+          await deleteCustomer(id);
+          await refreshCustomers();
+          break;
+        case 'Vehicles':
+          await deleteVehicle(id);
+          await refreshVehicles();
+          break;
+        case 'Drivers':
+          await deleteDriver(id);
+          await refreshDrivers();
+          break;
+        case 'Users':
+          await deleteUser(id);
+          await loadUsers();
+          break;
+      }
+      toast.success(`${entityType.slice(0, -1)} deleted successfully`);
+    } catch (error) {
+      console.error(`Error deleting ${entityType.toLowerCase()}:`, error);
+      toast.error(`Failed to delete ${entityType.slice(0, -1).toLowerCase()}`);
+    }
+  };
+
+  // Handle edit action
+  const handleEdit = (item: any) => {
+    setEditingItem(item);
+    setShowForm(true);
+  };
+
+  // Handle add action
+  const handleAdd = () => {
+    setEditingItem(null);
+    setShowForm(true);
+  };
+
+  // Handle save completion
+  const handleSaveComplete = async () => {
+    setShowForm(false);
+    setEditingItem(null);
+    
+    // Refresh the appropriate data
+    switch (entityType) {
+      case 'Products':
+        await refreshProducts();
+        break;
+      case 'Locations':
+        await refreshLocations();
+        break;
+      case 'Customers':
+        await refreshCustomers();
+        break;
+      case 'Vehicles':
+        await refreshVehicles();
+        break;
+      case 'Drivers':
+        await refreshDrivers();
+        break;
+      case 'Users':
+        await loadUsers();
+        break;
+    }
+  };
+
+  // Render the appropriate form based on entity type
+  const renderForm = () => {
+    switch (entityType) {
+      case 'Products':
+        return (
+          <ProductForm
+            onClose={() => setShowForm(false)}
+            onSave={handleSaveComplete}
+            editingItem={editingItem}
+          />
+        );
+      case 'Locations':
+        return (
+          <LocationForm
+            onClose={() => setShowForm(false)}
+            onSave={handleSaveComplete}
+            editingItem={editingItem}
+          />
+        );
+      case 'Customers':
+        return (
+          <CustomerForm
+            onClose={() => setShowForm(false)}
+            onSave={handleSaveComplete}
+            editingItem={editingItem}
+          />
+        );
+      case 'Vehicles':
+        return (
+          <VehicleForm
+            onClose={() => setShowForm(false)}
+            onSave={handleSaveComplete}
+            editingItem={editingItem}
+          />
+        );
+      case 'Drivers':
+        return (
+          <DriverForm
+            onClose={() => setShowForm(false)}
+            onSave={handleSaveComplete}
+            editingItem={editingItem}
+          />
+        );
+      case 'Users':
+        return (
+          <UserForm
+            onClose={() => setShowForm(false)}
+            onSave={handleSaveComplete}
+            editingItem={editingItem}
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-gray-900">{entityType} Management</h2>
+        <button
+          onClick={handleAdd}
+          className="bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700 transition-colors flex items-center gap-2"
+        >
+          <Plus className="h-4 w-4" />
+          Add {entityType.slice(0, -1)}
+        </button>
+      </div>
+
+      <EntityTable
+        title={entityType}
+        data={getData()}
+        columns={getColumns()}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
+
+      <Modal
+        title={`${editingItem ? 'Edit' : 'Add'} ${entityType.slice(0, -1)}`}
+        isOpen={showForm}
+        onClose={() => setShowForm(false)}
+        size="lg"
+      >
+        {renderForm()}
+      </Modal>
+    </div>
+  );
+};
+
+export default EntityView;

@@ -1,0 +1,288 @@
+MovementForm.tsx
+
+import React, { useState, useEffect } from 'react';
+import { Save } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import { format } from 'date-fns';
+import FormField from '../../ui/FormField';
+import { useAppContext } from '../../../context/AppContext';
+import { StockMovement } from '../../../lib/types';
+import { saveStockMovement } from '../../../lib/api';
+
+interface MovementFormProps {
+  onClose: () => void;
+  onSave: () => void;
+  editingItem?: StockMovement | null;
+}
+
+const MovementForm: React.FC<MovementFormProps> = ({ onClose, onSave, editingItem }) => {
+  const { products, locations, customers, vehicles, drivers, refreshCurrentStock, refreshStockMovements } = useAppContext();
+  
+  const [formData, setFormData] = useState<Partial<StockMovement>>({
+    movement_date: format(new Date(), 'yyyy-MM-dd'),
+    movement_type: 'PRODUCTION',
+    quantity: 0,
+    unit_cost: 0,
+    created_by: 'OPERATOR'
+  });
+  
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (editingItem) {
+      setFormData(editingItem);
+    } else {
+      // Set default values for a new movement
+      setFormData({
+        movement_date: format(new Date(), 'yyyy-MM-dd'),
+        movement_type: 'PRODUCTION',
+        quantity: 0,
+        unit_cost: 0,
+        created_by: 'OPERATOR'
+      });
+    }
+  }, [editingItem]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value, type } = e.target;
+    
+    // Convert numeric inputs to numbers
+    if (type === 'number') {
+      setFormData({ ...formData, [name]: parseFloat(value) || 0 });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
+    
+    // Clear error when field is changed
+    if (errors[name]) {
+      setErrors({ ...errors, [name]: '' });
+    }
+  };
+
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+    
+    // Required fields
+    if (!formData.movement_date) newErrors.movement_date = 'Date is required';
+    if (!formData.movement_type) newErrors.movement_type = 'Movement type is required';
+    if (!formData.product_id) newErrors.product_id = 'Product is required';
+    if (!formData.location_id) newErrors.location_id = 'Location is required';
+    
+    // Quantity validation
+    if (formData.quantity === undefined || formData.quantity === null) {
+      newErrors.quantity = 'Quantity is required';
+    } else {
+      // For SALES and TRANSFER, quantity should be negative
+      if ((formData.movement_type === 'SALES' || formData.movement_type === 'TRANSFER') && formData.quantity >= 0) {
+        newErrors.quantity = `${formData.movement_type} quantity should be negative`;
+      }
+      
+      // For PRODUCTION and OPENING, quantity should be positive
+      if ((formData.movement_type === 'PRODUCTION' || formData.movement_type === 'OPENING') && formData.quantity <= 0) {
+        newErrors.quantity = `${formData.movement_type} quantity should be positive`;
+      }
+    }
+    
+    // Unit cost validation
+    if (formData.unit_cost === undefined || formData.unit_cost === null) {
+      newErrors.unit_cost = 'Unit cost is required';
+    } else if (formData.unit_cost <= 0) {
+      newErrors.unit_cost = 'Unit cost must be greater than zero';
+    }
+    
+    // Customer is required for SALES
+    if (formData.movement_type === 'SALES' && !formData.customer_id) {
+      newErrors.customer_id = 'Customer is required for sales';
+    }
+    
+    // Reference number validation
+    if (!formData.reference_number) newErrors.reference_number = 'Reference number is required';
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) return;
+    
+    setIsSubmitting(true);
+    
+    try {
+      await saveStockMovement(formData);
+      
+      // Refresh data
+      await refreshCurrentStock();
+      await refreshStockMovements();
+      
+      toast.success(editingItem ? 'Movement updated successfully' : 'Movement added successfully');
+      onSave();
+    } catch (error) {
+      console.error('Error saving movement:', error);
+      toast.error('Failed to save movement');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormField
+          name="movement_date"
+          label="Movement Date"
+          type="date"
+          value={formData.movement_date || ''}
+          onChange={handleChange}
+          required
+          error={errors.movement_date}
+        />
+        
+        <FormField
+          name="movement_type"
+          label="Movement Type"
+          type="select"
+          value={formData.movement_type || ''}
+          onChange={handleChange}
+          required
+          options={['OPENING', 'PRODUCTION', 'SALES', 'TRANSFER', 'ADJUSTMENT']}
+          error={errors.movement_type}
+        />
+        
+        <FormField
+          name="product_id"
+          label="Product"
+          type="select"
+          value={formData.product_id?.toString() || ''}
+          onChange={handleChange}
+          required
+          options={products.map(p => ({ value: p.id, label: `${p.product_code} - ${p.product_name}` }))}
+          error={errors.product_id}
+        />
+        
+        <FormField
+          name="location_id"
+          label="Location"
+          type="select"
+          value={formData.location_id?.toString() || ''}
+          onChange={handleChange}
+          required
+          options={locations.map(l => ({ value: l.id, label: `${l.location_code} - ${l.location_name}` }))}
+          error={errors.location_id}
+        />
+        
+        <FormField
+          name="quantity"
+          label={`Quantity (${formData.movement_type === 'SALES' || formData.movement_type === 'TRANSFER' ? 'negative for outgoing' : 'positive for incoming'})`}
+          type="number"
+          value={formData.quantity || ''}
+          onChange={handleChange}
+          required
+          step="0.001"
+          error={errors.quantity}
+        />
+        
+        <FormField
+          name="unit_cost"
+          label="Unit Cost ($)"
+          type="number"
+          value={formData.unit_cost || ''}
+          onChange={handleChange}
+          required
+          step="0.01"
+          error={errors.unit_cost}
+        />
+        
+        <FormField
+          name="reference_number"
+          label="Reference Number"
+          type="text"
+          value={formData.reference_number || ''}
+          onChange={handleChange}
+          required
+          error={errors.reference_number}
+        />
+        
+        {formData.movement_type === 'SALES' && (
+          <>
+            <FormField
+              name="customer_id"
+              label="Customer"
+              type="select"
+              value={formData.customer_id?.toString() || ''}
+              onChange={handleChange}
+              required
+              options={customers.map(c => ({ value: c.id, label: `${c.customer_code} - ${c.customer_name}` }))}
+              error={errors.customer_id}
+            />
+            
+            <FormField
+              name="docket_number"
+              label="Docket Number"
+              type="text"
+              value={formData.docket_number || ''}
+              onChange={handleChange}
+              error={errors.docket_number}
+            />
+          </>
+        )}
+        
+        {(formData.movement_type === 'PRODUCTION' || formData.movement_type === 'TRANSFER') && (
+          <>
+            <FormField
+              name="vehicle_id"
+              label="Vehicle"
+              type="select"
+              value={formData.vehicle_id?.toString() || ''}
+              onChange={handleChange}
+              options={vehicles.map(v => ({ value: v.id, label: `${v.vehicle_code} - ${v.registration}` }))}
+              error={errors.vehicle_id}
+            />
+            
+            <FormField
+              name="driver_id"
+              label="Driver"
+              type="select"
+              value={formData.driver_id?.toString() || ''}
+              onChange={handleChange}
+              options={drivers.map(d => ({ value: d.id, label: `${d.driver_code} - ${d.first_name} ${d.last_name}` }))}
+              error={errors.driver_id}
+            />
+          </>
+        )}
+      </div>
+      
+      <FormField
+        name="notes"
+        label="Notes"
+        type="textarea"
+        value={formData.notes || ''}
+        onChange={handleChange}
+        error={errors.notes}
+      />
+      
+      <div className="flex justify-end space-x-3 mt-6">
+        <button
+          type="button"
+          onClick={onClose}
+          className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
+          disabled={isSubmitting}
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center gap-2 disabled:bg-orange-400 disabled:cursor-not-allowed"
+          disabled={isSubmitting}
+        >
+          <Save className="h-4 w-4" />
+          {isSubmitting ? 'Saving...' : 'Save Movement'}
+        </button>
+      </div>
+    </form>
+  );
+};
+
+export default MovementForm;

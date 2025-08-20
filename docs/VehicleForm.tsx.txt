@@ -1,0 +1,214 @@
+VehicleForm.tsx
+
+import React, { useState, useEffect } from 'react';
+import { Save } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import FormField from '../../ui/FormField';
+import { useAppContext } from '../../../context/AppContext';
+import { Vehicle } from '../../../lib/types';
+import { saveVehicle } from '../../../lib/api';
+
+interface VehicleFormProps {
+  onClose: () => void;
+  onSave: () => void;
+  editingItem?: Vehicle | null;
+}
+
+const VehicleForm: React.FC<VehicleFormProps> = ({ onClose, onSave, editingItem }) => {
+  const { drivers } = useAppContext();
+  
+  const [formData, setFormData] = useState<Partial<Vehicle>>({
+    vehicle_code: '',
+    registration: '',
+    vehicle_type: '',
+    capacity_tonnes: 0,
+    status: 'ACTIVE',
+    last_service_date: '',
+    driver_id: undefined,
+    active: true
+  });
+  
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (editingItem) {
+      setFormData(editingItem);
+    } else {
+      setFormData({
+        vehicle_code: '',
+        registration: '',
+        vehicle_type: '',
+        capacity_tonnes: 0,
+        status: 'ACTIVE',
+        last_service_date: '',
+        driver_id: undefined,
+        active: true
+      });
+    }
+  }, [editingItem]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value, type } = e.target;
+    
+    if (name === 'driver_id' && value === '') {
+      // Handle null/undefined value for driver_id
+      setFormData({ ...formData, [name]: undefined });
+    } else if (type === 'number') {
+      setFormData({ ...formData, [name]: parseFloat(value) || 0 });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
+    
+    // Clear error when field is changed
+    if (errors[name]) {
+      setErrors({ ...errors, [name]: '' });
+    }
+  };
+
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+    
+    // Required fields
+    if (!formData.vehicle_code) newErrors.vehicle_code = 'Vehicle code is required';
+    if (!formData.registration) newErrors.registration = 'Registration is required';
+    if (!formData.vehicle_type) newErrors.vehicle_type = 'Vehicle type is required';
+    if (!formData.status) newErrors.status = 'Status is required';
+    
+    // Numeric validation
+    if (formData.capacity_tonnes === undefined || formData.capacity_tonnes < 0) {
+      newErrors.capacity_tonnes = 'Capacity must be a positive number';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) return;
+    
+    setIsSubmitting(true);
+    
+    try {
+      // Convert driver_id to number if it's a string
+      if (formData.driver_id && typeof formData.driver_id === 'string') {
+        formData.driver_id = parseInt(formData.driver_id, 10);
+      }
+      
+      await saveVehicle(formData);
+      toast.success(editingItem ? 'Vehicle updated successfully' : 'Vehicle added successfully');
+      onSave();
+    } catch (error) {
+      console.error('Error saving vehicle:', error);
+      toast.error('Failed to save vehicle');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormField
+          name="vehicle_code"
+          label="Vehicle Code"
+          type="text"
+          value={formData.vehicle_code || ''}
+          onChange={handleChange}
+          required
+          placeholder="RAC-001"
+          error={errors.vehicle_code}
+        />
+        
+        <FormField
+          name="registration"
+          label="Registration"
+          type="text"
+          value={formData.registration || ''}
+          onChange={handleChange}
+          required
+          error={errors.registration}
+        />
+        
+        <FormField
+          name="vehicle_type"
+          label="Vehicle Type"
+          type="select"
+          value={formData.vehicle_type || ''}
+          onChange={handleChange}
+          required
+          options={['Road Train', 'Truck', 'Loader', 'Tipper', 'Water Truck']}
+          error={errors.vehicle_type}
+        />
+        
+        <FormField
+          name="capacity_tonnes"
+          label="Capacity (tonnes)"
+          type="number"
+          value={formData.capacity_tonnes || ''}
+          onChange={handleChange}
+          required
+          min={0}
+          step="0.1"
+          error={errors.capacity_tonnes}
+        />
+        
+        <FormField
+          name="status"
+          label="Status"
+          type="select"
+          value={formData.status || ''}
+          onChange={handleChange}
+          required
+          options={['ACTIVE', 'MAINTENANCE', 'OUT_OF_SERVICE']}
+          error={errors.status}
+        />
+        
+        <FormField
+          name="last_service_date"
+          label="Last Service Date"
+          type="date"
+          value={formData.last_service_date || ''}
+          onChange={handleChange}
+          error={errors.last_service_date}
+        />
+        
+        <FormField
+          name="driver_id"
+          label="Primary Driver"
+          type="select"
+          value={formData.driver_id?.toString() || ''}
+          onChange={handleChange}
+          options={[
+            { value: '', label: 'Unassigned' },
+            ...drivers.map(d => ({ value: d.id, label: `${d.driver_code} - ${d.first_name} ${d.last_name}` }))
+          ]}
+          error={errors.driver_id}
+        />
+      </div>
+      
+      <div className="flex justify-end space-x-3 mt-6">
+        <button
+          type="button"
+          onClick={onClose}
+          className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
+          disabled={isSubmitting}
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center gap-2 disabled:bg-orange-400 disabled:cursor-not-allowed"
+          disabled={isSubmitting}
+        >
+          <Save className="h-4 w-4" />
+          {isSubmitting ? 'Saving...' : 'Save Vehicle'}
+        </button>
+      </div>
+    </form>
+  );
+};
+
+export default VehicleForm;

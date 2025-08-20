@@ -1,0 +1,110 @@
+Navigation.tsx
+
+import React from 'react';
+import { Package, MapPin, Truck, Users, FileText, BarChart3, TrendingUp, Settings } from 'lucide-react';
+import { useState } from 'react';
+
+interface NavTab {
+  name: string;
+  icon: React.ElementType;
+  subItems?: NavTab[];
+}
+
+interface NavigationProps {
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+}
+
+const Navigation: React.FC<NavigationProps> = ({ activeTab, setActiveTab }) => {
+  const [showMaintenanceMenu, setShowMaintenanceMenu] = useState(false);
+
+  const tabs: NavTab[] = [
+    { name: 'Dashboard', icon: BarChart3 },
+    {
+      name: 'Operations',
+      icon: TrendingUp,
+      subItems: []
+    },
+    {
+      name: 'Maintenance',
+      icon: Settings,
+      subItems: [
+        { name: 'Products', icon: Package },
+        { name: 'Locations', icon: MapPin },
+        { name: 'Customers', icon: Users },
+        { name: 'Vehicles', icon: Truck },
+        { name: 'Drivers', icon: Users },
+        { name: 'Users', icon: Users },
+      ],
+    },
+    { name: 'Reports', icon: FileText }
+  ];
+  
+  return (
+    <div className="max-w-7xl mx-auto px-6">
+      <nav className="flex overflow-x-auto space-x-4 sm:space-x-8 py-4 scrollbar-hide relative">
+        {tabs.map((tab) => {
+          const IconComponent = tab.icon;
+          const isMaintenanceTab = tab.name === 'Maintenance';
+          const isMaintenanceActive = isMaintenanceTab && tab.subItems?.some(item => item.name === activeTab);
+
+          return (
+            <div key={tab.name} className="relative">
+              <button
+                onClick={() => {
+                  if (isMaintenanceTab) {
+                    setShowMaintenanceMenu(!showMaintenanceMenu);
+                  } else if (tab.name === 'Operations') {
+                    setActiveTab('Operations');
+                  } else {
+                    setActiveTab(tab.name);
+                    setShowMaintenanceMenu(false);
+                  }
+                }}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-colors ${
+                  activeTab === tab.name || isMaintenanceActive
+                    ? 'bg-orange-100 text-orange-600'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                }`}
+              >
+                <IconComponent className="h-4 w-4" />
+                {tab.name}
+              </button>
+              
+              {/* Submenu for Maintenance */}
+              {isMaintenanceTab && showMaintenanceMenu && (
+                <div 
+                  className="fixed top-[4.5rem] bg-white rounded-lg shadow-lg py-2 border border-gray-200 w-48"
+                  style={{ left: 'calc(50% - 6rem)' }}
+                >
+                  {tab.subItems?.map((subItem) => {
+                    const SubIcon = subItem.icon;
+                    return (
+                      <button
+                        key={subItem.name}
+                        onClick={() => {
+                          setActiveTab(subItem.name);
+                          setShowMaintenanceMenu(false);
+                        }} 
+                        className={`flex items-center gap-3 px-4 py-2 w-full text-left text-sm transition-colors ${
+                          activeTab === subItem.name
+                            ? 'bg-orange-50 text-orange-600'
+                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                        }`}
+                      >
+                        <SubIcon className="h-4 w-4" />
+                        {subItem.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </nav>
+    </div>
+  );
+};
+
+export default Navigation;

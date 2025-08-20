@@ -1,0 +1,17 @@
+Footer.tsx
+
+import React from 'react';
+
+const Footer: React.FC = () => {
+  return (
+    <div className="bg-white border-t mt-12 py-6">
+      <div className="max-w-7xl mx-auto px-6 text-center">
+        <p className="text-sm text-gray-500">
+          Rirratjingu Aboriginal Corporation | Supporting financial independence and community development
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export default Footer;

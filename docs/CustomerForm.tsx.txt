@@ -1,0 +1,221 @@
+CustomerForm.tsx
+
+import React, { useState, useEffect } from 'react';
+import { Save } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import FormField from '../../ui/FormField';
+import { Customer } from '../../../lib/types';
+import { saveCustomer } from '../../../lib/api';
+
+interface CustomerFormProps {
+  onClose: () => void;
+  onSave: () => void;
+  editingItem?: Customer | null;
+}
+
+const CustomerForm: React.FC<CustomerFormProps> = ({ onClose, onSave, editingItem }) => {
+  const [formData, setFormData] = useState<Partial<Customer>>({
+    customer_code: '',
+    customer_name: '',
+    contact_person: '',
+    phone: '',
+    email: '',
+    address: '',
+    payment_terms: 30,
+    credit_limit: 0,
+    active: true
+  });
+  
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (editingItem) {
+      setFormData(editingItem);
+    } else {
+      setFormData({
+        customer_code: '',
+        customer_name: '',
+        contact_person: '',
+        phone: '',
+        email: '',
+        address: '',
+        payment_terms: 30,
+        credit_limit: 0,
+        active: true
+      });
+    }
+  }, [editingItem]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value, type } = e.target;
+    
+    // Convert numeric inputs to numbers
+    if (type === 'number') {
+      setFormData({ ...formData, [name]: parseFloat(value) || 0 });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
+    
+    // Clear error when field is changed
+    if (errors[name]) {
+      setErrors({ ...errors, [name]: '' });
+    }
+  };
+
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+    
+    // Required fields
+    if (!formData.customer_code) newErrors.customer_code = 'Customer code is required';
+    if (!formData.customer_name) newErrors.customer_name = 'Customer name is required';
+    if (!formData.contact_person) newErrors.contact_person = 'Contact person is required';
+    if (!formData.phone) newErrors.phone = 'Phone is required';
+    if (!formData.address) newErrors.address = 'Address is required';
+    
+    // Email validation
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Invalid email format';
+    }
+    
+    // Numeric validation
+    if (formData.payment_terms === undefined || formData.payment_terms < 0) {
+      newErrors.payment_terms = 'Payment terms must be a positive number';
+    }
+    if (formData.credit_limit === undefined || formData.credit_limit < 0) {
+      newErrors.credit_limit = 'Credit limit must be a positive number';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) return;
+    
+    setIsSubmitting(true);
+    
+    try {
+      await saveCustomer(formData);
+      toast.success(editingItem ? 'Customer updated successfully' : 'Customer added successfully');
+      onSave();
+    } catch (error) {
+      console.error('Error saving customer:', error);
+      toast.error('Failed to save customer');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormField
+          name="customer_code"
+          label="Customer Code"
+          type="text"
+          value={formData.customer_code || ''}
+          onChange={handleChange}
+          required
+          placeholder="e.g., BHC"
+          error={errors.customer_code}
+        />
+        
+        <FormField
+          name="customer_name"
+          label="Customer Name"
+          type="text"
+          value={formData.customer_name || ''}
+          onChange={handleChange}
+          required
+          error={errors.customer_name}
+        />
+        
+        <FormField
+          name="contact_person"
+          label="Contact Person"
+          type="text"
+          value={formData.contact_person || ''}
+          onChange={handleChange}
+          required
+          error={errors.contact_person}
+        />
+        
+        <FormField
+          name="phone"
+          label="Phone"
+          type="tel"
+          value={formData.phone || ''}
+          onChange={handleChange}
+          required
+          error={errors.phone}
+        />
+        
+        <FormField
+          name="email"
+          label="Email"
+          type="email"
+          value={formData.email || ''}
+          onChange={handleChange}
+          error={errors.email}
+        />
+        
+        <div className="md:col-span-2">
+          <FormField
+            name="address"
+            label="Address"
+            type="textarea"
+            value={formData.address || ''}
+            onChange={handleChange}
+            required
+            error={errors.address}
+          />
+        </div>
+        
+        <FormField
+          name="payment_terms"
+          label="Payment Terms (days)"
+          type="number"
+          value={formData.payment_terms || ''}
+          onChange={handleChange}
+          min={0}
+          error={errors.payment_terms}
+        />
+        
+        <FormField
+          name="credit_limit"
+          label="Credit Limit ($)"
+          type="number"
+          value={formData.credit_limit || ''}
+          onChange={handleChange}
+          min={0}
+          step="0.01"
+          error={errors.credit_limit}
+        />
+      </div>
+      
+      <div className="flex justify-end space-x-3 mt-6">
+        <button
+          type="button"
+          onClick={onClose}
+          className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
+          disabled={isSubmitting}
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center gap-2 disabled:bg-orange-400 disabled:cursor-not-allowed"
+          disabled={isSubmitting}
+        >
+          <Save className="h-4 w-4" />
+          {isSubmitting ? 'Saving...' : 'Save Customer'}
+        </button>
+      </div>
+    </form>
+  );
+};
+
+export default CustomerForm;
