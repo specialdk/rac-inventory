@@ -1,0 +1,10 @@
+node_modules/
+dist/
+build/
+docs/
+.env
+.env.local
+.env.production
+.env.development
+*.log
+.DS_Storenode_modules/
