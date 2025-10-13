@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RAC Inventory System</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, Cantarell, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+
+      .container {
+        background: white;
+        padding: 60px 40px;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        text-align: center;
+        max-width: 500px;
+        width: 100%;
+      }
+
+      .logo {
+        font-size: 48px;
+        margin-bottom: 10px;
+      }
+
+      h1 {
+        color: #2d3748;
+        margin-bottom: 10px;
+        font-size: 32px;
+      }
+
+      .subtitle {
+        color: #718096;
+        margin-bottom: 40px;
+        font-size: 16px;
+      }
+
+      .status {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 15px 20px;
+        background: #f7fafc;
+        border-radius: 10px;
+        margin-bottom: 30px;
+      }
+
+      .status-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #48bb78;
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+
+      .status-text {
+        color: #2d3748;
+        font-weight: 600;
+      }
+
+      .info {
+        background: #edf2f7;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        text-align: left;
+      }
+
+      .info-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        color: #4a5568;
+        font-size: 14px;
+      }
+
+      .info-label {
+        font-weight: 600;
+      }
+
+      .message {
+        color: #718096;
+        font-size: 14px;
+        line-height: 1.6;
+      }
+
+      .footer {
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #e2e8f0;
+        color: #a0aec0;
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="logo">📦</div>
+      <h1>RAC Inventory System</h1>
+      <p class="subtitle">Quarry Production & Inventory Management</p>
+
+      <div class="status">
+        <div class="status-dot"></div>
+        <div class="status-text">System Online</div>
+      </div>
+
+      <div class="info">
+        <div class="info-item">
+          <span class="info-label">Environment:</span>
+          <span id="environment">Loading...</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Database:</span>
+          <span id="database">Loading...</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Status:</span>
+          <span id="status">Checking...</span>
+        </div>
+      </div>
+
+      <div class="message">
+        <strong>Setup Complete!</strong><br />
+        System is running and ready for development.<br />
+        Dashboard and application pages coming next.
+      </div>
+
+      <div class="footer">Rirratjingu Mining Pty Ltd &copy; 2025</div>
+    </div>
+
+    <script>
+      // Check server health
+      fetch("/api/health")
+        .then((res) => res.json())
+        .then((data) => {
+          document.getElementById("environment").textContent = "Production";
+          document.getElementById("database").textContent =
+            data.database === "connected" ? "Connected ✅" : "Disconnected ❌";
+          document.getElementById("status").textContent = data.status;
+        })
+        .catch((err) => {
+          document.getElementById("environment").textContent = "Unknown";
+          document.getElementById("database").textContent = "Error ❌";
+          document.getElementById("status").textContent = "Offline";
+        });
+    </script>
+  </body>
+</html>
