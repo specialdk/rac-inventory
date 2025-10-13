@@ -36,15 +36,14 @@ app.get("/api/health", async (req, res) => {
   }
 });
 
-// API Routes (we'll add these next)
-// app.use('/api/products', require('./routes/products'));
-// app.use('/api/stock', require('./routes/stock'));
-// app.use('/api/movements', require('./routes/movements'));
-// app.use('/api/locations', require('./routes/locations'));
-// app.use('/api/customers', require('./routes/customers'));
-// app.use('/api/vehicles', require('./routes/vehicles'));
-// app.use('/api/drivers', require('./routes/drivers'));
-// app.use('/api/reports', require('./routes/reports'));
+// API Routes
+app.use("/api/products", require("./routes/products"));
+app.use("/api/stock", require("./routes/stock"));
+app.use("/api/movements", require("./routes/movements"));
+app.use("/api/locations", require("./routes/locations"));
+app.use("/api/customers", require("./routes/customers"));
+app.use("/api/vehicles", require("./routes/vehicles"));
+app.use("/api/drivers", require("./routes/drivers"));
 
 // Serve index.html for root
 app.get("/", (req, res) => {
@@ -67,4 +66,13 @@ app.listen(PORT, () => {
   console.log(`🚀 RAC Inventory System running on port ${PORT}`);
   console.log(`📍 Environment: ${process.env.NODE_ENV || "development"}`);
   console.log(`🔗 Local: http://localhost:${PORT}`);
+  console.log(`📋 API Endpoints available:`);
+  console.log(`   - GET  /api/health`);
+  console.log(`   - /api/products`);
+  console.log(`   - /api/stock`);
+  console.log(`   - /api/movements`);
+  console.log(`   - /api/locations`);
+  console.log(`   - /api/customers`);
+  console.log(`   - /api/vehicles`);
+  console.log(`   - /api/drivers`);
 });
