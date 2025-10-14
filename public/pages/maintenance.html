@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Maintenance - RAC Inventory System</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body>
+    <!-- Header -->
+    <header class="header">
+      <div class="header-content">
+        <div class="logo-section">
+          <div class="logo">📦</div>
+          <div class="site-title">
+            <h1>Rirratjingu Mining Inventory System</h1>
+            <p>Quarry production and inventory management</p>
+          </div>
+        </div>
+        <div class="header-stats">
+          <div class="stat-item">
+            <div class="stat-label">Total Inventory Value</div>
+            <div class="stat-value" id="totalValue">$0</div>
+          </div>
+          <div class="user-info">
+            <span>👤</span>
+            <span>Admin User</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="nav">
+      <div class="nav-content">
+        <a href="dashboard.html" class="nav-item">📊 Dashboard</a>
+        <a href="operations.html" class="nav-item">⚙️ Operations</a>
+        <a href="maintenance.html" class="nav-item active">🔧 Maintenance</a>
+        <a href="reports.html" class="nav-item">📈 Reports</a>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container">
+      <div class="page-header">
+        <h1 class="page-title">System Maintenance</h1>
+        <p class="page-subtitle">
+          Manage products, customers, locations, vehicles, and operators
+        </p>
+      </div>
+
+      <!-- Sub Navigation Tabs -->
+      <div class="sub-nav">
+        <button class="sub-nav-item active" onclick="showSection('products')">
+          📦 Products
+        </button>
+        <button class="sub-nav-item" onclick="showSection('customers')">
+          👥 Customers
+        </button>
+        <button class="sub-nav-item" onclick="showSection('locations')">
+          📍 Locations
+        </button>
+        <button class="sub-nav-item" onclick="showSection('vehicles')">
+          🚛 Vehicles
+        </button>
+        <button class="sub-nav-item" onclick="showSection('drivers')">
+          👷 Drivers
+        </button>
+      </div>
+
+      <!-- Products Section -->
+      <div id="products-section" class="maintenance-section active">
+        <div class="data-table">
+          <div class="table-header">
+            <h2 class="table-title">Products Catalog</h2>
+            <div class="table-actions">
+              <input
+                type="text"
+                class="search-box"
+                id="searchProducts"
+                placeholder="Search products..."
+              />
+              <button
+                class="btn btn-primary btn-sm"
+                onclick="openAddProductModal()"
+              >
+                ➕ Add Product
+              </button>
+            </div>
+          </div>
+          <div id="productsTableContainer">
+            <div class="loading">
+              <div class="spinner"></div>
+              <p>Loading products...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Customers Section -->
+      <div id="customers-section" class="maintenance-section">
+        <div class="data-table">
+          <div class="table-header">
+            <h2 class="table-title">Customers Directory</h2>
+            <div class="table-actions">
+              <input
+                type="text"
+                class="search-box"
+                id="searchCustomers"
+                placeholder="Search customers..."
+              />
+              <button
+                class="btn btn-primary btn-sm"
+                onclick="openAddCustomerModal()"
+              >
+                ➕ Add Customer
+              </button>
+            </div>
+          </div>
+          <div id="customersTableContainer">
+            <div class="loading">
+              <div class="spinner"></div>
+              <p>Loading customers...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Locations Section -->
+      <div id="locations-section" class="maintenance-section">
+        <div class="data-table">
+          <div class="table-header">
+            <h2 class="table-title">Stockpile Locations</h2>
+            <div class="table-actions">
+              <input
+                type="text"
+                class="search-box"
+                id="searchLocations"
+                placeholder="Search locations..."
+              />
+              <button
+                class="btn btn-primary btn-sm"
+                onclick="openAddLocationModal()"
+              >
+                ➕ Add Location
+              </button>
+            </div>
+          </div>
+          <div id="locationsTableContainer">
+            <div class="loading">
+              <div class="spinner"></div>
+              <p>Loading locations...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vehicles Section -->
+      <div id="vehicles-section" class="maintenance-section">
+        <div class="data-table">
+          <div class="table-header">
+            <h2 class="table-title">Fleet Vehicles</h2>
+            <div class="table-actions">
+              <input
+                type="text"
+                class="search-box"
+                id="searchVehicles"
+                placeholder="Search vehicles..."
+              />
+              <button
+                class="btn btn-primary btn-sm"
+                onclick="openAddVehicleModal()"
+              >
+                ➕ Add Vehicle
+              </button>
+            </div>
+          </div>
+          <div id="vehiclesTableContainer">
+            <div class="loading">
+              <div class="spinner"></div>
+              <p>Loading vehicles...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Drivers Section -->
+      <div id="drivers-section" class="maintenance-section">
+        <div class="data-table">
+          <div class="table-header">
+            <h2 class="table-title">Operators & Drivers</h2>
+            <div class="table-actions">
+              <input
+                type="text"
+                class="search-box"
+                id="searchDrivers"
+                placeholder="Search drivers..."
+              />
+              <button
+                class="btn btn-primary btn-sm"
+                onclick="openAddDriverModal()"
+              >
+                ➕ Add Driver
+              </button>
+            </div>
+          </div>
+          <div id="driversTableContainer">
+            <div class="loading">
+              <div class="spinner"></div>
+              <p>Loading drivers...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Product Modal -->
+    <div id="productModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title" id="productModalTitle">Add Product</h3>
+          <button class="modal-close" onclick="closeProductModal()">
+            &times;
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="productForm">
+            <input type="hidden" id="product_id" />
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label required">Product Code</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="product_code"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label required">Product Name</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="product_name"
+                  required
+                />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label required">Family Group</label>
+                <select class="form-control" id="family_group" required>
+                  <option value="">Select Family</option>
+                  <option value="AGGREGATES">Aggregates</option>
+                  <option value="ROCK_ARMOR">Rock Armor</option>
+                  <option value="SAND">Sand</option>
+                  <option value="ROAD_BASE">Road Base</option>
+                  <option value="DUST">Dust</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Unit</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="unit"
+                  value="tonnes"
+                />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label required"
+                  >Standard Cost ($/tonne)</label
+                >
+                <input
+                  type="number"
+                  class="form-control"
+                  id="standard_cost"
+                  step="0.01"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Current Price ($/tonne)</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  id="current_price"
+                  step="0.01"
+                />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Min Stock Level (tonnes)</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  id="min_stock_level"
+                  step="0.01"
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Max Stock Level (tonnes)</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  id="max_stock_level"
+                  step="0.01"
+                />
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="closeProductModal()">
+            Cancel
+          </button>
+          <button class="btn btn-primary" onclick="saveProduct()">
+            💾 Save Product
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Customer Modal -->
+    <div id="customerModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title" id="customerModalTitle">Add Customer</h3>
+          <button class="modal-close" onclick="closeCustomerModal()">
+            &times;
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="customerForm">
+            <input type="hidden" id="customer_id" />
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label required">Customer Code</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="customer_code"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label required">Customer Name</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="customer_name"
+                  required
+                />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Contact Person</label>
+                <input type="text" class="form-control" id="contact_person" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Phone</label>
+                <input type="tel" class="form-control" id="phone" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email</label>
+              <input type="email" class="form-control" id="email" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Address</label>
+              <textarea class="form-control" id="address"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Customer Type</label>
+              <select class="form-control" id="customer_type">
+                <option value="">Select Type</option>
+                <option value="MAJOR_PROJECT">Major Project</option>
+                <option value="CONSTRUCTION">Construction</option>
+                <option value="RAC_INTERNAL">RAC Internal</option>
+                <option value="RETAIL">Retail</option>
+              </select>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="closeCustomerModal()">
+            Cancel
+          </button>
+          <button class="btn btn-primary" onclick="saveCustomer()">
+            💾 Save Customer
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Similar modals for Location, Vehicle, and Driver would go here -->
+    <!-- For brevity, I'll add these in the JavaScript file -->
+
+    <script src="/js/maintenance.js"></script>
+  </body>
+</html>
