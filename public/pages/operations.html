@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Operations - RAC Inventory System</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body>
+    <!-- Header -->
+    <header class="header">
+      <div class="header-content">
+        <div class="logo-section">
+          <div class="logo">📦</div>
+          <div class="site-title">
+            <h1>Rirratjingu Mining Inventory System</h1>
+            <p>Quarry production and inventory management</p>
+          </div>
+        </div>
+        <div class="header-stats">
+          <div class="stat-item">
+            <div class="stat-label">Total Inventory Value</div>
+            <div class="stat-value" id="totalValue">$0</div>
+          </div>
+          <div class="user-info">
+            <span>👤</span>
+            <span>Admin User</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="nav">
+      <div class="nav-content">
+        <a href="dashboard.html" class="nav-item">📊 Dashboard</a>
+        <a href="operations.html" class="nav-item active">⚙️ Operations</a>
+        <a href="maintenance.html" class="nav-item">🔧 Maintenance</a>
+        <a href="reports.html" class="nav-item">📈 Reports</a>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container">
+      <div class="page-header">
+        <h1 class="page-title">Quarry Operations</h1>
+        <p class="page-subtitle">
+          Record daily production and sales activities
+        </p>
+      </div>
+
+      <!-- Action Cards -->
+      <div class="action-cards">
+        <div class="action-card primary" onclick="openProductionModal()">
+          <div class="action-card-icon">📦</div>
+          <div class="action-card-title">Production Entry</div>
+          <div class="action-card-description">
+            Record daily production from extraction to stockpiles
+          </div>
+        </div>
+
+        <div class="action-card success" onclick="openSalesModal()">
+          <div class="action-card-icon">💰</div>
+          <div class="action-card-title">Sales Entry</div>
+          <div class="action-card-description">
+            Record customer sales and deliveries
+          </div>
+        </div>
+      </div>
+
+      <!-- Today's Activity Stats -->
+      <div class="stats-grid">
+        <div class="stat-card warning">
+          <div class="stat-card-header">
+            <div class="stat-card-title">Today's Production</div>
+            <div class="stat-card-icon">📈</div>
+          </div>
+          <div class="stat-card-value" id="todayProduction">0.0 tonnes</div>
+        </div>
+
+        <div class="stat-card info">
+          <div class="stat-card-header">
+            <div class="stat-card-title">Today's Sales</div>
+            <div class="stat-card-icon">📉</div>
+          </div>
+          <div class="stat-card-value" id="todaySales">0.0 tonnes</div>
+        </div>
+
+        <div class="stat-card success">
+          <div class="stat-card-header">
+            <div class="stat-card-title">Active Vehicles</div>
+            <div class="stat-card-icon">🚛</div>
+          </div>
+          <div class="stat-card-value" id="activeVehicles">-</div>
+        </div>
+
+        <div class="stat-card primary">
+          <div class="stat-card-header">
+            <div class="stat-card-title">Active Operators</div>
+            <div class="stat-card-icon">👷</div>
+          </div>
+          <div class="stat-card-value" id="activeOperators">-</div>
+        </div>
+      </div>
+
+      <!-- Recent Movements -->
+      <div class="data-table">
+        <div class="table-header">
+          <h2 class="table-title">Recent Movements</h2>
+          <div class="table-actions">
+            <input
+              type="text"
+              class="search-box"
+              id="searchMovements"
+              placeholder="Search movements..."
+            />
+            <button
+              class="btn btn-secondary btn-sm"
+              onclick="loadRecentMovements()"
+            >
+              🔄 Refresh
+            </button>
+          </div>
+        </div>
+
+        <div id="movementsTableContainer">
+          <div class="loading">
+            <div class="spinner"></div>
+            <p>Loading movements...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Production Entry Modal -->
+    <div id="productionModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title">Production Entry</h3>
+          <button class="modal-close" onclick="closeProductionModal()">
+            &times;
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="productionForm">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label required">Production Date</label>
+                <input
+                  type="date"
+                  class="form-control"
+                  id="prod_date"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label required">Product</label>
+                <select class="form-control" id="prod_product" required>
+                  <option value="">Select Product</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">From (Production Area)</label>
+                <select class="form-control" id="prod_from">
+                  <option value="">Main Production Area</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label required">To (Stockpile)</label>
+                <select class="form-control" id="prod_to" required>
+                  <option value="">Select Stockpile</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label required">Quantity (tonnes)</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  id="prod_quantity"
+                  step="0.01"
+                  required
+                  placeholder="e.g., 25.50"
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label required"
+                  >Production Cost per Tonne ($)</label
+                >
+                <input
+                  type="number"
+                  class="form-control"
+                  id="prod_cost"
+                  step="0.01"
+                  required
+                  placeholder="Auto-filled from product"
+                />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Loader/Vehicle</label>
+                <select class="form-control" id="prod_vehicle">
+                  <option value="">Select Vehicle</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Operator</label>
+                <select class="form-control" id="prod_operator">
+                  <option value="">Select Operator</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Production Reference</label>
+              <input
+                type="text"
+                class="form-control"
+                id="prod_reference"
+                placeholder="e.g., PROD_001"
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Notes</label>
+              <textarea
+                class="form-control"
+                id="prod_notes"
+                placeholder="Production notes, weather conditions, etc."
+              ></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="closeProductionModal()">
+            Cancel
+          </button>
+          <button class="btn btn-primary" onclick="submitProduction()">
+            💾 Save Production
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sales Entry Modal -->
+    <div id="salesModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title">Sales Entry</h3>
+          <button class="modal-close" onclick="closeSalesModal()">
+            &times;
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="salesForm">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label required">Sale Date</label>
+                <input
+                  type="date"
+                  class="form-control"
+                  id="sale_date"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label required">Product Sold</label>
+                <select class="form-control" id="sale_product" required>
+                  <option value="">Select Product Sold</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label required">From Stockpile</label>
+                <select class="form-control" id="sale_from" required>
+                  <option value="">Select From Stockpile</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label required"
+                  >Quantity Sold (tonnes)</label
+                >
+                <input
+                  type="number"
+                  class="form-control"
+                  id="sale_quantity"
+                  step="0.01"
+                  required
+                  placeholder="e.g., 15.75"
+                />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label required"
+                  >Sale Price per Tonne ($)</label
+                >
+                <input
+                  type="number"
+                  class="form-control"
+                  id="sale_price"
+                  step="0.01"
+                  required
+                  placeholder="Auto-filled from product"
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label required">Customer</label>
+                <select class="form-control" id="sale_customer" required>
+                  <option value="">Select Customer</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Delivery Vehicle</label>
+                <select class="form-control" id="sale_vehicle">
+                  <option value="">Select Vehicle</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Driver</label>
+                <select class="form-control" id="sale_driver">
+                  <option value="">Select Driver</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Docket Number</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="sale_docket"
+                  placeholder="e.g., DK_60561"
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Sale Reference</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="sale_reference"
+                  placeholder="e.g., SALE-001"
+                />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Notes</label>
+              <textarea
+                class="form-control"
+                id="sale_notes"
+                placeholder="Delivery instructions, special requirements, etc."
+              ></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="closeSalesModal()">
+            Cancel
+          </button>
+          <button class="btn btn-success" onclick="submitSales()">
+            💰 Save Sales
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="/js/operations.js"></script>
+  </body>
+</html>
