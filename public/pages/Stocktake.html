@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stocktake Adjustment - RAC Inventory System</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body>
+    <!-- Header -->
+    <header class="header">
+      <div class="header-content">
+        <div class="logo-section">
+          <div class="logo">📦</div>
+          <div class="site-title">
+            <h1>Rirratjingu Mining Inventory System</h1>
+            <p>Quarry production and inventory management</p>
+          </div>
+        </div>
+        <div class="header-stats">
+          <div class="stat-item">
+            <div class="stat-label">Total Inventory Value</div>
+            <div class="stat-value" id="headerTotalValue">$0</div>
+          </div>
+          <div class="user-info">
+            <span>👤</span>
+            <span>Admin User</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="nav">
+      <div class="nav-content">
+        <a href="dashboard.html" class="nav-item">📊 Dashboard</a>
+        <a href="operations.html" class="nav-item active">⚙️ Operations</a>
+        <a href="maintenance.html" class="nav-item">🔧 Maintenance</a>
+        <a href="reports.html" class="nav-item">📈 Reports</a>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container">
+      <!-- Header Section -->
+      <div class="stocktake-header">
+        <div class="stocktake-title-section">
+          <h1 class="page-title">📊 Stocktake Adjustment</h1>
+          <p class="page-subtitle">
+            Align system inventory with physical stocktake measurements
+          </p>
+        </div>
+        <div class="stocktake-actions">
+          <button class="btn-secondary" onclick="cancelStocktake()">
+            Cancel
+          </button>
+          <button class="btn-info" onclick="applyStocktake()">
+            💾 Apply Stocktake
+          </button>
+        </div>
+      </div>
+
+      <!-- Stocktake Info Form -->
+      <div class="stocktake-info-card">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label required">Stocktake Date</label>
+            <input
+              type="date"
+              id="stocktakeDate"
+              class="form-control"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-label required">Reference</label>
+            <input
+              type="text"
+              id="stocktakeReference"
+              class="form-control"
+              placeholder="e.g., STOCK-2025-Q1"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Operator</label>
+            <input
+              type="text"
+              id="stocktakeOperator"
+              class="form-control"
+              value="Admin User"
+              readonly
+            />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes</label>
+          <textarea
+            id="stocktakeNotes"
+            class="form-control"
+            rows="2"
+            placeholder="e.g., Q1 FY26 drone stocktake reconciliation"
+          ></textarea>
+        </div>
+      </div>
+
+      <!-- SAND PRODUCTS SECTION -->
+      <div class="stocktake-section">
+        <div class="section-header-stocktake">
+          <div>
+            <h2 class="section-title">Sand Products</h2>
+            <p class="section-subtitle">All sand family group products</p>
+          </div>
+          <div class="avg-cost-input">
+            <label class="form-label required">Average Cost ($/tonne)</label>
+            <input
+              type="number"
+              id="sandAvgCost"
+              class="form-control-inline"
+              step="0.01"
+              placeholder="53.56"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="stocktake-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Current Qty (t)</th>
+                <th>New Qty (t)</th>
+                <th>Adjustment (t)</th>
+                <th>Value Impact</th>
+              </tr>
+            </thead>
+            <tbody id="sandProductsTable">
+              <!-- Sand products populated by JS -->
+            </tbody>
+            <tfoot>
+              <tr class="total-row">
+                <td><strong>SAND TOTAL</strong></td>
+                <td id="sandCurrentTotal">0.0</td>
+                <td id="sandNewTotal">0.0</td>
+                <td id="sandAdjustmentTotal">0.0</td>
+                <td id="sandValueTotal">$0</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+      <!-- ROCK PRODUCTS SECTION -->
+      <div class="stocktake-section">
+        <div class="section-header-stocktake">
+          <div>
+            <h2 class="section-title">Rock Products</h2>
+            <p class="section-subtitle">
+              Aggregates, rock armor, road base, and other rock products
+            </p>
+          </div>
+          <div class="avg-cost-input">
+            <label class="form-label required">Average Cost ($/tonne)</label>
+            <input
+              type="number"
+              id="rockAvgCost"
+              class="form-control-inline"
+              step="0.01"
+              placeholder="35.00"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="stocktake-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Current Qty (t)</th>
+                <th>New Qty (t)</th>
+                <th>Adjustment (t)</th>
+                <th>Value Impact</th>
+              </tr>
+            </thead>
+            <tbody id="rockProductsTable">
+              <!-- Rock products populated by JS -->
+            </tbody>
+            <tfoot>
+              <tr class="total-row">
+                <td><strong>ROCK TOTAL</strong></td>
+                <td id="rockCurrentTotal">0.0</td>
+                <td id="rockNewTotal">0.0</td>
+                <td id="rockAdjustmentTotal">0.0</td>
+                <td id="rockValueTotal">$0</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+      <!-- GRAND TOTAL SECTION -->
+      <div class="stocktake-summary">
+        <div class="summary-card">
+          <div class="summary-label">Total Quantity Adjustment</div>
+          <div class="summary-value" id="grandTotalQty">0.0 tonnes</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">Total Value Adjustment</div>
+          <div class="summary-value success" id="grandTotalValue">$0</div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="stocktake-footer">
+        <button class="btn-secondary btn-lg" onclick="cancelStocktake()">
+          Cancel
+        </button>
+        <button class="btn-info btn-lg" onclick="applyStocktake()">
+          💾 Apply Stocktake Adjustment
+        </button>
+      </div>
+    </div>
+
+    <script src="/js/stocktake.js"></script>
+  </body>
+</html>
