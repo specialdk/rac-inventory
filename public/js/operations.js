@@ -431,7 +431,7 @@ async function saveSales() {
     !formData.product_id ||
     !formData.from_location_id ||
     !formData.quantity ||
-    !formData.sale_price_per_unit ||
+    !formData.unit_price ||
     !formData.customer_id
   ) {
     alert("Please fill in all required fields");
