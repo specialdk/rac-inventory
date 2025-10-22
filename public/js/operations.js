@@ -163,7 +163,9 @@ async function loadStats() {
     const today = new Date().toISOString().split("T")[0];
 
     // Production stats
-    const prodRes = await fetch(`/api/movements?type=PRODUCTION&date=${today}`);
+    const prodRes = await fetch(
+      `/api/movements?movement_type=PRODUCTION&date=${today}`
+    );
     const prodData = await prodRes.json();
     const todayProduction = prodData.reduce(
       (sum, m) => sum + parseFloat(m.quantity || 0),
@@ -173,7 +175,9 @@ async function loadStats() {
       todayProduction.toFixed(1) + " tonnes";
 
     // Sales stats
-    const salesRes = await fetch(`/api/movements?type=SALE&date=${today}`);
+    const salesRes = await fetch(
+      `/api/movements?movement_type=SALES&date=${today}`
+    );
     const salesData = await salesRes.json();
     const todaySales = salesData.reduce(
       (sum, m) => sum + parseFloat(m.quantity || 0),

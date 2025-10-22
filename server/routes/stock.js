@@ -41,6 +41,14 @@ router.get("/current", async (req, res) => {
         cs.last_movement_date,
         p.min_stock_level,
         p.max_stock_level,
+        COALESCE(
+          (SELECT SUM(quantity) 
+           FROM stock_movements 
+           WHERE product_id = cs.product_id 
+             AND movement_type = 'DEMAND'
+             AND movement_date >= CURRENT_DATE
+          ), 0
+        ) as demand,
         CASE 
           WHEN cs.quantity < p.min_stock_level THEN 'LOW'
           WHEN cs.quantity > p.max_stock_level THEN 'HIGH'
