@@ -277,8 +277,8 @@ async function saveProduction() {
     product_id: document.getElementById("productionProduct").value,
     to_location_id: document.getElementById("productionLocation").value,
     quantity: parseFloat(document.getElementById("productionQuantity").value),
-    cost_per_unit: parseFloat(document.getElementById("productionCost").value),
-    operator_id: document.getElementById("productionOperator").value || null,
+    unit_cost: parseFloat(document.getElementById("productionCost").value),
+    driver_id: document.getElementById("productionOperator").value || null,
     reference_number: document.getElementById("productionReference").value,
     notes: document.getElementById("productionNotes").value,
   };
