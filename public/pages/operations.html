@@ -49,14 +49,41 @@
         </p>
       </div>
 
-      <div
-        class="action-card info"
-        onclick="window.location.href='stocktake.html'"
-      >
-        <div class="action-card-icon">📊</div>
-        <div class="action-card-title">Stocktake</div>
-        <div class="action-card-description">
-          Adjust inventory to match physical stocktake
+      <!-- Action Cards -->
+      <div class="action-cards">
+        <div class="action-card primary" onclick="openProductionModal()">
+          <div class="action-card-icon">📦</div>
+          <div class="action-card-title">Production Entry</div>
+          <div class="action-card-description">
+            Record daily production from extraction to stockpiles
+          </div>
+        </div>
+
+        <div class="action-card demand" onclick="openDemandModal()">
+          <div class="action-card-icon">📋</div>
+          <div class="action-card-title">Demand Entry</div>
+          <div class="action-card-description">
+            Record future orders and demand forecasts
+          </div>
+        </div>
+
+        <div class="action-card success" onclick="openSalesModal()">
+          <div class="action-card-icon">💰</div>
+          <div class="action-card-title">Sales Entry</div>
+          <div class="action-card-description">
+            Record customer sales and deliveries
+          </div>
+        </div>
+
+        <div
+          class="action-card info"
+          onclick="window.location.href='stocktake.html'"
+        >
+          <div class="action-card-icon">📊</div>
+          <div class="action-card-title">Stocktake</div>
+          <div class="action-card-description">
+            Adjust inventory to match physical stocktake
+          </div>
         </div>
       </div>
 
@@ -447,16 +474,6 @@
             <button type="submit" class="btn-success">💰 Save Sales</button>
           </div>
         </form>
-      </div>
-      <div
-        class="action-card info"
-        onclick="window.location.href='stocktake.html'"
-      >
-        <div class="action-card-icon">📊</div>
-        <div class="action-card-title">Stocktake</div>
-        <div class="action-card-description">
-          Adjust inventory to match physical stocktake
-        </div>
       </div>
     </div>
 
