@@ -1,144 +1,36 @@
-// Operations Page JavaScript
+// RAC Inventory - Operations Page JavaScript
+// This file handles Production, Demand, and Sales entry modals
 
-// Format currency
-function formatCurrency(value) {
-  return new Intl.NumberFormat("en-AU", {
-    style: "currency",
-    currency: "AUD",
-    minimumFractionDigits: 0,
-  }).format(value);
-}
+let productsData = [];
+let locationsData = [];
+let customersData = [];
+let vehiclesData = [];
+let driversData = [];
 
-// Format number
-function formatNumber(value) {
-  return new Intl.NumberFormat("en-AU", {
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 1,
-  }).format(value);
-}
+// Initialize on page load
+document.addEventListener("DOMContentLoaded", async function () {
+  setDefaultDate();
+  await loadDropdowns();
+  await loadStats();
+  await loadRecentMovements();
 
-// Set today's date as default
-function setTodayDate() {
-  const today = new Date().toISOString().split("T")[0];
-  document.getElementById("prod_date").value = today;
-  document.getElementById("sale_date").value = today;
-}
+  // ============================================
+  // BUSINESS RULE 1: Auto-suggest stockpile when product selected
+  // ============================================
+  const productionProductSelect = document.getElementById("productionProduct");
+  const productionCostInput = document.getElementById("productionCost");
+  const productionLocationSelect =
+    document.getElementById("productionLocation");
 
-// Load dropdown data
-async function loadDropdowns() {
-  try {
-    // Load products
-    const productsRes = await fetch("/api/products?is_active=true");
-    const products = await productsRes.json();
-
-    const prodProductSelect = document.getElementById("prod_product");
-    const saleProductSelect = document.getElementById("sale_product");
-
-    products.forEach((product) => {
-      const option1 = new Option(
-        `${product.product_name} (${product.product_code})`,
-        product.product_id
-      );
-      option1.dataset.cost = product.standard_cost;
-      option1.dataset.price = product.current_price;
-      prodProductSelect.add(option1);
-
-      const option2 = new Option(
-        `${product.product_name} (${product.product_code})`,
-        product.product_id
-      );
-      option2.dataset.cost = product.standard_cost;
-      option2.dataset.price = product.current_price;
-      saleProductSelect.add(option2);
-    });
-
-    // Load locations
-    const locationsRes = await fetch("/api/locations?is_active=true");
-    const locations = await locationsRes.json();
-
-    const prodFromSelect = document.getElementById("prod_from");
-    const prodToSelect = document.getElementById("prod_to");
-    const saleFromSelect = document.getElementById("sale_from");
-
-    locations.forEach((location) => {
-      if (location.location_type === "PRODUCTION") {
-        prodFromSelect.add(
-          new Option(location.location_name, location.location_id)
-        );
-      } else if (location.location_type === "STOCKPILE") {
-        prodToSelect.add(
-          new Option(location.location_name, location.location_id)
-        );
-        saleFromSelect.add(
-          new Option(location.location_name, location.location_id)
-        );
-      }
-    });
-
-    // Load customers
-    const customersRes = await fetch("/api/customers?is_active=true");
-    const customers = await customersRes.json();
-
-    const saleCustomerSelect = document.getElementById("sale_customer");
-    customers.forEach((customer) => {
-      saleCustomerSelect.add(
-        new Option(customer.customer_name, customer.customer_id)
-      );
-    });
-
-    // Load vehicles
-    const vehiclesRes = await fetch("/api/vehicles?is_active=true");
-    const vehicles = await vehiclesRes.json();
-
-    const prodVehicleSelect = document.getElementById("prod_vehicle");
-    const saleVehicleSelect = document.getElementById("sale_vehicle");
-
-    vehicles.forEach((vehicle) => {
-      prodVehicleSelect.add(
-        new Option(vehicle.registration, vehicle.vehicle_id)
-      );
-      saleVehicleSelect.add(
-        new Option(vehicle.registration, vehicle.vehicle_id)
-      );
-    });
-
-    // Load drivers
-    const driversRes = await fetch("/api/drivers?is_active=true");
-    const drivers = await driversRes.json();
-
-    const prodOperatorSelect = document.getElementById("prod_operator");
-    const saleDriverSelect = document.getElementById("sale_driver");
-
-    drivers.forEach((driver) => {
-      prodOperatorSelect.add(new Option(driver.driver_name, driver.driver_id));
-      saleDriverSelect.add(new Option(driver.driver_name, driver.driver_id));
-    });
-
-    // Set active counts
-    document.getElementById("activeVehicles").textContent = vehicles.length;
-    document.getElementById("activeOperators").textContent = drivers.length;
-  } catch (error) {
-    console.error("Error loading dropdowns:", error);
-  }
-}
-
-// ============================================
-// UPDATED: Auto-fill cost and suggest stockpile when product selected (Production)
-// ============================================
-document.addEventListener("DOMContentLoaded", () => {
-  const prodProductSelect = document.getElementById("prod_product");
-  const prodCostInput = document.getElementById("prod_cost");
-  const prodToSelect = document.getElementById("prod_to");
-
-  prodProductSelect.addEventListener("change", async (e) => {
+  productionProductSelect.addEventListener("change", async (e) => {
     const selectedOption = e.target.options[e.target.selectedIndex];
 
-    // Auto-fill cost
+    // Auto-fill cost (existing functionality)
     if (selectedOption.dataset.cost) {
-      prodCostInput.value = selectedOption.dataset.cost;
+      productionCostInput.value = selectedOption.dataset.cost;
     }
 
-    // Auto-suggest stockpile for this product (NEW FEATURE)
+    // NEW: Auto-suggest stockpile for this product
     const productId = e.target.value;
     if (productId) {
       try {
@@ -147,305 +39,427 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (data.suggested && data.location) {
           // Set the suggested location
-          prodToSelect.value = data.location.location_id;
-
-          // Show helpful message in console
+          productionLocationSelect.value = data.location.location_id;
           console.log(`✓ ${data.message}`);
-
-          // Optional: You could add a visual indicator here
-          // For example, add a label next to the dropdown showing "(Suggested)"
         } else {
-          // No suggestion - clear selection so user must choose
-          prodToSelect.value = "";
-          console.log("No stockpile assigned yet for this product");
+          // No suggestion - let user choose
+          console.log(`No stockpile assigned yet for this product`);
         }
       } catch (error) {
         console.error("Error getting suggested location:", error);
-        // Don't block the form if suggestion fails
-        prodToSelect.value = "";
       }
-    } else {
-      // No product selected - clear stockpile
-      prodToSelect.value = "";
-    }
-  });
-
-  // Auto-fill price when product selected (Sales)
-  const saleProductSelect = document.getElementById("sale_product");
-  const salePriceInput = document.getElementById("sale_price");
-
-  saleProductSelect.addEventListener("change", (e) => {
-    const selectedOption = e.target.options[e.target.selectedIndex];
-    if (selectedOption.dataset.price) {
-      salePriceInput.value = selectedOption.dataset.price;
     }
   });
 });
 
-// Modal functions
-function openProductionModal() {
-  document.getElementById("productionModal").classList.add("active");
-}
-
-function closeProductionModal() {
-  document.getElementById("productionModal").classList.remove("active");
-  document.getElementById("productionForm").reset();
-  setTodayDate();
-}
-
-function openSalesModal() {
-  document.getElementById("salesModal").classList.add("active");
-}
-
-function closeSalesModal() {
-  document.getElementById("salesModal").classList.remove("active");
-  document.getElementById("salesForm").reset();
-  setTodayDate();
-}
-
-// Submit production entry
-async function submitProduction() {
-  try {
-    const data = {
-      movement_date: document.getElementById("prod_date").value,
-      product_id: parseInt(document.getElementById("prod_product").value),
-      from_location_id: document.getElementById("prod_from").value
-        ? parseInt(document.getElementById("prod_from").value)
-        : null,
-      to_location_id: parseInt(document.getElementById("prod_to").value),
-      quantity: parseFloat(document.getElementById("prod_quantity").value),
-      unit_cost: parseFloat(document.getElementById("prod_cost").value),
-      vehicle_id: document.getElementById("prod_vehicle").value
-        ? parseInt(document.getElementById("prod_vehicle").value)
-        : null,
-      driver_id: document.getElementById("prod_operator").value
-        ? parseInt(document.getElementById("prod_operator").value)
-        : null,
-      reference_number: document.getElementById("prod_reference").value,
-      notes: document.getElementById("prod_notes").value,
-      created_by: "Admin User",
-    };
-
-    // Validation
-    if (
-      !data.product_id ||
-      !data.to_location_id ||
-      !data.quantity ||
-      !data.unit_cost
-    ) {
-      alert("Please fill in all required fields");
-      return;
-    }
-
-    const response = await fetch("/api/movements/production", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-
-    if (response.ok) {
-      alert("✅ Production entry recorded successfully!");
-      closeProductionModal();
-      loadRecentMovements();
-      loadTodayStats();
-    } else {
-      const error = await response.json();
-      alert("❌ Error: " + (error.error || "Failed to record production"));
-    }
-  } catch (error) {
-    console.error("Error submitting production:", error);
-    alert("❌ Error recording production");
+// Set default dates to today
+function setDefaultDate() {
+  const today = new Date().toISOString().split("T")[0];
+  document.getElementById("productionDate").value = today;
+  document.getElementById("saleDate").value = today;
+  if (document.getElementById("demandDate")) {
+    document.getElementById("demandDate").value = today;
   }
 }
 
-// Submit sales entry
-async function submitSales() {
+// Load all dropdowns
+async function loadDropdowns() {
   try {
-    const data = {
-      movement_date: document.getElementById("sale_date").value,
-      product_id: parseInt(document.getElementById("sale_product").value),
-      from_location_id: parseInt(document.getElementById("sale_from").value),
-      quantity: parseFloat(document.getElementById("sale_quantity").value),
-      unit_price: parseFloat(document.getElementById("sale_price").value),
-      customer_id: parseInt(document.getElementById("sale_customer").value),
-      vehicle_id: document.getElementById("sale_vehicle").value
-        ? parseInt(document.getElementById("sale_vehicle").value)
-        : null,
-      driver_id: document.getElementById("sale_driver").value
-        ? parseInt(document.getElementById("sale_driver").value)
-        : null,
-      docket_number: document.getElementById("sale_docket").value,
-      reference_number: document.getElementById("sale_reference").value,
-      notes: document.getElementById("sale_notes").value,
-      created_by: "Admin User",
-    };
-
-    // Validation
-    if (
-      !data.product_id ||
-      !data.from_location_id ||
-      !data.quantity ||
-      !data.unit_price ||
-      !data.customer_id
-    ) {
-      alert("Please fill in all required fields");
-      return;
+    // Load products
+    const productsRes = await fetch("/api/products");
+    productsData = await productsRes.json();
+    const productSelects = [
+      document.getElementById("productionProduct"),
+      document.getElementById("saleProduct"),
+    ];
+    if (document.getElementById("demandProduct")) {
+      productSelects.push(document.getElementById("demandProduct"));
     }
 
-    const response = await fetch("/api/movements/sales", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+    productsData.forEach((product) => {
+      productSelects.forEach((select) => {
+        if (select) {
+          const option = new Option(product.product_name, product.product_id);
+          option.dataset.cost = product.production_cost_per_unit;
+          option.dataset.price = product.standard_price_per_unit;
+          select.add(option);
+        }
+      });
     });
 
-    if (response.ok) {
-      alert("✅ Sale recorded successfully!");
-      closeSalesModal();
-      loadRecentMovements();
-      loadTodayStats();
-    } else {
-      const error = await response.json();
-      alert("❌ Error: " + (error.error || "Failed to record sale"));
+    // Load locations
+    const locationsRes = await fetch("/api/locations");
+    locationsData = await locationsRes.json();
+    const locationSelects = [
+      document.getElementById("productionLocation"),
+      document.getElementById("saleLocation"),
+    ];
+
+    locationsData.forEach((location) => {
+      locationSelects.forEach((select) => {
+        if (select) {
+          select.add(
+            new Option(
+              `${location.location_name} (${location.location_code})`,
+              location.location_id
+            )
+          );
+        }
+      });
+    });
+
+    // Load customers
+    const customersRes = await fetch("/api/customers");
+    customersData = await customersRes.json();
+    const customerSelects = [document.getElementById("saleCustomer")];
+    if (document.getElementById("demandCustomer")) {
+      customerSelects.push(document.getElementById("demandCustomer"));
     }
+
+    customersData.forEach((customer) => {
+      customerSelects.forEach((select) => {
+        if (select) {
+          select.add(new Option(customer.customer_name, customer.customer_id));
+        }
+      });
+    });
+
+    // Load vehicles
+    const vehiclesRes = await fetch("/api/vehicles");
+    vehiclesData = await vehiclesRes.json();
+    const saleVehicleSelect = document.getElementById("saleVehicle");
+
+    vehiclesData.forEach((vehicle) => {
+      saleVehicleSelect.add(
+        new Option(
+          `${vehicle.registration} - ${vehicle.vehicle_type}`,
+          vehicle.vehicle_id
+        )
+      );
+    });
+
+    // Load drivers
+    const driversRes = await fetch("/api/drivers");
+    driversData = await driversRes.json();
+    const prodOperatorSelect = document.getElementById("productionOperator");
+    const saleDriverSelect = document.getElementById("saleDriver");
+
+    driversData.forEach((driver) => {
+      prodOperatorSelect.add(new Option(driver.driver_name, driver.driver_id));
+      saleDriverSelect.add(new Option(driver.driver_name, driver.driver_id));
+    });
+
+    // Set active counts
+    document.getElementById("activeVehicles").textContent = vehiclesData.length;
+    document.getElementById("activeOperators").textContent = driversData.length;
   } catch (error) {
-    console.error("Error submitting sale:", error);
-    alert("❌ Error recording sale");
+    console.error("Error loading dropdowns:", error);
   }
 }
 
 // Load today's stats
-async function loadTodayStats() {
+async function loadStats() {
   try {
-    const response = await fetch("/api/movements/today");
-    const data = await response.json();
+    const today = new Date().toISOString().split("T")[0];
 
-    const production = data.find((d) => d.movement_type === "PRODUCTION");
-    const sales = data.find((d) => d.movement_type === "SALES");
+    // Production stats
+    const prodRes = await fetch(`/api/movements?type=PRODUCTION&date=${today}`);
+    const prodData = await prodRes.json();
+    const todayProduction = prodData.reduce(
+      (sum, m) => sum + parseFloat(m.quantity || 0),
+      0
+    );
+    document.getElementById("todayProduction").textContent =
+      todayProduction.toFixed(1) + " tonnes";
 
-    document.getElementById("todayProduction").textContent = production
-      ? formatNumber(production.total_quantity) + " tonnes"
-      : "0.0 tonnes";
-    document.getElementById("todaySales").textContent = sales
-      ? formatNumber(Math.abs(sales.total_quantity)) + " tonnes"
-      : "0.0 tonnes";
+    // Sales stats
+    const salesRes = await fetch(`/api/movements?type=SALE&date=${today}`);
+    const salesData = await salesRes.json();
+    const todaySales = salesData.reduce(
+      (sum, m) => sum + parseFloat(m.quantity || 0),
+      0
+    );
+    document.getElementById("todaySales").textContent =
+      todaySales.toFixed(1) + " tonnes";
   } catch (error) {
-    console.error("Error loading today stats:", error);
+    console.error("Error loading stats:", error);
   }
 }
 
 // Load recent movements
 async function loadRecentMovements() {
   try {
-    const response = await fetch("/api/movements?limit=50");
-    const movements = await response.json();
-
     const container = document.getElementById("movementsTableContainer");
+    container.innerHTML =
+      '<div class="loading"><div class="spinner"></div><p>Loading movements...</p></div>';
+
+    const response = await fetch("/api/movements?limit=20");
+    const movements = await response.json();
 
     if (movements.length === 0) {
       container.innerHTML =
-        '<div class="loading"><p>No movements recorded yet</p></div>';
+        '<div class="no-data">No movements recorded yet</div>';
       return;
     }
 
     let html = `
-            <table>
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Type</th>
-                        <th>Product</th>
-                        <th>Quantity</th>
-                        <th>Location</th>
-                        <th>Customer/Operator</th>
-                        <th>Reference</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Type</th>
+            <th>Product</th>
+            <th>Location</th>
+            <th>Quantity</th>
+            <th>Reference</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
 
-    movements.forEach((movement) => {
+    movements.forEach((m) => {
+      const date = new Date(m.movement_date).toLocaleDateString("en-AU");
+      const type = m.movement_type;
       const typeClass =
-        movement.movement_type === "PRODUCTION"
-          ? "badge-warning"
-          : "badge-info";
-      const location =
-        movement.movement_type === "PRODUCTION"
-          ? movement.to_location_name
-          : movement.from_location_name;
-      const person = movement.customer_name || movement.driver_name || "-";
+        type === "PRODUCTION"
+          ? "badge-primary"
+          : type === "SALE"
+          ? "badge-success"
+          : type === "DEMAND"
+          ? "badge-demand"
+          : "badge-warning";
 
       html += `
-                <tr>
-                    <td>${new Date(
-                      movement.movement_date
-                    ).toLocaleDateString()}</td>
-                    <td><span class="badge ${typeClass}">${
-        movement.movement_type
-      }</span></td>
-                    <td>
-                        <strong>${movement.product_name}</strong><br>
-                        <small style="color: var(--gray-500);">${
-                          movement.product_code
-                        }</small>
-                    </td>
-                    <td><strong>${
-                      movement.movement_type === "SALES" ? "-" : "+"
-                    }${formatNumber(Math.abs(movement.quantity))}</strong></td>
-                    <td>${location || "-"}</td>
-                    <td>${person}</td>
-                    <td><small>${
-                      movement.reference_number || movement.docket_number || "-"
-                    }</small></td>
-                    <td><span class="badge badge-success">Completed</span></td>
-                </tr>
-            `;
+        <tr>
+          <td>${date}</td>
+          <td><span class="badge ${typeClass}">${type}</span></td>
+          <td>${m.product_name || "-"}</td>
+          <td>${m.location_name || "-"}</td>
+          <td>${parseFloat(m.quantity).toFixed(2)} ${m.unit || "tonnes"}</td>
+          <td>${m.reference_number || "-"}</td>
+        </tr>
+      `;
     });
 
-    html += "</tbody></table>";
+    html += `</tbody></table>`;
     container.innerHTML = html;
-
-    // Add search functionality
-    const searchBox = document.getElementById("searchMovements");
-    searchBox.addEventListener("input", filterMovements);
   } catch (error) {
     console.error("Error loading movements:", error);
     document.getElementById("movementsTableContainer").innerHTML =
-      '<div class="loading"><p>Error loading movements</p></div>';
+      '<div class="error">Failed to load movements</div>';
   }
 }
 
-// Filter movements table
-function filterMovements() {
-  const searchTerm = document
-    .getElementById("searchMovements")
-    .value.toLowerCase();
-  const rows = document.querySelectorAll("#movementsTableContainer tbody tr");
-
-  rows.forEach((row) => {
-    const text = row.textContent.toLowerCase();
-    row.style.display = text.includes(searchTerm) ? "" : "none";
-  });
-}
-
-// Load inventory value for header
-async function loadInventoryValue() {
-  try {
-    const response = await fetch("/api/stock/summary");
-    const data = await response.json();
-    document.getElementById("totalValue").textContent = formatCurrency(
-      data.total_inventory_value || 0
-    );
-  } catch (error) {
-    console.error("Error loading inventory value:", error);
-  }
-}
-
-// Initialize page
-document.addEventListener("DOMContentLoaded", () => {
-  setTodayDate();
-  loadDropdowns();
-  loadTodayStats();
+function refreshMovements() {
   loadRecentMovements();
-  loadInventoryValue();
-});
+  loadStats();
+}
+
+// ============================================
+// PRODUCTION MODAL
+// ============================================
+function openProductionModal() {
+  document.getElementById("productionModal").style.display = "flex";
+  document.getElementById("productionForm").reset();
+  setDefaultDate();
+}
+
+function closeProductionModal() {
+  document.getElementById("productionModal").style.display = "none";
+}
+
+// ============================================
+// BUSINESS RULE 2: Prevent mixing products in same location
+// ============================================
+async function saveProduction() {
+  const formData = {
+    movement_date: document.getElementById("productionDate").value,
+    product_id: document.getElementById("productionProduct").value,
+    to_location_id: document.getElementById("productionLocation").value,
+    quantity: parseFloat(document.getElementById("productionQuantity").value),
+    cost_per_unit: parseFloat(document.getElementById("productionCost").value),
+    operator_id: document.getElementById("productionOperator").value || null,
+    reference_number: document.getElementById("productionReference").value,
+    notes: document.getElementById("productionNotes").value,
+  };
+
+  // Validate
+  if (
+    !formData.movement_date ||
+    !formData.product_id ||
+    !formData.to_location_id ||
+    !formData.quantity ||
+    !formData.cost_per_unit
+  ) {
+    alert("Please fill in all required fields");
+    return;
+  }
+
+  try {
+    const response = await fetch("/api/movements/production", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      // NEW: Handle mixed product error from backend
+      alert(data.error || "Failed to save production");
+      return;
+    }
+
+    alert("Production saved successfully!");
+    closeProductionModal();
+    await loadRecentMovements();
+    await loadStats();
+  } catch (error) {
+    console.error("Error saving production:", error);
+    alert("Error saving production");
+  }
+}
+
+// ============================================
+// DEMAND MODAL
+// ============================================
+function openDemandModal() {
+  if (!document.getElementById("demandModal")) {
+    alert("Demand entry feature not yet implemented");
+    return;
+  }
+  document.getElementById("demandModal").style.display = "flex";
+  document.getElementById("demandForm").reset();
+  setDefaultDate();
+}
+
+function closeDemandModal() {
+  if (document.getElementById("demandModal")) {
+    document.getElementById("demandModal").style.display = "none";
+  }
+}
+
+async function saveDemand() {
+  const formData = {
+    movement_date: document.getElementById("demandDate").value,
+    product_id: document.getElementById("demandProduct").value,
+    quantity: parseFloat(document.getElementById("demandQuantity").value),
+    customer_id: document.getElementById("demandCustomer").value,
+    po_number: document.getElementById("demandPO").value,
+    reference_number: document.getElementById("demandReference").value,
+    notes: document.getElementById("demandNotes").value,
+  };
+
+  // Validate
+  if (
+    !formData.movement_date ||
+    !formData.product_id ||
+    !formData.quantity ||
+    !formData.customer_id ||
+    !formData.po_number
+  ) {
+    alert("Please fill in all required fields");
+    return;
+  }
+
+  try {
+    const response = await fetch("/api/movements/demand", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      alert(error.error || "Failed to save demand");
+      return;
+    }
+
+    alert("Demand saved successfully!");
+    closeDemandModal();
+    await loadRecentMovements();
+    await loadStats();
+  } catch (error) {
+    console.error("Error saving demand:", error);
+    alert("Error saving demand");
+  }
+}
+
+// ============================================
+// SALES MODAL
+// ============================================
+function openSalesModal() {
+  document.getElementById("salesModal").style.display = "flex";
+  document.getElementById("salesForm").reset();
+  setDefaultDate();
+}
+
+function closeSalesModal() {
+  document.getElementById("salesModal").style.display = "none";
+}
+
+function updateSalePrice() {
+  const selectedOption =
+    document.getElementById("saleProduct").selectedOptions[0];
+  if (selectedOption && selectedOption.dataset.price) {
+    document.getElementById("salePrice").value = selectedOption.dataset.price;
+  }
+}
+
+async function saveSales() {
+  const formData = {
+    movement_date: document.getElementById("saleDate").value,
+    product_id: document.getElementById("saleProduct").value,
+    from_location_id: document.getElementById("saleLocation").value,
+    quantity: parseFloat(document.getElementById("saleQuantity").value),
+    sale_price_per_unit: parseFloat(document.getElementById("salePrice").value),
+    customer_id: document.getElementById("saleCustomer").value,
+    vehicle_id: document.getElementById("saleVehicle").value || null,
+    driver_id: document.getElementById("saleDriver").value || null,
+    docket_number: document.getElementById("saleDocket").value,
+    reference_number: document.getElementById("saleReference").value,
+    notes: document.getElementById("saleNotes").value,
+  };
+
+  // Validate
+  if (
+    !formData.movement_date ||
+    !formData.product_id ||
+    !formData.from_location_id ||
+    !formData.quantity ||
+    !formData.sale_price_per_unit ||
+    !formData.customer_id
+  ) {
+    alert("Please fill in all required fields");
+    return;
+  }
+
+  try {
+    const response = await fetch("/api/movements/sale", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      alert(error.error || "Failed to save sale");
+      return;
+    }
+
+    alert("Sale saved successfully!");
+    closeSalesModal();
+    await loadRecentMovements();
+    await loadStats();
+  } catch (error) {
+    console.error("Error saving sale:", error);
+    alert("Error saving sale");
+  }
+}
+
+// Close modals when clicking outside
+window.onclick = function (event) {
+  if (event.target.classList.contains("modal")) {
+    event.target.style.display = "none";
+  }
+};
