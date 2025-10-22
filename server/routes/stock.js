@@ -7,12 +7,12 @@ router.get("/summary", async (req, res) => {
   try {
     const result = await query(`
       SELECT 
-        COUNT(DISTINCT p.product_id) as products_with_stock,
-        SUM(cs.total_value) as total_inventory_value,
-        SUM(CASE WHEN cs.quantity > 0 THEN cs.quantity ELSE 0 END) as total_quantity
-      FROM products p
-      LEFT JOIN current_stock cs ON p.product_id = cs.product_id
-      WHERE p.is_active = true
+  COUNT(DISTINCT cs.product_id) as products_with_stock,
+  SUM(cs.total_value) as total_inventory_value,
+  SUM(cs.quantity) as total_quantity
+FROM current_stock cs
+JOIN products p ON cs.product_id = p.product_id
+WHERE p.is_active = true AND cs.quantity > 0
     `);
 
     res.json(result.rows[0]);
