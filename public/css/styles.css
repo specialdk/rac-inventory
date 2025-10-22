@@ -655,81 +655,313 @@ textarea.form-control {
   color: white;
 }
 
-/* Maintenance Sections */
-.maintenance-section {
-  display: none;
-}
+/* ============================================
+   MAINTENANCE PAGE SPECIFIC STYLES
+   ============================================ */
 
-.maintenance-section.active {
-  display: block;
-}
-
-/* Action buttons in tables */
-.action-buttons {
+/* Sub-navigation for maintenance tabs */
+.sub-nav {
   display: flex;
+  gap: 0;
+  background: white;
+  border-bottom: 2px solid #f0f0f0;
+  padding: 0;
+  margin-bottom: 2rem;
+}
+
+.sub-nav-item {
+  padding: 1rem 1.5rem;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #666;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
   gap: 0.5rem;
 }
 
-.btn-edit {
-  background: var(--info-color);
-  color: white;
-  padding: 0.375rem 0.75rem;
+.sub-nav-item:hover {
+  background: #f9f9f9;
+  color: var(--primary-color);
+}
+
+.sub-nav-item.active {
+  color: var(--primary-color);
+  border-bottom-color: var(--primary-color);
+  background: #fff5f2;
+}
+
+.sub-nav-item .nav-icon {
+  font-size: 1.1rem;
+}
+
+/* Maintenance sections */
+.maintenance-section {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.section-header h2 {
+  font-size: 1.5rem;
+  color: #2c3e50;
+  margin: 0;
+}
+
+/* Search bar */
+.search-bar {
+  margin-bottom: 1.5rem;
+}
+
+.search-bar input {
+  width: 100%;
+  max-width: 400px;
+  padding: 0.75rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+.search-bar input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+}
+
+/* Modal improvements - more compact like Bolt */
+.modal-content {
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.3rem;
+  color: #2c3e50;
+}
+
+.modal-close {
+  background: transparent;
   border: none;
-  border-radius: 4px;
-  font-size: 12px;
+  font-size: 1.8rem;
+  color: #999;
   cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
   transition: all 0.2s;
 }
 
-.btn-edit:hover {
-  background: #2563eb;
+.modal-close:hover {
+  background: #f5f5f5;
+  color: #333;
 }
 
-.btn-delete {
-  background: var(--danger-color);
-  color: white;
-  padding: 0.375rem 0.75rem;
+.modal form {
+  padding: 1.5rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #555;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 0.65rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #e0e0e0;
+  background: #f9f9f9;
+}
+
+/* Badge improvements */
+.badge {
+  padding: 0.35rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.badge-aggregates {
+  background: #fff3e0;
+  color: #e65100;
+}
+.badge-rock_armor {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+.badge-sand {
+  background: #fff9c4;
+  color: #f57f17;
+}
+.badge-road_base {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+.badge-dust {
+  background: #f3e5f5;
+  color: #6a1b9a;
+}
+.badge-production {
+  background: #fff3e0;
+  color: #e65100;
+}
+.badge-stockpile {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+.badge-dispatch {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+.badge-truck {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+.badge-loader {
+  background: #fff3e0;
+  color: #e65100;
+}
+.badge-excavator {
+  background: #f3e5f5;
+  color: #6a1b9a;
+}
+.badge-grader {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+.badge-other {
+  background: #f5f5f5;
+  color: #666;
+}
+.badge-major_project {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+.badge-construction {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+.badge-rac_internal {
+  background: #fff3e0;
+  color: #e65100;
+}
+.badge-retail {
+  background: #f3e5f5;
+  color: #6a1b9a;
+}
+
+/* Button icon improvements */
+.btn-icon {
+  background: transparent;
   border: none;
-  border-radius: 4px;
-  font-size: 12px;
   cursor: pointer;
-  transition: all 0.2s;
+  padding: 0.25rem;
+  font-size: 1.1rem;
+  opacity: 0.7;
+  transition: opacity 0.2s, transform 0.2s;
 }
 
-.btn-delete:hover {
-  background: #dc2626;
+.btn-icon:hover {
+  opacity: 1;
+  transform: scale(1.1);
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .header-content {
-    flex-direction: column;
-    gap: 1rem;
-  }
+/* Table improvements */
+.data-table table {
+  font-size: 0.9rem;
+}
 
-  .nav-content {
-    overflow-x: auto;
-  }
+.data-table th {
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.5px;
+  color: #666;
+}
 
-  .stats-grid {
-    grid-template-columns: 1fr;
-  }
+.data-table td {
+  padding: 0.75rem 1rem;
+}
 
-  .form-row {
-    grid-template-columns: 1fr;
-  }
-
-  .table-header {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: stretch;
-  }
-
-  .search-box {
-    width: 100%;
-  }
-
-  .sub-nav {
-    overflow-x: auto;
-  }
+/* Container adjustment for maintenance page */
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
 }
