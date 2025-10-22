@@ -41,56 +41,6 @@ router.get("/", async (req, res) => {
   }
 });
 
-// GET suggested location for a product
-router.get("/suggest/:productId", async (req, res) => {
-  try {
-    const { productId } = req.params;
-
-    console.log(`🔍 Looking for location with product ${productId}`);
-
-    // Find location where this product currently has stock
-    const result = await query(
-      `SELECT 
-        l.location_id,
-        l.location_code,
-        l.location_name,
-        l.location_type,
-        cs.quantity_on_hand
-      FROM current_stock cs
-      JOIN locations l ON l.location_id = cs.location_id
-      WHERE cs.product_id = $1 
-        AND l.is_active = true 
-        AND cs.quantity_on_hand > 0
-      ORDER BY cs.quantity_on_hand DESC
-      LIMIT 1`,
-      [productId]
-    );
-
-    console.log(`📦 Found ${result.rows.length} locations`);
-
-    if (result.rows.length > 0) {
-      console.log(`✅ Suggesting location_id: ${result.rows[0].location_id}`);
-
-      res.json({
-        suggested: true,
-        location: result.rows[0],
-        message: `Suggested: ${result.rows[0].location_name} (currently holds this product)`,
-      });
-    } else {
-      console.log(`ℹ️ No stock found for product ${productId}`);
-
-      res.json({
-        suggested: false,
-        location: null,
-        message: "No stockpile assigned yet. Please select a location.",
-      });
-    }
-  } catch (error) {
-    console.error("Error getting suggested location:", error);
-    res.status(500).json({ error: "Failed to get suggested location" });
-  }
-});
-
 // GET single location
 router.get("/:id", async (req, res) => {
   try {
@@ -234,6 +184,56 @@ router.delete("/:id", async (req, res) => {
   } catch (error) {
     console.error("Error deleting location:", error);
     res.status(500).json({ error: "Failed to delete location" });
+  }
+});
+
+// GET suggested location for a product (for auto-suggest in production entry)
+router.get("/suggest/:productId", async (req, res) => {
+  try {
+    const { productId } = req.params;
+
+    console.log(`🔍 Looking for location with product ${productId}`);
+
+    // Find location where this product currently has stock
+    const result = await query(
+      `SELECT 
+        l.location_id,
+        l.location_code,
+        l.location_name,
+        l.location_type,
+        cs.quantity_on_hand
+      FROM current_stock cs
+      JOIN locations l ON l.location_id = cs.location_id
+      WHERE cs.product_id = $1 
+        AND l.is_active = true 
+        AND cs.quantity_on_hand > 0
+      ORDER BY cs.quantity_on_hand DESC
+      LIMIT 1`,
+      [productId]
+    );
+
+    console.log(`📦 Found ${result.rows.length} locations`);
+
+    if (result.rows.length > 0) {
+      console.log(`✅ Suggesting location_id: ${result.rows[0].location_id}`);
+
+      res.json({
+        suggested: true,
+        location: result.rows[0],
+        message: `Suggested: ${result.rows[0].location_name} (currently holds this product)`,
+      });
+    } else {
+      console.log(`ℹ️ No stock found for product ${productId}`);
+
+      res.json({
+        suggested: false,
+        location: null,
+        message: "No stockpile assigned yet. Please select a location.",
+      });
+    }
+  } catch (error) {
+    console.error("Error getting suggested location:", error);
+    res.status(500).json({ error: "Failed to get suggested location" });
   }
 });
 
