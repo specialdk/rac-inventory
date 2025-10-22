@@ -41,36 +41,44 @@ router.get("/", async (req, res) => {
   }
 });
 
-// GET suggested location for a product (NEW - for auto-suggest in production entry)
+// GET suggested location for a product
 router.get("/suggest/:productId", async (req, res) => {
   try {
     const { productId } = req.params;
 
-    // Find location already assigned to this product
+    console.log(`🔍 Looking for location with product ${productId}`);
+
+    // Find location where this product currently has stock
     const result = await query(
       `SELECT 
         l.location_id,
         l.location_code,
         l.location_name,
         l.location_type,
-        l.assigned_product_id,
-        p.product_name
-      FROM locations l
-      LEFT JOIN products p ON l.assigned_product_id = p.product_id
-      WHERE l.assigned_product_id = $1 AND l.is_active = true
+        cs.quantity_on_hand
+      FROM current_stock cs
+      JOIN locations l ON l.location_id = cs.location_id
+      WHERE cs.product_id = $1 
+        AND l.is_active = true 
+        AND cs.quantity_on_hand > 0
+      ORDER BY cs.quantity_on_hand DESC
       LIMIT 1`,
       [productId]
     );
 
+    console.log(`📦 Found ${result.rows.length} locations`);
+
     if (result.rows.length > 0) {
-      // Product already has an assigned location
+      console.log(`✅ Suggesting location_id: ${result.rows[0].location_id}`);
+
       res.json({
         suggested: true,
         location: result.rows[0],
         message: `Suggested: ${result.rows[0].location_name} (currently holds this product)`,
       });
     } else {
-      // No location assigned - return null and let user choose
+      console.log(`ℹ️ No stock found for product ${productId}`);
+
       res.json({
         suggested: false,
         location: null,
