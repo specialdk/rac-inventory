@@ -441,4 +441,41 @@ router.get("/today", async (req, res) => {
   }
 });
 
+// GET recent movements (for operations page)
+router.get("/recent", async (req, res) => {
+  try {
+    const { limit = 10 } = req.query;
+
+    const result = await pool.query(
+      `
+      SELECT 
+        sm.*,
+        p.product_code,
+        p.product_name,
+        p.family_group,
+        fl.location_name as from_location_name,
+        tl.location_name as to_location_name,
+        c.customer_name,
+        v.registration as vehicle_registration,
+        d.driver_name
+      FROM stock_movements sm
+      JOIN products p ON sm.product_id = p.product_id
+      LEFT JOIN locations fl ON sm.from_location_id = fl.location_id
+      LEFT JOIN locations tl ON sm.to_location_id = tl.location_id
+      LEFT JOIN customers c ON sm.customer_id = c.customer_id
+      LEFT JOIN vehicles v ON sm.vehicle_id = v.vehicle_id
+      LEFT JOIN drivers d ON sm.driver_id = d.driver_id
+      ORDER BY sm.movement_date DESC, sm.created_at DESC 
+      LIMIT $1
+    `,
+      [limit]
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error("Error fetching recent movements:", error);
+    res.status(500).json({ error: "Failed to fetch recent movements" });
+  }
+});
+
 module.exports = router;
