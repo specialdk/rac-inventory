@@ -516,4 +516,65 @@ router.get("/recent", async (req, res) => {
   }
 });
 
+// POST demand entry
+router.post("/demand", async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const {
+      movement_date,
+      product_id,
+      quantity,
+      customer_id,
+      po_number,
+      reference_number,
+      notes,
+      created_by = "system",
+    } = req.body;
+
+    // Validation
+    if (
+      !movement_date ||
+      !product_id ||
+      !quantity ||
+      !customer_id ||
+      !po_number
+    ) {
+      throw new Error("Missing required fields");
+    }
+
+    // Insert demand record (no stock impact - just tracking future orders)
+    const movementResult = await client.query(
+      `INSERT INTO stock_movements 
+       (movement_date, movement_type, product_id, quantity, customer_id, reference_number, notes, created_by)
+       VALUES ($1, 'DEMAND', $2, $3, $4, $5, $6, $7)
+       RETURNING *`,
+      [
+        movement_date,
+        product_id,
+        quantity,
+        customer_id,
+        po_number,
+        notes,
+        created_by,
+      ]
+    );
+
+    await client.query("COMMIT");
+
+    res.status(201).json({
+      message: "Demand entry recorded successfully",
+      movement: movementResult.rows[0],
+    });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    console.error("Error recording demand:", error);
+    res.status(500).json({ error: error.message || "Failed to record demand" });
+  } finally {
+    client.release();
+  }
+});
+
 module.exports = router;
