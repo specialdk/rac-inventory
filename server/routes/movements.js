@@ -96,13 +96,9 @@ router.post("/production", async (req, res) => {
       throw new Error("Missing required fields");
     }
 
-    // ========================================
-    // NEW BUSINESS RULES
-    // ========================================
-
-    // RULE 1: Check destination location type and assigned product
+    // BUSINESS RULE: Check if destination stockpile already has a different product
     const locationCheck = await client.query(
-      "SELECT location_type, assigned_product_id FROM locations WHERE location_id = $1",
+      "SELECT location_type FROM locations WHERE location_id = $1",
       [to_location_id]
     );
 
@@ -110,42 +106,33 @@ router.post("/production", async (req, res) => {
       throw new Error("Invalid location");
     }
 
-    const location = locationCheck.rows[0];
+    const locationType = locationCheck.rows[0].location_type;
 
-    // RULE 2: Prevent mixed products in stockpiles (except Production Area)
-    if (location.location_type !== "PRODUCTION") {
-      // Check if location has a different product already assigned
-      if (
-        location.assigned_product_id &&
-        location.assigned_product_id !== parseInt(product_id)
-      ) {
-        // Get product names for clear error message
-        const assignedProduct = await client.query(
-          "SELECT product_name FROM products WHERE product_id = $1",
-          [location.assigned_product_id]
-        );
-        const currentProduct = await client.query(
+    // Only enforce this rule for STOCKPILE locations (not PRODUCTION areas)
+    if (locationType === "STOCKPILE") {
+      // Check if this stockpile already has a different product
+      const stockCheck = await client.query(
+        `SELECT cs.product_id, p.product_name 
+         FROM current_stock cs
+         JOIN products p ON cs.product_id = p.product_id
+         WHERE cs.location_id = $1 AND cs.quantity > 0 AND cs.product_id != $2
+         LIMIT 1`,
+        [to_location_id, product_id]
+      );
+
+      if (stockCheck.rows.length > 0) {
+        const existingProduct = stockCheck.rows[0].product_name;
+        const newProductResult = await client.query(
           "SELECT product_name FROM products WHERE product_id = $1",
           [product_id]
         );
+        const newProduct = newProductResult.rows[0].product_name;
 
         throw new Error(
-          `This stockpile already contains ${assignedProduct.rows[0].product_name}. Cannot add ${currentProduct.rows[0].product_name} to the same location.`
-        );
-      }
-
-      // If no product assigned yet, assign this product to the location
-      if (!location.assigned_product_id) {
-        await client.query(
-          "UPDATE locations SET assigned_product_id = $1, updated_at = NOW() WHERE location_id = $2",
-          [product_id, to_location_id]
+          `This stockpile already contains ${existingProduct}. Cannot add ${newProduct} to the same location.`
         );
       }
     }
-
-    // ========================================
-    // END NEW BUSINESS RULES
-    // ========================================
 
     const total_cost = quantity * unit_cost;
 
@@ -389,53 +376,6 @@ router.post("/adjustment", async (req, res) => {
       .json({ error: error.message || "Failed to record adjustment" });
   } finally {
     client.release();
-  }
-});
-
-// POST demand entry
-router.post("/demand", async (req, res) => {
-  try {
-    const {
-      movement_date,
-      product_id,
-      quantity,
-      customer_id,
-      po_number,
-      reference_number,
-      notes,
-      created_by = "system",
-    } = req.body;
-
-    // Validation
-    if (!movement_date || !product_id || !quantity || !po_number) {
-      return res.status(400).json({ error: "Missing required fields" });
-    }
-
-    const result = await pool.query(
-      `INSERT INTO stock_movements 
-       (movement_date, movement_type, product_id, quantity, customer_id, 
-        docket_number, reference_number, notes, created_by, status)
-       VALUES ($1, 'DEMAND', $2, $3, $4, $5, $6, $7, $8, 'COMPLETED')
-       RETURNING *`,
-      [
-        movement_date,
-        product_id,
-        quantity,
-        customer_id,
-        po_number,
-        reference_number,
-        notes,
-        created_by,
-      ]
-    );
-
-    res.status(201).json({
-      message: "Demand entry recorded successfully",
-      movement: result.rows[0],
-    });
-  } catch (error) {
-    console.error("Error recording demand:", error);
-    res.status(500).json({ error: error.message || "Failed to record demand" });
   }
 });
 

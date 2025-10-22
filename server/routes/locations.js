@@ -201,13 +201,13 @@ router.get("/suggest/:productId", async (req, res) => {
         l.location_code,
         l.location_name,
         l.location_type,
-        cs.quantity_on_hand
+        cs.quantity
       FROM current_stock cs
       JOIN locations l ON l.location_id = cs.location_id
       WHERE cs.product_id = $1 
         AND l.is_active = true 
-        AND cs.quantity_on_hand > 0
-      ORDER BY cs.quantity_on_hand DESC
+        AND cs.quantity > 0
+      ORDER BY cs.quantity DESC
       LIMIT 1`,
       [productId]
     );
