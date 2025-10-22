@@ -234,7 +234,7 @@ async function loadRecentMovements() {
           <td>${date}</td>
           <td><span class="badge ${typeClass}">${type}</span></td>
           <td>${m.product_name || "-"}</td>
-          <td>${m.location_name || "-"}</td>
+          <td>${m.to_location_name || m.from_location_name || "-"}</td>
           <td>${parseFloat(m.quantity).toFixed(2)} ${m.unit || "tonnes"}</td>
           <td>${m.reference_number || "-"}</td>
         </tr>
