@@ -59,6 +59,14 @@
           </div>
         </div>
 
+        <div class="action-card demand" onclick="openDemandModal()">
+          <div class="action-card-icon">📋</div>
+          <div class="action-card-title">Demand Entry</div>
+          <div class="action-card-description">
+            Record future orders and demand forecasts
+          </div>
+        </div>
+
         <div class="action-card success" onclick="openSalesModal()">
           <div class="action-card-icon">💰</div>
           <div class="action-card-title">Sales Entry</div>
@@ -68,9 +76,9 @@
         </div>
       </div>
 
-      <!-- Today's Activity Stats -->
+      <!-- Stats Row -->
       <div class="stats-grid">
-        <div class="stat-card warning">
+        <div class="stat-card primary">
           <div class="stat-card-header">
             <div class="stat-card-title">Today's Production</div>
             <div class="stat-card-icon">📈</div>
@@ -81,7 +89,7 @@
         <div class="stat-card info">
           <div class="stat-card-header">
             <div class="stat-card-title">Today's Sales</div>
-            <div class="stat-card-icon">📉</div>
+            <div class="stat-card-icon">💰</div>
           </div>
           <div class="stat-card-value" id="todaySales">0.0 tonnes</div>
         </div>
@@ -94,7 +102,7 @@
           <div class="stat-card-value" id="activeVehicles">-</div>
         </div>
 
-        <div class="stat-card primary">
+        <div class="stat-card warning">
           <div class="stat-card-header">
             <div class="stat-card-title">Active Operators</div>
             <div class="stat-card-icon">👷</div>
@@ -116,7 +124,7 @@
             />
             <button
               class="btn btn-secondary btn-sm"
-              onclick="loadRecentMovements()"
+              onclick="refreshMovements()"
             >
               🔄 Refresh
             </button>
@@ -132,253 +140,351 @@
       </div>
     </div>
 
-    <!-- Production Entry Modal -->
+    <!-- Production Modal -->
     <div id="productionModal" class="modal">
       <div class="modal-content">
         <div class="modal-header">
-          <h3 class="modal-title">Production Entry</h3>
+          <h2>Production Entry</h2>
           <button class="modal-close" onclick="closeProductionModal()">
-            &times;
+            ×
           </button>
         </div>
-        <div class="modal-body">
-          <form id="productionForm">
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label required">Production Date</label>
-                <input
-                  type="date"
-                  class="form-control"
-                  id="prod_date"
-                  required
-                />
-              </div>
-              <div class="form-group">
-                <label class="form-label required">Product</label>
-                <select class="form-control" id="prod_product" required>
-                  <option value="">Select Product</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">From (Production Area)</label>
-                <select class="form-control" id="prod_from">
-                  <option value="">Main Production Area</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label class="form-label required">To (Stockpile)</label>
-                <select class="form-control" id="prod_to" required>
-                  <option value="">Select Stockpile</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label required">Quantity (tonnes)</label>
-                <input
-                  type="number"
-                  class="form-control"
-                  id="prod_quantity"
-                  step="0.01"
-                  required
-                  placeholder="e.g., 25.50"
-                />
-              </div>
-              <div class="form-group">
-                <label class="form-label required"
-                  >Production Cost per Tonne ($)</label
-                >
-                <input
-                  type="number"
-                  class="form-control"
-                  id="prod_cost"
-                  step="0.01"
-                  required
-                  placeholder="Auto-filled from product"
-                />
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">Loader/Vehicle</label>
-                <select class="form-control" id="prod_vehicle">
-                  <option value="">Select Vehicle</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Operator</label>
-                <select class="form-control" id="prod_operator">
-                  <option value="">Select Operator</option>
-                </select>
-              </div>
-            </div>
-
+        <form
+          id="productionForm"
+          onsubmit="event.preventDefault(); saveProduction();"
+        >
+          <!-- Production form fields -->
+          <div class="form-row">
             <div class="form-group">
-              <label class="form-label">Production Reference</label>
+              <label class="form-label required">Production Date</label>
               <input
-                type="text"
+                type="date"
                 class="form-control"
-                id="prod_reference"
-                placeholder="e.g., PROD_001"
+                id="productionDate"
+                required
               />
             </div>
-
             <div class="form-group">
-              <label class="form-label">Notes</label>
-              <textarea
-                class="form-control"
-                id="prod_notes"
-                placeholder="Production notes, weather conditions, etc."
-              ></textarea>
+              <label class="form-label required">Product</label>
+              <select class="form-control" id="productionProduct" required>
+                <option value="">Select Product</option>
+              </select>
             </div>
-          </form>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary" onclick="closeProductionModal()">
-            Cancel
-          </button>
-          <button class="btn btn-primary" onclick="submitProduction()">
-            💾 Save Production
-          </button>
-        </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label required">To Stockpile</label>
+              <select class="form-control" id="productionLocation" required>
+                <option value="">Select Stockpile</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label required">Quantity (tonnes)</label>
+              <input
+                type="number"
+                class="form-control"
+                id="productionQuantity"
+                step="0.01"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label required">Cost per Tonne ($)</label>
+            <input
+              type="number"
+              class="form-control"
+              id="productionCost"
+              step="0.01"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Operator</label>
+            <select class="form-control" id="productionOperator">
+              <option value="">Select Operator</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Reference</label>
+            <input
+              type="text"
+              class="form-control"
+              id="productionReference"
+              placeholder="e.g., PROD_001"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Notes</label>
+            <textarea
+              class="form-control"
+              id="productionNotes"
+              rows="3"
+              placeholder="Production notes..."
+            ></textarea>
+          </div>
+
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn-secondary"
+              onclick="closeProductionModal()"
+            >
+              Cancel
+            </button>
+            <button type="submit" class="btn-primary">
+              💾 Save Production
+            </button>
+          </div>
+        </form>
       </div>
     </div>
 
-    <!-- Sales Entry Modal -->
+    <!-- Demand Modal -->
+    <div id="demandModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Demand Entry</h2>
+          <button class="modal-close" onclick="closeDemandModal()">×</button>
+        </div>
+        <form id="demandForm" onsubmit="event.preventDefault(); saveDemand();">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label required">Future Sale Date</label>
+              <input
+                type="date"
+                class="form-control"
+                id="demandDate"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label required">Product</label>
+              <select class="form-control" id="demandProduct" required>
+                <option value="">Select Product</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label required"
+                >Demand Quantity (tonnes)</label
+              >
+              <input
+                type="number"
+                class="form-control"
+                id="demandQuantity"
+                step="0.01"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label required">Customer</label>
+              <select class="form-control" id="demandCustomer" required>
+                <option value="">Select Customer</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label required">PO Number</label>
+              <input
+                type="text"
+                class="form-control"
+                id="demandPO"
+                required
+                placeholder="e.g., PO-2025-001"
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Demand Reference</label>
+              <input
+                type="text"
+                class="form-control"
+                id="demandReference"
+                placeholder="e.g., DEMAND-001"
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Notes</label>
+            <textarea
+              class="form-control"
+              id="demandNotes"
+              rows="3"
+              placeholder="Delivery instructions, special requirements, etc."
+            ></textarea>
+          </div>
+
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn-secondary"
+              onclick="closeDemandModal()"
+            >
+              Cancel
+            </button>
+            <button type="submit" class="btn-demand">📋 Save Demand</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Sales Modal -->
     <div id="salesModal" class="modal">
       <div class="modal-content">
         <div class="modal-header">
-          <h3 class="modal-title">Sales Entry</h3>
-          <button class="modal-close" onclick="closeSalesModal()">
-            &times;
-          </button>
+          <h2>Sales Entry</h2>
+          <button class="modal-close" onclick="closeSalesModal()">×</button>
         </div>
-        <div class="modal-body">
-          <form id="salesForm">
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label required">Sale Date</label>
-                <input
-                  type="date"
-                  class="form-control"
-                  id="sale_date"
-                  required
-                />
-              </div>
-              <div class="form-group">
-                <label class="form-label required">Product Sold</label>
-                <select class="form-control" id="sale_product" required>
-                  <option value="">Select Product Sold</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label required">From Stockpile</label>
-                <select class="form-control" id="sale_from" required>
-                  <option value="">Select From Stockpile</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label class="form-label required"
-                  >Quantity Sold (tonnes)</label
-                >
-                <input
-                  type="number"
-                  class="form-control"
-                  id="sale_quantity"
-                  step="0.01"
-                  required
-                  placeholder="e.g., 15.75"
-                />
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label required"
-                  >Sale Price per Tonne ($)</label
-                >
-                <input
-                  type="number"
-                  class="form-control"
-                  id="sale_price"
-                  step="0.01"
-                  required
-                  placeholder="Auto-filled from product"
-                />
-              </div>
-              <div class="form-group">
-                <label class="form-label required">Customer</label>
-                <select class="form-control" id="sale_customer" required>
-                  <option value="">Select Customer</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">Delivery Vehicle</label>
-                <select class="form-control" id="sale_vehicle">
-                  <option value="">Select Vehicle</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Driver</label>
-                <select class="form-control" id="sale_driver">
-                  <option value="">Select Driver</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">Docket Number</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  id="sale_docket"
-                  placeholder="e.g., DK_60561"
-                />
-              </div>
-              <div class="form-group">
-                <label class="form-label">Sale Reference</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  id="sale_reference"
-                  placeholder="e.g., SALE-001"
-                />
-              </div>
-            </div>
-
+        <form id="salesForm" onsubmit="event.preventDefault(); saveSales();">
+          <!-- Sales form fields -->
+          <div class="form-row">
             <div class="form-group">
-              <label class="form-label">Notes</label>
-              <textarea
-                class="form-control"
-                id="sale_notes"
-                placeholder="Delivery instructions, special requirements, etc."
-              ></textarea>
+              <label class="form-label required">Sale Date</label>
+              <input type="date" class="form-control" id="saleDate" required />
             </div>
-          </form>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary" onclick="closeSalesModal()">
-            Cancel
-          </button>
-          <button class="btn btn-success" onclick="submitSales()">
-            💰 Save Sales
-          </button>
-        </div>
+            <div class="form-group">
+              <label class="form-label required">Product Sold</label>
+              <select
+                class="form-control"
+                id="saleProduct"
+                required
+                onchange="updateSalePrice()"
+              >
+                <option value="">Select Product Sold</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label required">From Stockpile</label>
+              <select class="form-control" id="saleLocation" required>
+                <option value="">Select From Stockpile</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label required">Quantity Sold (tonnes)</label>
+              <input
+                type="number"
+                class="form-control"
+                id="saleQuantity"
+                step="0.01"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label required"
+                >Sale Price per Tonne ($)</label
+              >
+              <input
+                type="number"
+                class="form-control"
+                id="salePrice"
+                step="0.01"
+                required
+                placeholder="Auto-filled from product"
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label required">Customer</label>
+              <select class="form-control" id="saleCustomer" required>
+                <option value="">Select Customer</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Delivery Vehicle</label>
+              <select class="form-control" id="saleVehicle">
+                <option value="">Select Vehicle</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Driver</label>
+              <select class="form-control" id="saleDriver">
+                <option value="">Select Driver</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Docket Number</label>
+              <input
+                type="text"
+                class="form-control"
+                id="saleDocket"
+                placeholder="e.g., DK_60561"
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Sale Reference</label>
+              <input
+                type="text"
+                class="form-control"
+                id="saleReference"
+                placeholder="e.g., SALE-001"
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Notes</label>
+            <textarea
+              class="form-control"
+              id="saleNotes"
+              rows="3"
+              placeholder="Delivery instructions, special requirements, etc."
+            ></textarea>
+          </div>
+
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn-secondary"
+              onclick="closeSalesModal()"
+            >
+              Cancel
+            </button>
+            <button type="submit" class="btn-success">💰 Save Sales</button>
+          </div>
+        </form>
       </div>
     </div>
 
     <script src="/js/operations.js"></script>
+    <script>
+      // Update header inventory value
+      async function updateHeaderValue() {
+        try {
+          const response = await fetch("/api/stock/summary");
+          const data = await response.json();
+          const totalValue = data.total_inventory_value || 0;
+          document.getElementById("totalValue").textContent =
+            new Intl.NumberFormat("en-AU", {
+              style: "currency",
+              currency: "AUD",
+              minimumFractionDigits: 0,
+            }).format(totalValue);
+        } catch (error) {
+          console.error("Error loading header value:", error);
+        }
+      }
+      updateHeaderValue();
+    </script>
   </body>
 </html>

@@ -161,7 +161,7 @@
         }
       }
 
-      // Load current stock
+      // Load current stock with demand
       async function loadCurrentStock() {
         try {
           const response = await fetch("/api/stock/current");
@@ -182,6 +182,7 @@
                                 <th>Product</th>
                                 <th>Location</th>
                                 <th>Stock Level</th>
+                                <th>Demand</th>
                                 <th>Avg Cost</th>
                                 <th>Total Value</th>
                                 <th>Status</th>
@@ -198,6 +199,11 @@
                 ? "badge-warning"
                 : "badge-normal";
 
+            // Calculate demand (placeholder - will be from API later)
+            const demand = item.demand || 0;
+            const demandColor =
+              demand > 0 ? "var(--warning-color)" : "var(--gray-400)";
+
             html += `
                         <tr>
                             <td>
@@ -212,6 +218,9 @@
                             <td><strong style="color: var(--success-color);">${formatNumber(
                               item.quantity
                             )}</strong></td>
+                            <td><strong style="color: ${demandColor};">${formatNumber(
+              demand
+            )}</strong></td>
                             <td>${formatCurrency(item.average_cost)}</td>
                             <td><strong>${formatCurrency(
                               item.total_value

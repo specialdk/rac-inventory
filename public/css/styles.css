@@ -926,3 +926,43 @@ textarea.form-control {
   margin: 0 auto;
   padding: 2rem;
 }
+
+/* Demand-specific styles (purple/violet theme) */
+:root {
+  --demand-color: #8b5cf6;
+  --demand-light: #f5f3ff;
+}
+
+.action-card.demand::before {
+  background: var(--demand-color);
+}
+
+.action-card.demand:hover {
+  border-color: var(--demand-color);
+}
+
+.btn-demand {
+  background: var(--demand-color);
+  color: white;
+  border: none;
+  padding: 0.625rem 1.25rem;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-demand:hover {
+  background: #7c3aed;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(139, 92, 246, 0.3);
+}
+
+.badge-demand {
+  background: var(--demand-light);
+  color: var(--demand-color);
+}
