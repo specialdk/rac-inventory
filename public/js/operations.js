@@ -39,7 +39,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
         if (data.suggested && data.location) {
           // Set the suggested location
-          productionLocationSelect.value = data.location.location_id;
+          productionLocationSelect.value = String(data.location.location_id);
           console.log(`✓ ${data.message}`);
         } else {
           // No suggestion - let user choose
@@ -289,7 +289,7 @@ async function saveProduction() {
     !formData.product_id ||
     !formData.to_location_id ||
     !formData.quantity ||
-    !formData.cost_per_unit
+    !formData.unit_cost
   ) {
     alert("Please fill in all required fields");
     return;
