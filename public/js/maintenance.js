@@ -595,7 +595,7 @@ async function loadVehicleData(vehicleId) {
     document.getElementById("vehicleId").value = vehicle.vehicle_id;
     document.getElementById("registration").value = vehicle.registration;
     document.getElementById("vehicleType").value = vehicle.vehicle_type || "";
-    document.getElementById("capacityTonnes").value =
+    document.getElementById("vehicleCapacity").value =
       vehicle.capacity_tonnes || "";
     document.getElementById("lastServiceDate").value =
       vehicle.last_service_date || "";
@@ -613,7 +613,7 @@ async function saveVehicle() {
   const vehicleData = {
     registration: document.getElementById("registration").value,
     vehicle_type: document.getElementById("vehicleType").value,
-    capacity_tonnes: document.getElementById("capacityTonnes").value || null,
+    capacity_tonnes: document.getElementById("vehicleCapacity").value || null,
     last_service_date: document.getElementById("lastServiceDate").value || null,
     next_service_date: document.getElementById("nextServiceDate").value || null,
     notes: document.getElementById("vehicleNotes").value,
