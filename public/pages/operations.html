@@ -49,30 +49,14 @@
         </p>
       </div>
 
-      <!-- Action Cards -->
-      <div class="action-cards">
-        <div class="action-card primary" onclick="openProductionModal()">
-          <div class="action-card-icon">📦</div>
-          <div class="action-card-title">Production Entry</div>
-          <div class="action-card-description">
-            Record daily production from extraction to stockpiles
-          </div>
-        </div>
-
-        <div class="action-card demand" onclick="openDemandModal()">
-          <div class="action-card-icon">📋</div>
-          <div class="action-card-title">Demand Entry</div>
-          <div class="action-card-description">
-            Record future orders and demand forecasts
-          </div>
-        </div>
-
-        <div class="action-card success" onclick="openSalesModal()">
-          <div class="action-card-icon">💰</div>
-          <div class="action-card-title">Sales Entry</div>
-          <div class="action-card-description">
-            Record customer sales and deliveries
-          </div>
+      <div
+        class="action-card info"
+        onclick="window.location.href='stocktake.html'"
+      >
+        <div class="action-card-icon">📊</div>
+        <div class="action-card-title">Stocktake</div>
+        <div class="action-card-description">
+          Adjust inventory to match physical stocktake
         </div>
       </div>
 
@@ -464,23 +448,17 @@
           </div>
         </form>
       </div>
-    </div>
-
-    <!-- ADD THIS AS THE 4TH ACTION CARD IN operations.html -->
-<!-- Place this AFTER the Sales Entry card, around line 70 -->
-
-        <!-- Stocktake Card (Blue/Info) - NEW -->
-        <div class="action-card info" onclick="window.location.href='stocktake.html'">
-          <div class="action-card-icon">📊</div>
-          <div class="action-card-title">Stocktake</div>
-          <div class="action-card-description">
-            Adjust inventory to match physical stocktake
-          </div>
+      <div
+        class="action-card info"
+        onclick="window.location.href='stocktake.html'"
+      >
+        <div class="action-card-icon">📊</div>
+        <div class="action-card-title">Stocktake</div>
+        <div class="action-card-description">
+          Adjust inventory to match physical stocktake
         </div>
-
-<!-- 
-The complete action-cards section should now look like:
-
+      </div>
+    </div>
 
     <script src="/js/operations.js"></script>
     <script>
