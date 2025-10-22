@@ -149,8 +149,12 @@ async function saveProduct() {
     product_name: document.getElementById("productName").value,
     family_group: document.getElementById("familyGroup").value,
     unit: document.getElementById("unit").value,
-    standard_cost: parseFloat(document.getElementById("standardCost").value),
-    current_price: parseFloat(document.getElementById("currentPrice").value),
+    production_cost_per_unit: parseFloat(
+      document.getElementById("standardCost").value
+    ), // Changed
+    standard_price_per_unit: parseFloat(
+      document.getElementById("currentPrice").value
+    ), // Changed
     min_stock_level: parseFloat(document.getElementById("minStockLevel").value),
     max_stock_level: parseFloat(document.getElementById("maxStockLevel").value),
   };
