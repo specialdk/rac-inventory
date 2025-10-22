@@ -40,7 +40,6 @@
       </div>
     </nav>
 
-
     <div class="sub-nav">
       <button class="sub-nav-item active" data-section="products">
         📦 Products
@@ -51,14 +50,9 @@
       <button class="sub-nav-item" data-section="locations">
         📍 Locations
       </button>
-      <button class="sub-nav-item" data-section="vehicles">
-        🚛 Vehicles
-      </button>
-      <button class="sub-nav-item" data-section="drivers">
-        👷 Drivers
-      </button>
+      <button class="sub-nav-item" data-section="vehicles">🚛 Vehicles</button>
+      <button class="sub-nav-item" data-section="drivers">👷 Drivers</button>
     </div>
-
 
     <div class="container">
       <!-- PRODUCTS SECTION -->
@@ -66,7 +60,7 @@
         <div class="section-header">
           <h2>Products Management</h2>
           <button class="btn-primary" onclick="openProductModal()">
-            âž• Add Product
+            ➕ Add Product
           </button>
         </div>
 
@@ -114,7 +108,7 @@
         <div class="section-header">
           <h2>Customers Management</h2>
           <button class="btn-primary" onclick="openCustomerModal()">
-            âž• Add Customer
+            ➕ Add Customer
           </button>
         </div>
 
@@ -160,7 +154,7 @@
         <div class="section-header">
           <h2>Locations Management</h2>
           <button class="btn-primary" onclick="openLocationModal()">
-            âž• Add Location
+            ➕ Add Location
           </button>
         </div>
 
@@ -205,7 +199,7 @@
         <div class="section-header">
           <h2>Vehicles Management</h2>
           <button class="btn-primary" onclick="openVehicleModal()">
-            âž• Add Vehicle
+            ➕ Add Vehicle
           </button>
         </div>
 
@@ -250,7 +244,7 @@
         <div class="section-header">
           <h2>Drivers Management</h2>
           <button class="btn-primary" onclick="openDriverModal()">
-            âž• Add Driver
+            ➕ Add Driver
           </button>
         </div>
 
@@ -269,15 +263,16 @@
               <tr>
                 <th>Code</th>
                 <th>Name</th>
-                <th>License Number</th>
-                <th>License Class</th>
-                <th>License Expiry</th>
+                <th>License</th>
+                <th>Class</th>
+                <th>Expiry</th>
+                <th>Certifications</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody id="driversTableBody">
               <tr>
-                <td colspan="6" style="text-align: center; padding: 2rem">
+                <td colspan="7" style="text-align: center; padding: 2rem">
                   Loading drivers...
                 </td>
               </tr>
@@ -292,7 +287,7 @@
       <div class="modal-content">
         <div class="modal-header">
           <h2 id="productModalTitle">Add Product</h2>
-          <button class="modal-close" onclick="closeProductModal()">Ã—</button>
+          <button class="modal-close" onclick="closeProductModal()">×</button>
         </div>
         <form
           id="productForm"
@@ -325,7 +320,7 @@
             <div class="form-group">
               <label for="familyGroup">Family Group *</label>
               <select id="familyGroup" required>
-                <option value="">Select Family Group</option>
+                <option value="">Select Family</option>
                 <option value="AGGREGATES">Aggregates</option>
                 <option value="ROCK_ARMOR">Rock Armor</option>
                 <option value="SAND">Sand</option>
@@ -336,56 +331,62 @@
             <div class="form-group">
               <label for="unit">Unit *</label>
               <select id="unit" required>
-                <option value="tonnes">tonnes</option>
-                <option value="cubic metres">cubic metres</option>
+                <option value="">Select Unit</option>
+                <option value="TONNES">Tonnes</option>
+                <option value="M3">Cubic Meters</option>
               </select>
             </div>
           </div>
 
           <div class="form-row">
             <div class="form-group">
-              <label for="standardCost">Standard Cost ($) *</label>
+              <label for="avgCostPerUnit">Cost per Unit ($)</label>
               <input
                 type="number"
-                id="standardCost"
+                id="avgCostPerUnit"
                 step="0.01"
-                required
-                placeholder="e.g., 35.00"
+                placeholder="0.00"
               />
             </div>
             <div class="form-group">
-              <label for="currentPrice">Current Price ($) *</label>
+              <label for="sellingPricePerUnit">Selling Price ($)</label>
               <input
                 type="number"
-                id="currentPrice"
+                id="sellingPricePerUnit"
                 step="0.01"
-                required
-                placeholder="e.g., 99.00"
+                placeholder="0.00"
               />
             </div>
           </div>
 
           <div class="form-row">
             <div class="form-group">
-              <label for="minStockLevel">Minimum Stock Level *</label>
+              <label for="minStockLevel">Min Stock Level</label>
               <input
                 type="number"
                 id="minStockLevel"
                 step="0.01"
-                required
-                placeholder="e.g., 30"
+                placeholder="0"
               />
             </div>
             <div class="form-group">
-              <label for="maxStockLevel">Maximum Stock Level *</label>
+              <label for="maxStockLevel">Max Stock Level</label>
               <input
                 type="number"
                 id="maxStockLevel"
                 step="0.01"
-                required
-                placeholder="e.g., 1000"
+                placeholder="0"
               />
             </div>
+          </div>
+
+          <div class="form-group">
+            <label for="productDescription">Description</label>
+            <textarea
+              id="productDescription"
+              rows="3"
+              placeholder="Product description or notes"
+            ></textarea>
           </div>
 
           <div class="modal-footer">
@@ -396,7 +397,7 @@
             >
               Cancel
             </button>
-            <button type="submit" class="btn-primary">ðŸ’¾ Save Product</button>
+            <button type="submit" class="btn-primary">💾 Save Product</button>
           </div>
         </form>
       </div>
@@ -407,7 +408,7 @@
       <div class="modal-content">
         <div class="modal-header">
           <h2 id="customerModalTitle">Add Customer</h2>
-          <button class="modal-close" onclick="closeCustomerModal()">Ã—</button>
+          <button class="modal-close" onclick="closeCustomerModal()">×</button>
         </div>
         <form
           id="customerForm"
@@ -422,7 +423,7 @@
                 type="text"
                 id="customerCode"
                 required
-                placeholder="e.g., SWISS-01"
+                placeholder="e.g., BEN-HAL"
               />
             </div>
             <div class="form-group">
@@ -431,7 +432,7 @@
                 type="text"
                 id="customerName"
                 required
-                placeholder="e.g., Swiss Aluminium Australia Ltd"
+                placeholder="e.g., Ben Hall Construction"
               />
             </div>
           </div>
@@ -446,27 +447,14 @@
               />
             </div>
             <div class="form-group">
-              <label for="customerPhone">Phone</label>
-              <input type="tel" id="customerPhone" placeholder="Phone number" />
+              <label for="phone">Phone</label>
+              <input type="tel" id="phone" placeholder="Phone number" />
             </div>
           </div>
 
           <div class="form-group">
-            <label for="customerEmail">Email</label>
-            <input
-              type="email"
-              id="customerEmail"
-              placeholder="email@example.com"
-            />
-          </div>
-
-          <div class="form-group">
-            <label for="customerAddress">Address</label>
-            <textarea
-              id="customerAddress"
-              rows="2"
-              placeholder="Customer address"
-            ></textarea>
+            <label for="email">Email</label>
+            <input type="email" id="email" placeholder="email@example.com" />
           </div>
 
           <div class="form-group">
@@ -480,6 +468,24 @@
             </select>
           </div>
 
+          <div class="form-group">
+            <label for="billingAddress">Billing Address</label>
+            <textarea
+              id="billingAddress"
+              rows="3"
+              placeholder="Street address, city, postcode"
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="customerNotes">Notes</label>
+            <textarea
+              id="customerNotes"
+              rows="2"
+              placeholder="Additional customer information"
+            ></textarea>
+          </div>
+
           <div class="modal-footer">
             <button
               type="button"
@@ -488,7 +494,7 @@
             >
               Cancel
             </button>
-            <button type="submit" class="btn-primary">ðŸ’¾ Save Customer</button>
+            <button type="submit" class="btn-primary">💾 Save Customer</button>
           </div>
         </form>
       </div>
@@ -499,7 +505,7 @@
       <div class="modal-content">
         <div class="modal-header">
           <h2 id="locationModalTitle">Add Location</h2>
-          <button class="modal-close" onclick="closeLocationModal()">Ã—</button>
+          <button class="modal-close" onclick="closeLocationModal()">×</button>
         </div>
         <form
           id="locationForm"
@@ -573,7 +579,7 @@
             >
               Cancel
             </button>
-            <button type="submit" class="btn-primary">ðŸ’¾ Save Location</button>
+            <button type="submit" class="btn-primary">💾 Save Location</button>
           </div>
         </form>
       </div>
@@ -584,7 +590,7 @@
       <div class="modal-content">
         <div class="modal-header">
           <h2 id="vehicleModalTitle">Add Vehicle</h2>
-          <button class="modal-close" onclick="closeVehicleModal()">Ã—</button>
+          <button class="modal-close" onclick="closeVehicleModal()">×</button>
         </div>
         <form
           id="vehicleForm"
@@ -653,7 +659,7 @@
             >
               Cancel
             </button>
-            <button type="submit" class="btn-primary">ðŸ’¾ Save Vehicle</button>
+            <button type="submit" class="btn-primary">💾 Save Vehicle</button>
           </div>
         </form>
       </div>
@@ -664,7 +670,7 @@
       <div class="modal-content">
         <div class="modal-header">
           <h2 id="driverModalTitle">Add Driver</h2>
-          <button class="modal-close" onclick="closeDriverModal()">Ã—</button>
+          <button class="modal-close" onclick="closeDriverModal()">×</button>
         </div>
         <form id="driverForm" onsubmit="event.preventDefault(); saveDriver();">
           <input type="hidden" id="driverId" />
@@ -735,7 +741,7 @@
             >
               Cancel
             </button>
-            <button type="submit" class="btn-primary">ðŸ’¾ Save Driver</button>
+            <button type="submit" class="btn-primary">💾 Save Driver</button>
           </div>
         </form>
       </div>
