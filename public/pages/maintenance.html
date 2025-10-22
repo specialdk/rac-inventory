@@ -10,15 +10,24 @@
     <header class="header">
       <div class="header-left">
         <div class="logo">📦</div>
-        <div>
-          <h1>Rirratjingu Mining Inventory System</h1>
-          <p class="subtitle">Quarry production and inventory management</p>
+        <div class="header-text">
+          <h1 class="header-title">Rirratjingu Mining Inventory System</h1>
+          <p class="header-subtitle">
+            Quarry production and inventory management
+          </p>
         </div>
       </div>
       <div class="header-right">
-        <div class="user-info">
-          <span class="icon">👤</span>
-          <span>Admin User</span>
+        <div class="total-value">
+          <div class="total-label">Total Inventory Value</div>
+          <div class="total-amount" id="headerTotalValue">$0</div>
+        </div>
+        <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+        <div class="user-menu">
+          <button class="user-button">
+            <span class="user-icon">👤</span>
+            <span class="user-name">Admin User</span>
+          </button>
         </div>
       </div>
     </header>
