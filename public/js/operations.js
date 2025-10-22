@@ -416,7 +416,7 @@ async function saveSales() {
     product_id: document.getElementById("saleProduct").value,
     from_location_id: document.getElementById("saleLocation").value,
     quantity: parseFloat(document.getElementById("saleQuantity").value),
-    sale_price_per_unit: parseFloat(document.getElementById("salePrice").value),
+    unit_price: parseFloat(document.getElementById("salePrice").value),
     customer_id: document.getElementById("saleCustomer").value,
     vehicle_id: document.getElementById("saleVehicle").value || null,
     driver_id: document.getElementById("saleDriver").value || null,
@@ -439,7 +439,7 @@ async function saveSales() {
   }
 
   try {
-    const response = await fetch("/api/movements/sale", {
+    const response = await fetch("/api/movements/sales", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(formData),
