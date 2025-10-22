@@ -756,5 +756,24 @@
     </div>
 
     <script src="/js/maintenance.js"></script>
+    <script>
+      // Update header inventory value
+      async function updateHeaderValue() {
+        try {
+          const response = await fetch("/api/stock/summary");
+          const data = await response.json();
+          const totalValue = data.total_inventory_value || 0;
+          document.getElementById("headerTotalValue").textContent =
+            new Intl.NumberFormat("en-AU", {
+              style: "currency",
+              currency: "AUD",
+              minimumFractionDigits: 0,
+            }).format(totalValue);
+        } catch (error) {
+          console.error("Error loading header value:", error);
+        }
+      }
+      updateHeaderValue();
+    </script>
   </body>
 </html>
