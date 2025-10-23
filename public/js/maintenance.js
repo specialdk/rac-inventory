@@ -149,14 +149,15 @@ async function saveProduct() {
     product_name: document.getElementById("productName").value,
     family_group: document.getElementById("familyGroup").value,
     unit: document.getElementById("unit").value,
-    production_cost_per_unit: parseFloat(
-      document.getElementById("standardCost").value
-    ), // Changed
-    standard_price_per_unit: parseFloat(
-      document.getElementById("currentPrice").value
-    ), // Changed
-    min_stock_level: parseFloat(document.getElementById("minStockLevel").value),
-    max_stock_level: parseFloat(document.getElementById("maxStockLevel").value),
+    production_cost_per_unit:
+      parseFloat(document.getElementById("avgCostPerUnit").value) || 0,
+    standard_price_per_unit:
+      parseFloat(document.getElementById("sellingPricePerUnit").value) || 0,
+    min_stock_level:
+      parseFloat(document.getElementById("minStockLevel").value) || 0,
+    max_stock_level:
+      parseFloat(document.getElementById("maxStockLevel").value) || 0,
+    description: document.getElementById("productDescription").value,
   };
 
   try {
@@ -178,7 +179,8 @@ async function saveProduct() {
           : "Product created successfully!"
       );
     } else {
-      alert("Failed to save product");
+      const error = await response.json();
+      alert("Failed to save product: " + (error.error || "Unknown error"));
     }
   } catch (error) {
     console.error("Error saving product:", error);
@@ -187,7 +189,25 @@ async function saveProduct() {
 }
 
 function editProduct(productId) {
-  openProductModal(productId);
+  const product = productsData.find((p) => p.product_id === productId);
+  if (!product) return;
+
+  document.getElementById("productId").value = product.product_id;
+  document.getElementById("productCode").value = product.product_code;
+  document.getElementById("productName").value = product.product_name;
+  document.getElementById("familyGroup").value = product.family_group;
+  document.getElementById("unit").value = product.unit;
+  document.getElementById("avgCostPerUnit").value =
+    product.production_cost_per_unit || 0;
+  document.getElementById("sellingPricePerUnit").value =
+    product.standard_price_per_unit || 0;
+  document.getElementById("minStockLevel").value = product.min_stock_level || 0;
+  document.getElementById("maxStockLevel").value = product.max_stock_level || 0;
+  document.getElementById("productDescription").value =
+    product.description || "";
+
+  document.getElementById("productModalTitle").textContent = "Edit Product";
+  document.getElementById("productModal").style.display = "flex";
 }
 
 async function deleteProduct(productId) {
