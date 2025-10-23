@@ -149,9 +149,9 @@ async function saveProduct() {
     product_name: document.getElementById("productName").value,
     family_group: document.getElementById("familyGroup").value,
     unit: document.getElementById("unit").value,
-    production_cost_per_unit:
+    standard_cost:
       parseFloat(document.getElementById("avgCostPerUnit").value) || 0,
-    standard_price_per_unit:
+    current_price:
       parseFloat(document.getElementById("sellingPricePerUnit").value) || 0,
     min_stock_level:
       parseFloat(document.getElementById("minStockLevel").value) || 0,
