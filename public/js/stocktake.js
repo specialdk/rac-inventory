@@ -1,11 +1,8 @@
-// Stocktake Page JavaScript
+// Stocktake Page JavaScript - Simplified Single Table
 // Uses existing /api/movements/adjustment endpoint
 
-// Data storage
 let currentStock = [];
 let products = [];
-let sandProducts = [];
-let rockProducts = [];
 
 // Initialize page
 document.addEventListener("DOMContentLoaded", function () {
@@ -15,13 +12,8 @@ document.addEventListener("DOMContentLoaded", function () {
   // Load data
   loadStocktakeData();
 
-  // Add event listeners for avg cost changes
-  document
-    .getElementById("sandAvgCost")
-    .addEventListener("input", calculateTotals);
-  document
-    .getElementById("rockAvgCost")
-    .addEventListener("input", calculateTotals);
+  // Add event listener for avg cost changes
+  document.getElementById("avgCost").addEventListener("input", calculateTotals);
 });
 
 // Format currency
@@ -49,15 +41,8 @@ async function loadStocktakeData() {
     const stockResponse = await fetch("/api/stock/current");
     currentStock = await stockResponse.json();
 
-    // Separate Sand vs Rock products
-    sandProducts = products.filter((p) => p.family_group === "SAND");
-    rockProducts = products.filter((p) =>
-      ["AGGREGATES", "ROCK_ARMOR", "ROAD_BASE", "DUST"].includes(p.family_group)
-    );
-
-    // Render tables
-    renderSandProducts();
-    renderRockProducts();
+    // Render single table sorted by family group
+    renderStocktakeTable();
     calculateTotals();
   } catch (error) {
     console.error("Error loading stocktake data:", error);
@@ -65,220 +50,101 @@ async function loadStocktakeData() {
   }
 }
 
-// Render sand products table
-function renderSandProducts() {
-  const tbody = document.getElementById("sandProductsTable");
+// Render unified stocktake table (sorted by family, no family labels)
+function renderStocktakeTable() {
+  const tbody = document.getElementById("stocktakeTableBody");
   tbody.innerHTML = "";
 
-  sandProducts.forEach((product) => {
+  // Define family sort order
+  const familyOrder = {
+    AGGREGATES: 1,
+    DUST: 2,
+    ROAD_BASE: 3,
+    ROCK_ARMOR: 4,
+    SAND: 5,
+  };
+
+  // Sort products by family group then by name
+  const sortedProducts = [...products].sort((a, b) => {
+    const familyA = familyOrder[a.family_group] || 99;
+    const familyB = familyOrder[b.family_group] || 99;
+    if (familyA !== familyB) return familyA - familyB;
+    return a.product_name.localeCompare(b.product_name);
+  });
+
+  sortedProducts.forEach((product) => {
     // Find current stock for this product
     const stock = currentStock.find((s) => s.product_id === product.product_id);
     const currentQty = stock ? parseFloat(stock.quantity) : 0;
+    const locationName = stock ? stock.location_name : "-";
     const locationId = stock ? stock.location_id : null;
 
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td>
-        <strong>${product.product_name}</strong><br>
-        <small style="color: var(--gray-500);">${product.product_code}</small>
-      </td>
-      <td class="text-right">${formatNumber(currentQty)}</td>
-      <td>
+      <td><strong>${product.product_name}</strong></td>
+      <td>${locationName}</td>
+      <td style="text-align: right;">${formatNumber(currentQty)}</td>
+      <td style="text-align: center;">
         <input 
           type="number" 
-          class="form-control-table" 
-          id="sand_${product.product_id}" 
+          class="form-control" 
+          id="count_${product.product_id}" 
           data-product-id="${product.product_id}"
+          data-product-name="${product.product_name}"
           data-current-qty="${currentQty}"
           data-location-id="${locationId || ""}"
           step="0.1" 
           placeholder="0.0"
-          onchange="calculateAdjustment(this, 'sand')"
+          style="width: 120px; text-align: center; margin: 0 auto;"
+          onchange="calculateTotals()"
         />
       </td>
-      <td class="text-right adjustment-cell" id="sand_adj_${
-        product.product_id
-      }">0.0</td>
-      <td class="text-right value-cell" id="sand_val_${
-        product.product_id
-      }">$0</td>
     `;
     tbody.appendChild(row);
   });
-}
-
-// Render rock products table
-function renderRockProducts() {
-  const tbody = document.getElementById("rockProductsTable");
-  tbody.innerHTML = "";
-
-  rockProducts.forEach((product) => {
-    // Find current stock for this product
-    const stock = currentStock.find((s) => s.product_id === product.product_id);
-    const currentQty = stock ? parseFloat(stock.quantity) : 0;
-    const locationId = stock ? stock.location_id : null;
-
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>
-        <strong>${product.product_name}</strong><br>
-        <small style="color: var(--gray-500);">${product.product_code}</small>
-      </td>
-      <td class="text-right">${formatNumber(currentQty)}</td>
-      <td>
-        <input 
-          type="number" 
-          class="form-control-table" 
-          id="rock_${product.product_id}" 
-          data-product-id="${product.product_id}"
-          data-current-qty="${currentQty}"
-          data-location-id="${locationId || ""}"
-          step="0.1" 
-          placeholder="0.0"
-          onchange="calculateAdjustment(this, 'rock')"
-        />
-      </td>
-      <td class="text-right adjustment-cell" id="rock_adj_${
-        product.product_id
-      }">0.0</td>
-      <td class="text-right value-cell" id="rock_val_${
-        product.product_id
-      }">$0</td>
-    `;
-    tbody.appendChild(row);
-  });
-}
-
-// Calculate adjustment for a single product
-function calculateAdjustment(input, family) {
-  const productId = input.dataset.productId;
-  const currentQty = parseFloat(input.dataset.currentQty);
-  const newQty = parseFloat(input.value) || 0;
-  const adjustment = newQty - currentQty;
-
-  // Get avg cost
-  const avgCost =
-    parseFloat(document.getElementById(family + "AvgCost").value) || 0;
-  const valueImpact = adjustment * avgCost;
-
-  // Update adjustment cell
-  const adjCell = document.getElementById(`${family}_adj_${productId}`);
-  adjCell.textContent = formatNumber(adjustment);
-  adjCell.className = "text-right adjustment-cell";
-  if (adjustment > 0) {
-    adjCell.classList.add("positive");
-  } else if (adjustment < 0) {
-    adjCell.classList.add("negative");
-  }
-
-  // Update value cell
-  const valCell = document.getElementById(`${family}_val_${productId}`);
-  valCell.textContent = formatCurrency(valueImpact);
-  valCell.className = "text-right value-cell";
-  if (valueImpact > 0) {
-    valCell.classList.add("positive");
-  } else if (valueImpact < 0) {
-    valCell.classList.add("negative");
-  }
-
-  // Recalculate totals
-  calculateTotals();
 }
 
 // Calculate all totals
 function calculateTotals() {
-  // Sand totals
-  let sandCurrentTotal = 0;
-  let sandNewTotal = 0;
-  let sandAdjTotal = 0;
-  let sandValueTotal = 0;
+  let totalAdjustment = 0;
+  let totalValue = 0;
 
-  const sandAvgCost =
-    parseFloat(document.getElementById("sandAvgCost").value) || 0;
+  const avgCost = parseFloat(document.getElementById("avgCost").value) || 0;
 
-  sandProducts.forEach((product) => {
-    const input = document.getElementById(`sand_${product.product_id}`);
-    if (input) {
+  products.forEach((product) => {
+    const input = document.getElementById(`count_${product.product_id}`);
+    if (input && input.value) {
       const currentQty = parseFloat(input.dataset.currentQty);
       const newQty = parseFloat(input.value) || 0;
       const adjustment = newQty - currentQty;
 
-      sandCurrentTotal += currentQty;
-      sandNewTotal += newQty;
-      sandAdjTotal += adjustment;
-      sandValueTotal += adjustment * sandAvgCost;
+      totalAdjustment += adjustment;
+      totalValue += adjustment * avgCost;
     }
   });
 
-  document.getElementById("sandCurrentTotal").textContent =
-    formatNumber(sandCurrentTotal);
-  document.getElementById("sandNewTotal").textContent =
-    formatNumber(sandNewTotal);
-  document.getElementById("sandAdjustmentTotal").textContent =
-    formatNumber(sandAdjTotal);
-  document.getElementById("sandValueTotal").textContent =
-    formatCurrency(sandValueTotal);
+  document.getElementById("totalAdjustment").textContent =
+    formatNumber(totalAdjustment) + " t";
+  document.getElementById("totalValue").textContent =
+    formatCurrency(totalValue);
 
-  // Rock totals
-  let rockCurrentTotal = 0;
-  let rockNewTotal = 0;
-  let rockAdjTotal = 0;
-  let rockValueTotal = 0;
-
-  const rockAvgCost =
-    parseFloat(document.getElementById("rockAvgCost").value) || 0;
-
-  rockProducts.forEach((product) => {
-    const input = document.getElementById(`rock_${product.product_id}`);
-    if (input) {
-      const currentQty = parseFloat(input.dataset.currentQty);
-      const newQty = parseFloat(input.value) || 0;
-      const adjustment = newQty - currentQty;
-
-      rockCurrentTotal += currentQty;
-      rockNewTotal += newQty;
-      rockAdjTotal += adjustment;
-      rockValueTotal += adjustment * rockAvgCost;
-    }
-  });
-
-  document.getElementById("rockCurrentTotal").textContent =
-    formatNumber(rockCurrentTotal);
-  document.getElementById("rockNewTotal").textContent =
-    formatNumber(rockNewTotal);
-  document.getElementById("rockAdjustmentTotal").textContent =
-    formatNumber(rockAdjTotal);
-  document.getElementById("rockValueTotal").textContent =
-    formatCurrency(rockValueTotal);
-
-  // Grand totals
-  const grandQtyAdj = sandAdjTotal + rockAdjTotal;
-  const grandValueAdj = sandValueTotal + rockValueTotal;
-
-  document.getElementById("grandTotalQty").textContent =
-    formatNumber(grandQtyAdj) + " tonnes";
-  document.getElementById("grandTotalValue").textContent =
-    formatCurrency(grandValueAdj);
-
-  // Color code grand total value
-  const grandValueElement = document.getElementById("grandTotalValue");
-  grandValueElement.className = "summary-value";
-  if (grandValueAdj > 0) {
-    grandValueElement.classList.add("success");
-  } else if (grandValueAdj < 0) {
-    grandValueElement.classList.add("danger");
+  // Color code total value
+  const totalValueElement = document.getElementById("totalValue");
+  totalValueElement.className = "";
+  if (totalValue > 0) {
+    totalValueElement.style.color = "var(--success-color, green)";
+  } else if (totalValue < 0) {
+    totalValueElement.style.color = "var(--danger-color, red)";
   }
 }
 
 // Collect all adjustments
 function collectAdjustments() {
   const adjustments = [];
-  const sandAvgCost = parseFloat(document.getElementById("sandAvgCost").value);
-  const rockAvgCost = parseFloat(document.getElementById("rockAvgCost").value);
+  const avgCost = parseFloat(document.getElementById("avgCost").value);
 
-  // Collect sand adjustments
-  sandProducts.forEach((product) => {
-    const input = document.getElementById(`sand_${product.product_id}`);
+  products.forEach((product) => {
+    const input = document.getElementById(`count_${product.product_id}`);
     if (input && input.value) {
       const currentQty = parseFloat(input.dataset.currentQty);
       const newQty = parseFloat(input.value);
@@ -291,28 +157,7 @@ function collectAdjustments() {
           product_name: product.product_name,
           location_id: parseInt(locationId),
           quantity_adjustment: adjustment,
-          unit_cost: sandAvgCost,
-        });
-      }
-    }
-  });
-
-  // Collect rock adjustments
-  rockProducts.forEach((product) => {
-    const input = document.getElementById(`rock_${product.product_id}`);
-    if (input && input.value) {
-      const currentQty = parseFloat(input.dataset.currentQty);
-      const newQty = parseFloat(input.value);
-      const adjustment = newQty - currentQty;
-      const locationId = input.dataset.locationId;
-
-      if (adjustment !== 0 && locationId) {
-        adjustments.push({
-          product_id: product.product_id,
-          product_name: product.product_name,
-          location_id: parseInt(locationId),
-          quantity_adjustment: adjustment,
-          unit_cost: rockAvgCost,
+          unit_cost: avgCost,
         });
       }
     }
@@ -326,8 +171,7 @@ async function applyStocktake() {
   // Validation
   const stocktakeDate = document.getElementById("stocktakeDate").value;
   const reference = document.getElementById("stocktakeReference").value;
-  const sandAvgCost = parseFloat(document.getElementById("sandAvgCost").value);
-  const rockAvgCost = parseFloat(document.getElementById("rockAvgCost").value);
+  const avgCost = parseFloat(document.getElementById("avgCost").value);
   const notes = document.getElementById("stocktakeNotes").value;
 
   if (!stocktakeDate || !reference) {
@@ -335,13 +179,8 @@ async function applyStocktake() {
     return;
   }
 
-  if (!sandAvgCost || sandAvgCost <= 0) {
-    alert("Please enter a valid Sand Average Cost");
-    return;
-  }
-
-  if (!rockAvgCost || rockAvgCost <= 0) {
-    alert("Please enter a valid Rock Average Cost");
+  if (!avgCost || avgCost <= 0) {
+    alert("Please enter a valid Average Cost");
     return;
   }
 
@@ -349,7 +188,7 @@ async function applyStocktake() {
   const adjustments = collectAdjustments();
 
   if (adjustments.length === 0) {
-    alert("No adjustments to apply. Please enter new quantities.");
+    alert("No adjustments to apply. Please enter count quantities.");
     return;
   }
 
