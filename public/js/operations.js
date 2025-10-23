@@ -98,12 +98,7 @@ async function loadDropdowns() {
     locationsData.forEach((location) => {
       locationSelects.forEach((select) => {
         if (select) {
-          select.add(
-            new Option(
-              `${location.location_name} (${location.location_code})`,
-              location.location_id
-            )
-          );
+          select.add(new Option(location.location_name, location.location_id));
         }
       });
     });
