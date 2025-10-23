@@ -380,6 +380,7 @@ router.post("/adjustment", async (req, res) => {
 });
 
 // GET all movements with filters
+// GET all movements with filters
 router.get("/", async (req, res) => {
   try {
     const {
@@ -388,6 +389,7 @@ router.get("/", async (req, res) => {
       customer_id,
       date_from,
       date_to,
+      search, // ADD THIS LINE
       limit = 100,
     } = req.query;
 
@@ -442,6 +444,21 @@ router.get("/", async (req, res) => {
     if (date_to) {
       sql += ` AND sm.movement_date <= $${paramCount}`;
       params.push(date_to);
+      paramCount++;
+    }
+
+    // ADD TEXT SEARCH - searches across product name, family, location, customer
+    if (search) {
+      sql += ` AND (
+        UPPER(p.product_name) LIKE UPPER($${paramCount})
+        OR UPPER(p.family_group) LIKE UPPER($${paramCount})
+        OR UPPER(p.product_code) LIKE UPPER($${paramCount})
+        OR UPPER(fl.location_name) LIKE UPPER($${paramCount})
+        OR UPPER(tl.location_name) LIKE UPPER($${paramCount})
+        OR UPPER(c.customer_name) LIKE UPPER($${paramCount})
+        OR UPPER(sm.reference_number) LIKE UPPER($${paramCount})
+      )`;
+      params.push(`%${search}%`);
       paramCount++;
     }
 
