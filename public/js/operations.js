@@ -185,19 +185,26 @@ async function loadStats() {
   }
 }
 
-// Load recent movements
+// Load recent movements with optional search
 async function loadRecentMovements() {
   try {
     const container = document.getElementById("movementsTableContainer");
     container.innerHTML =
       '<div class="loading"><div class="spinner"></div><p>Loading movements...</p></div>';
 
-    const response = await fetch("/api/movements?limit=20");
+    // Get search term from input
+    const searchTerm = document.getElementById("searchMovements")?.value || "";
+
+    // Build URL with search parameter if provided
+    const url = searchTerm
+      ? `/api/movements?limit=50&search=${encodeURIComponent(searchTerm)}`
+      : "/api/movements?limit=20";
+
+    const response = await fetch(url);
     const movements = await response.json();
 
     if (movements.length === 0) {
-      container.innerHTML =
-        '<div class="no-data">No movements recorded yet</div>';
+      container.innerHTML = '<div class="no-data">No movements found</div>';
       return;
     }
 

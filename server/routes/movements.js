@@ -380,7 +380,6 @@ router.post("/adjustment", async (req, res) => {
 });
 
 // GET all movements with filters
-// GET all movements with filters
 router.get("/", async (req, res) => {
   try {
     const {

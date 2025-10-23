@@ -75,7 +75,10 @@
           </div>
         </div>
 
-        <div class="action-card info" onclick="window.location.href='stocktake.html'">
+        <div
+          class="action-card info"
+          onclick="window.location.href='stocktake.html'"
+        >
           <div class="action-card-icon">📊</div>
           <div class="action-card-title">Stocktake</div>
           <div class="action-card-description">
@@ -129,6 +132,7 @@
               class="search-box"
               id="searchMovements"
               placeholder="Search movements..."
+              onkeyup="loadRecentMovements()"
             />
             <button
               class="btn btn-secondary btn-sm"
