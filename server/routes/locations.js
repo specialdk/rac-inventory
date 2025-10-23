@@ -187,53 +187,71 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-// GET suggested location for a product (for auto-suggest in production entry)
+// GET /api/locations/suggest/:productId - Suggest best location for a product
 router.get("/suggest/:productId", async (req, res) => {
   try {
     const { productId } = req.params;
 
-    console.log(`🔍 Looking for location with product ${productId}`);
-
-    // Find location where this product currently has stock
-    const result = await query(
-      `SELECT 
-        l.location_id,
-        l.location_code,
-        l.location_name,
-        l.location_type,
-        cs.quantity
-      FROM current_stock cs
-      JOIN locations l ON l.location_id = cs.location_id
-      WHERE cs.product_id = $1 
-        AND l.is_active = true 
-        AND cs.quantity > 0
-      ORDER BY cs.quantity DESC
-      LIMIT 1`,
+    // PRIORITY 1: Check if location is already assigned to this product
+    const assignedResult = await query(
+      `
+      SELECT 
+        location_id,
+        location_code,
+        location_name,
+        capacity_tonnes
+      FROM locations
+      WHERE assigned_product_id = $1
+        AND location_type = 'STOCKPILE'
+      LIMIT 1
+    `,
       [productId]
     );
 
-    console.log(`📦 Found ${result.rows.length} locations`);
-
-    if (result.rows.length > 0) {
-      console.log(`✅ Suggesting location_id: ${result.rows[0].location_id}`);
-
-      res.json({
+    if (assignedResult.rows.length > 0) {
+      return res.json({
         suggested: true,
-        location: result.rows[0],
-        message: `Suggested: ${result.rows[0].location_name} (currently holds this product)`,
-      });
-    } else {
-      console.log(`ℹ️ No stock found for product ${productId}`);
-
-      res.json({
-        suggested: false,
-        location: null,
-        message: "No stockpile assigned yet. Please select a location.",
+        location: assignedResult.rows[0],
+        message: `Pre-assigned stockpile: ${assignedResult.rows[0].location_name}`,
       });
     }
+
+    // PRIORITY 2: Check if product already has stock somewhere
+    const stockResult = await query(
+      `
+      SELECT 
+        l.location_id,
+        l.location_code,
+        l.location_name,
+        l.capacity_tonnes,
+        cs.quantity
+      FROM current_stock cs
+      JOIN locations l ON cs.location_id = l.location_id
+      WHERE cs.product_id = $1
+        AND cs.quantity > 0
+        AND l.location_type = 'STOCKPILE'
+      ORDER BY cs.quantity DESC
+      LIMIT 1
+    `,
+      [productId]
+    );
+
+    if (stockResult.rows.length > 0) {
+      return res.json({
+        suggested: true,
+        location: stockResult.rows[0],
+        message: `Product already in: ${stockResult.rows[0].location_name}`,
+      });
+    }
+
+    // No suggestion available
+    res.json({
+      suggested: false,
+      message: "No assigned or existing stockpile for this product",
+    });
   } catch (error) {
-    console.error("Error getting suggested location:", error);
-    res.status(500).json({ error: "Failed to get suggested location" });
+    console.error("Error suggesting location:", error);
+    res.status(500).json({ error: "Failed to suggest location" });
   }
 });
 
