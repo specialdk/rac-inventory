@@ -59,10 +59,10 @@ router.post("/", async (req, res) => {
     } = req.body;
 
     // Validation
-    if (!product_code || !product_name || !family_group || !standard_cost) {
+    if (!product_code || !product_name || !family_group) {
       return res.status(400).json({
         error:
-          "Missing required fields: product_code, product_name, family_group, standard_cost",
+          "Missing required fields: product_code, product_name, family_group",
       });
     }
 
