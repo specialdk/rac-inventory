@@ -407,7 +407,7 @@ async function loadLocations() {
                         ? location.capacity_tonnes + "t"
                         : "-"
                     }</td>
-                    <td>${location.assigned_product_name || "-"}</td>
+                    <td>${location.product_name || "-"}</td>
                     <td>
                         <button class="btn-icon" onclick="editLocation(${
                           location.location_id
