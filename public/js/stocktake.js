@@ -1,4 +1,4 @@
-// Stocktake Page JavaScript - Simplified Single Table
+// Stocktake Page JavaScript - Simplified with Group and Row-Level Costs
 // Uses existing /api/movements/adjustment endpoint
 
 let currentStock = [];
@@ -11,9 +11,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Load data
   loadStocktakeData();
-
-  // Add event listener for avg cost changes
-  document.getElementById("avgCost").addEventListener("input", calculateTotals);
 });
 
 // Format currency
@@ -30,6 +27,18 @@ function formatNumber(value) {
   return parseFloat(value || 0).toFixed(1);
 }
 
+// Format family group name for display
+function formatFamilyGroup(group) {
+  const names = {
+    AGGREGATES: "AGGREGATES",
+    DUST: "DUST",
+    ROAD_BASE: "ROAD BASE",
+    ROCK_ARMOR: "ROCK ARMOR",
+    SAND: "SAND",
+  };
+  return names[group] || group;
+}
+
 // Load current stock and products
 async function loadStocktakeData() {
   try {
@@ -43,14 +52,13 @@ async function loadStocktakeData() {
 
     // Render single table sorted by family group
     renderStocktakeTable();
-    calculateTotals();
   } catch (error) {
     console.error("Error loading stocktake data:", error);
     alert("Error loading stocktake data");
   }
 }
 
-// Render unified stocktake table (sorted by family, no family labels)
+// Render unified stocktake table (sorted by group)
 function renderStocktakeTable() {
   const tbody = document.getElementById("stocktakeTableBody");
   tbody.innerHTML = "";
@@ -78,13 +86,20 @@ function renderStocktakeTable() {
     const currentQty = stock ? parseFloat(stock.quantity) : 0;
     const locationName = stock ? stock.location_name : "-";
     const locationId = stock ? stock.location_id : null;
+    const defaultCost = product.standard_cost || 40;
 
     const row = document.createElement("tr");
+    row.style.height = "40px";
     row.innerHTML = `
-      <td><strong>${product.product_name}</strong></td>
-      <td>${locationName}</td>
-      <td style="text-align: right;">${formatNumber(currentQty)}</td>
-      <td style="text-align: center;">
+      <td style="padding: 0.3rem 0.5rem;"><small><strong>${formatFamilyGroup(
+        product.family_group
+      )}</strong></small></td>
+      <td style="padding: 0.3rem 0.5rem;">${product.product_name}</td>
+      <td style="padding: 0.3rem 0.5rem;">${locationName}</td>
+      <td style="text-align: right; padding: 0.3rem 0.5rem;">${formatNumber(
+        currentQty
+      )}</td>
+      <td style="text-align: center; padding: 0.3rem 0.5rem;">
         <input 
           type="number" 
           class="form-control" 
@@ -95,13 +110,37 @@ function renderStocktakeTable() {
           data-location-id="${locationId || ""}"
           step="0.1" 
           placeholder="0.0"
-          style="width: 120px; text-align: center; margin: 0 auto;"
+          style="width: 90px; text-align: center; padding: 0.25rem; font-size: 0.9rem;"
           onchange="calculateTotals()"
+        />
+      </td>
+      <td style="text-align: center; padding: 0.3rem 0.5rem;">
+        <input 
+          type="number" 
+          class="form-control" 
+          id="cost_${product.product_id}" 
+          value="${defaultCost}"
+          step="0.01" 
+          placeholder="0.00"
+          style="width: 80px; text-align: center; padding: 0.25rem; font-size: 0.9rem;"
+          onchange="calculateTotals()"
+        />
+      </td>
+      <td style="padding: 0.3rem 0.5rem;">
+        <input 
+          type="text" 
+          class="form-control" 
+          id="notes_${product.product_id}" 
+          placeholder="Optional notes..."
+          style="width: 100%; padding: 0.25rem; font-size: 0.85rem;"
         />
       </td>
     `;
     tbody.appendChild(row);
   });
+
+  // Initial totals calculation
+  calculateTotals();
 }
 
 // Calculate all totals
@@ -109,17 +148,18 @@ function calculateTotals() {
   let totalAdjustment = 0;
   let totalValue = 0;
 
-  const avgCost = parseFloat(document.getElementById("avgCost").value) || 0;
-
   products.forEach((product) => {
-    const input = document.getElementById(`count_${product.product_id}`);
-    if (input && input.value) {
-      const currentQty = parseFloat(input.dataset.currentQty);
-      const newQty = parseFloat(input.value) || 0;
+    const countInput = document.getElementById(`count_${product.product_id}`);
+    const costInput = document.getElementById(`cost_${product.product_id}`);
+
+    if (countInput && countInput.value) {
+      const currentQty = parseFloat(countInput.dataset.currentQty);
+      const newQty = parseFloat(countInput.value) || 0;
       const adjustment = newQty - currentQty;
+      const cost = parseFloat(costInput.value) || 0;
 
       totalAdjustment += adjustment;
-      totalValue += adjustment * avgCost;
+      totalValue += adjustment * cost;
     }
   });
 
@@ -130,26 +170,31 @@ function calculateTotals() {
 
   // Color code total value
   const totalValueElement = document.getElementById("totalValue");
-  totalValueElement.className = "";
   if (totalValue > 0) {
-    totalValueElement.style.color = "var(--success-color, green)";
+    totalValueElement.style.color = "green";
   } else if (totalValue < 0) {
-    totalValueElement.style.color = "var(--danger-color, red)";
+    totalValueElement.style.color = "red";
+  } else {
+    totalValueElement.style.color = "inherit";
   }
 }
 
 // Collect all adjustments
 function collectAdjustments() {
   const adjustments = [];
-  const avgCost = parseFloat(document.getElementById("avgCost").value);
 
   products.forEach((product) => {
-    const input = document.getElementById(`count_${product.product_id}`);
-    if (input && input.value) {
-      const currentQty = parseFloat(input.dataset.currentQty);
-      const newQty = parseFloat(input.value);
+    const countInput = document.getElementById(`count_${product.product_id}`);
+    const costInput = document.getElementById(`cost_${product.product_id}`);
+    const notesInput = document.getElementById(`notes_${product.product_id}`);
+
+    if (countInput && countInput.value) {
+      const currentQty = parseFloat(countInput.dataset.currentQty);
+      const newQty = parseFloat(countInput.value);
       const adjustment = newQty - currentQty;
-      const locationId = input.dataset.locationId;
+      const locationId = countInput.dataset.locationId;
+      const cost = parseFloat(costInput.value) || 0;
+      const notes = notesInput.value || "";
 
       if (adjustment !== 0 && locationId) {
         adjustments.push({
@@ -157,7 +202,8 @@ function collectAdjustments() {
           product_name: product.product_name,
           location_id: parseInt(locationId),
           quantity_adjustment: adjustment,
-          unit_cost: avgCost,
+          unit_cost: cost,
+          notes: notes,
         });
       }
     }
@@ -171,16 +217,10 @@ async function applyStocktake() {
   // Validation
   const stocktakeDate = document.getElementById("stocktakeDate").value;
   const reference = document.getElementById("stocktakeReference").value;
-  const avgCost = parseFloat(document.getElementById("avgCost").value);
-  const notes = document.getElementById("stocktakeNotes").value;
+  const generalNotes = document.getElementById("stocktakeNotes").value;
 
   if (!stocktakeDate || !reference) {
     alert("Please fill in Stocktake Date and Reference");
-    return;
-  }
-
-  if (!avgCost || avgCost <= 0) {
-    alert("Please enter a valid Average Cost");
     return;
   }
 
@@ -218,6 +258,12 @@ async function applyStocktake() {
 
     for (const adj of adjustments) {
       try {
+        const fullNotes = generalNotes
+          ? `${generalNotes} - ${
+              adj.notes || "Stocktake adjustment for " + adj.product_name
+            }`
+          : adj.notes || "Stocktake adjustment for " + adj.product_name;
+
         const response = await fetch("/api/movements/adjustment", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -227,7 +273,7 @@ async function applyStocktake() {
             location_id: adj.location_id,
             quantity_adjustment: adj.quantity_adjustment,
             reason: reference,
-            notes: `${notes} - Stocktake adjustment for ${adj.product_name}`,
+            notes: fullNotes,
             created_by: "Admin User",
           }),
         });
