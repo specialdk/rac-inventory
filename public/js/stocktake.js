@@ -3,6 +3,8 @@
 
 let currentStock = [];
 let products = [];
+let locations = [];
+let manualRowCounter = 0;
 
 // Initialize page
 document.addEventListener("DOMContentLoaded", function () {
@@ -45,6 +47,10 @@ async function loadStocktakeData() {
     // Load products
     const productsResponse = await fetch("/api/products");
     products = await productsResponse.json();
+
+    // Load locations
+    const locationsResponse = await fetch("/api/locations");
+    locations = await locationsResponse.json();
 
     // Load current stock
     const stockResponse = await fetch("/api/stock/current");
@@ -148,6 +154,7 @@ function calculateTotals() {
   let totalAdjustment = 0;
   let totalValue = 0;
 
+  // Calculate from original product rows
   products.forEach((product) => {
     const countInput = document.getElementById(`count_${product.product_id}`);
     const costInput = document.getElementById(`cost_${product.product_id}`);
@@ -162,6 +169,24 @@ function calculateTotals() {
       totalValue += adjustment * cost;
     }
   });
+
+  // Calculate from manual rows
+  for (let i = 1; i <= manualRowCounter; i++) {
+    const rowId = `manual_${i}`;
+    const countInput = document.getElementById(`count_${rowId}`);
+    const costInput = document.getElementById(`cost_${rowId}`);
+    const sohElement = document.getElementById(`soh_${rowId}`);
+
+    if (countInput && countInput.value && sohElement) {
+      const currentQty = parseFloat(sohElement.textContent) || 0;
+      const newQty = parseFloat(countInput.value) || 0;
+      const adjustment = newQty - currentQty;
+      const cost = parseFloat(costInput.value) || 0;
+
+      totalAdjustment += adjustment;
+      totalValue += adjustment * cost;
+    }
+  }
 
   document.getElementById("totalAdjustment").textContent =
     formatNumber(totalAdjustment) + " t";
@@ -183,6 +208,7 @@ function calculateTotals() {
 function collectAdjustments() {
   const adjustments = [];
 
+  // Collect from original product rows
   products.forEach((product) => {
     const countInput = document.getElementById(`count_${product.product_id}`);
     const costInput = document.getElementById(`cost_${product.product_id}`);
@@ -208,6 +234,46 @@ function collectAdjustments() {
       }
     }
   });
+
+  // Collect from manual rows
+  for (let i = 1; i <= manualRowCounter; i++) {
+    const rowId = `manual_${i}`;
+    const productSelect = document.getElementById(`product_${rowId}`);
+    const locationSelect = document.getElementById(`location_${rowId}`);
+    const countInput = document.getElementById(`count_${rowId}`);
+    const costInput = document.getElementById(`cost_${rowId}`);
+    const notesInput = document.getElementById(`notes_${rowId}`);
+    const sohElement = document.getElementById(`soh_${rowId}`);
+
+    if (
+      productSelect &&
+      productSelect.value &&
+      locationSelect &&
+      locationSelect.value &&
+      countInput &&
+      countInput.value
+    ) {
+      const currentQty = parseFloat(sohElement.textContent) || 0;
+      const newQty = parseFloat(countInput.value);
+      const adjustment = newQty - currentQty;
+      const cost = parseFloat(costInput.value) || 0;
+      const notes = notesInput.value || "";
+
+      const productName =
+        productSelect.options[productSelect.selectedIndex].text;
+
+      if (adjustment !== 0) {
+        adjustments.push({
+          product_id: parseInt(productSelect.value),
+          product_name: productName,
+          location_id: parseInt(locationSelect.value),
+          quantity_adjustment: adjustment,
+          unit_cost: cost,
+          notes: notes,
+        });
+      }
+    }
+  }
 
   return adjustments;
 }
@@ -312,5 +378,148 @@ async function applyStocktake() {
 function cancelStocktake() {
   if (confirm("Cancel stocktake? Any entered data will be lost.")) {
     window.location.href = "operations.html";
+  }
+}
+
+// Add a new manual product row for products at different locations
+function addProductRow() {
+  manualRowCounter++;
+  const rowId = `manual_${manualRowCounter}`;
+  const tbody = document.getElementById("stocktakeTableBody");
+
+  const row = document.createElement("tr");
+  row.id = `row_${rowId}`;
+  row.style.height = "40px";
+  row.style.backgroundColor = "#fffbea"; // Light yellow to distinguish manual rows
+
+  // Build product dropdown
+  let productOptions = '<option value="">-- Select Product --</option>';
+  products.forEach((p) => {
+    productOptions += `<option value="${p.product_id}" data-group="${
+      p.family_group
+    }" data-cost="${p.standard_cost || 40}">${p.product_name}</option>`;
+  });
+
+  // Build location dropdown
+  let locationOptions = '<option value="">-- Select Location --</option>';
+  locations.forEach((l) => {
+    locationOptions += `<option value="${l.location_id}">${l.location_name}</option>`;
+  });
+
+  row.innerHTML = `
+    <td style="padding: 0.3rem 0.5rem;">
+      <small><em id="group_${rowId}">-</em></small>
+    </td>
+    <td style="padding: 0.3rem 0.5rem;">
+      <select 
+        class="form-control" 
+        id="product_${rowId}" 
+        onchange="updateManualRow('${rowId}')"
+        style="padding: 0.25rem; font-size: 0.9rem;"
+      >
+        ${productOptions}
+      </select>
+    </td>
+    <td style="padding: 0.3rem 0.5rem;">
+      <select 
+        class="form-control" 
+        id="location_${rowId}" 
+        onchange="updateManualRowSOH('${rowId}')"
+        style="padding: 0.25rem; font-size: 0.9rem;"
+      >
+        ${locationOptions}
+      </select>
+    </td>
+    <td style="text-align: right; padding: 0.3rem 0.5rem;">
+      <span id="soh_${rowId}">0.0</span>
+    </td>
+    <td style="text-align: center; padding: 0.3rem 0.5rem;">
+      <input 
+        type="number" 
+        class="form-control" 
+        id="count_${rowId}" 
+        step="0.1" 
+        placeholder="0.0"
+        style="width: 90px; text-align: center; padding: 0.25rem; font-size: 0.9rem;"
+        onchange="calculateTotals()"
+      />
+    </td>
+    <td style="text-align: center; padding: 0.3rem 0.5rem;">
+      <input 
+        type="number" 
+        class="form-control" 
+        id="cost_${rowId}" 
+        step="0.01" 
+        placeholder="0.00"
+        style="width: 80px; text-align: center; padding: 0.25rem; font-size: 0.9rem;"
+        onchange="calculateTotals()"
+      />
+    </td>
+    <td style="padding: 0.3rem 0.5rem;">
+      <input 
+        type="text" 
+        class="form-control" 
+        id="notes_${rowId}" 
+        placeholder="Optional notes..."
+        style="width: 100%; padding: 0.25rem; font-size: 0.85rem;"
+      />
+    </td>
+    <td style="text-align: center; padding: 0.3rem 0.5rem;">
+      <button 
+        class="btn-icon" 
+        onclick="removeManualRow('${rowId}')"
+        title="Remove"
+        style="background: none; border: none; cursor: pointer; font-size: 1.2rem;"
+      >🗑️</button>
+    </td>
+  `;
+
+  tbody.appendChild(row);
+}
+
+// Update manual row when product is selected
+function updateManualRow(rowId) {
+  const productSelect = document.getElementById(`product_${rowId}`);
+  const selectedOption = productSelect.options[productSelect.selectedIndex];
+
+  if (selectedOption.value) {
+    const group = selectedOption.dataset.group;
+    const cost = selectedOption.dataset.cost;
+
+    document.getElementById(`group_${rowId}`).textContent =
+      formatFamilyGroup(group);
+    document.getElementById(`cost_${rowId}`).value = cost;
+  } else {
+    document.getElementById(`group_${rowId}`).textContent = "-";
+  }
+
+  updateManualRowSOH(rowId);
+}
+
+// Update SOH when location is selected
+function updateManualRowSOH(rowId) {
+  const productSelect = document.getElementById(`product_${rowId}`);
+  const locationSelect = document.getElementById(`location_${rowId}`);
+
+  if (productSelect.value && locationSelect.value) {
+    const productId = parseInt(productSelect.value);
+    const locationId = parseInt(locationSelect.value);
+
+    // Find existing stock at this product/location combo
+    const stock = currentStock.find(
+      (s) => s.product_id === productId && s.location_id === locationId
+    );
+
+    const soh = stock ? parseFloat(stock.quantity) : 0;
+    document.getElementById(`soh_${rowId}`).textContent = formatNumber(soh);
+  }
+}
+
+// Remove manual row
+function removeManualRow(rowId) {
+  const row = document.getElementById(`row_${rowId}`);
+  if (row) {
+    row.remove();
+    calculateTotals();
   }
 }
