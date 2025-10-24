@@ -265,9 +265,15 @@ async function loadStats() {
     );
 
     // Update UI
-    document.getElementById("todayProduction").textContent =
-      prodTotal.toFixed(1);
-    document.getElementById("todaySales").textContent = salesTotal.toFixed(1);
+    const todayProdElement = document.getElementById("todayProduction");
+    const todaySalesElement = document.getElementById("todaySales");
+
+    if (todayProdElement) {
+      todayProdElement.textContent = prodTotal.toFixed(1);
+    }
+    if (todaySalesElement) {
+      todaySalesElement.textContent = salesTotal.toFixed(1);
+    }
   } catch (error) {
     console.error("Error loading stats:", error);
   }
