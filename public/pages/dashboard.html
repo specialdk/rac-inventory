@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard - RAC Inventory System</title>
-    <link rel="stylesheet" href="../css/styles.css" />
+    <link rel="stylesheet" href="/css/styles.css" />
   </head>
   <body>
     <!-- Header -->
@@ -20,7 +20,7 @@
         <div class="header-stats">
           <div class="stat-item">
             <div class="stat-label">Total Inventory Value</div>
-            <div class="stat-value" id="totalValue">$0</div>
+            <div class="stat-value" id="headerTotalValue">$0</div>
           </div>
           <div class="user-info">
             <span>👤</span>
@@ -42,241 +42,87 @@
 
     <!-- Main Content -->
     <div class="container">
-      <!-- Stats Grid -->
+      <!-- Page Title -->
+      <div class="page-header">
+        <h1 class="page-title">📊 Dashboard</h1>
+        <p class="page-subtitle">
+          Real-time inventory overview and key metrics
+        </p>
+      </div>
+
+      <!-- Statistics Cards -->
       <div class="stats-grid">
-        <div class="stat-card primary">
-          <div class="stat-card-header">
-            <div class="stat-card-title">Products with Stock</div>
-            <div class="stat-card-icon">📦</div>
+        <div class="stat-card">
+          <div class="stat-icon">📦</div>
+          <div class="stat-details">
+            <div class="stat-label">Products with Stock</div>
+            <div class="stat-value" id="productsWithStock">0</div>
           </div>
-          <div class="stat-card-value" id="productsCount">-</div>
         </div>
 
-        <div class="stat-card success">
-          <div class="stat-card-header">
-            <div class="stat-card-title">Inventory Value</div>
-            <div class="stat-card-icon">💰</div>
+        <div class="stat-card">
+          <div class="stat-icon">💰</div>
+          <div class="stat-details">
+            <div class="stat-label">Inventory Value</div>
+            <div class="stat-value" id="totalInventoryValue">$0</div>
           </div>
-          <div class="stat-card-value" id="inventoryValue">-</div>
         </div>
 
-        <div class="stat-card warning">
-          <div class="stat-card-header">
-            <div class="stat-card-title">MTD Production</div>
-            <div class="stat-card-icon">📈</div>
+        <div class="stat-card">
+          <div class="stat-icon">⚙️</div>
+          <div class="stat-details">
+            <div class="stat-label">MTD Production</div>
+            <div class="stat-value" id="mtdProduction">0t</div>
           </div>
-          <div class="stat-card-value" id="mtdProduction">-</div>
         </div>
 
-        <div class="stat-card info">
-          <div class="stat-card-header">
-            <div class="stat-card-title">MTD Sales</div>
-            <div class="stat-card-icon">📉</div>
+        <div class="stat-card">
+          <div class="stat-icon">📈</div>
+          <div class="stat-details">
+            <div class="stat-label">MTD Sales</div>
+            <div class="stat-value" id="mtdSales">0t</div>
           </div>
-          <div class="stat-card-value" id="mtdSales">-</div>
         </div>
       </div>
 
       <!-- Real-Time Stock Overview -->
-      <div class="data-table">
-        <div class="table-header">
-          <h2 class="table-title">Real-Time Stock Overview</h2>
-          <div class="table-actions">
+      <div class="dashboard-section">
+        <div class="section-header">
+          <h2>Real-Time Stock Overview</h2>
+          <div class="section-actions">
             <input
               type="text"
-              class="search-box"
               id="searchStock"
+              class="search-input"
               placeholder="Search products..."
             />
-            <button class="btn btn-secondary btn-sm" onclick="refreshStock()">
-              🔄 Refresh
-            </button>
+            <button id="refreshStock" class="btn-secondary">🔄 Refresh</button>
           </div>
         </div>
 
-        <div id="stockTableContainer">
-          <div class="loading">
-            <div class="spinner"></div>
-            <p>Loading stock data...</p>
-          </div>
+        <div class="data-table" id="stockTableContainer">
+          <table class="table" style="font-size: 0.9rem">
+            <thead>
+              <tr style="background-color: var(--gray-100, #f5f5f5)">
+                <th style="width: 10%">GROUP</th>
+                <th style="width: 20%">PRODUCT</th>
+                <th style="width: 15%">LOCATION</th>
+                <th style="width: 12%; text-align: right">STOCK LEVEL</th>
+                <th style="width: 12%; text-align: right">DEMAND</th>
+                <th style="width: 10%; text-align: right">AVG COST</th>
+                <th style="width: 12%; text-align: right">TOTAL VALUE</th>
+                <th style="width: 9%; text-align: center">STATUS</th>
+              </tr>
+            </thead>
+            <tbody style="line-height: 1.2">
+              <!-- Populated by JavaScript -->
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
 
-    <script>
-      // Format currency
-      function formatCurrency(value) {
-        return new Intl.NumberFormat("en-AU", {
-          style: "currency",
-          currency: "AUD",
-          minimumFractionDigits: 0,
-        }).format(value);
-      }
-
-      // Format number with commas
-      function formatNumber(value) {
-        return new Intl.NumberFormat("en-AU", {
-          minimumFractionDigits: 1,
-          maximumFractionDigits: 1,
-        }).format(value);
-      }
-
-      // Load dashboard summary
-      async function loadDashboardSummary() {
-        try {
-          const response = await fetch("/api/stock/summary");
-          const data = await response.json();
-
-          document.getElementById("productsCount").textContent =
-            data.products_with_stock || 0;
-          document.getElementById("inventoryValue").textContent =
-            formatCurrency(data.total_inventory_value || 0);
-          document.getElementById("totalValue").textContent = formatCurrency(
-            data.total_inventory_value || 0
-          );
-        } catch (error) {
-          console.error("Error loading summary:", error);
-        }
-      }
-
-      // Load today's movements (MTD)
-      async function loadTodayMovements() {
-        try {
-          const response = await fetch("/api/movements/today");
-          const data = await response.json();
-
-          const production = data.find((d) => d.movement_type === "PRODUCTION");
-          const sales = data.find((d) => d.movement_type === "SALES");
-
-          document.getElementById("mtdProduction").textContent = production
-            ? formatNumber(production.total_quantity) + "t"
-            : "0.0t";
-          document.getElementById("mtdSales").textContent = sales
-            ? formatNumber(Math.abs(sales.total_quantity)) + "t"
-            : "0.0t";
-        } catch (error) {
-          console.error("Error loading movements:", error);
-          document.getElementById("mtdProduction").textContent = "0.0t";
-          document.getElementById("mtdSales").textContent = "0.0t";
-        }
-      }
-
-      // Load current stock with demand
-      async function loadCurrentStock() {
-        try {
-          const response = await fetch("/api/stock/current");
-          const stock = await response.json();
-
-          const container = document.getElementById("stockTableContainer");
-
-          if (stock.length === 0) {
-            container.innerHTML =
-              '<div class="loading"><p>No stock data available</p></div>';
-            return;
-          }
-
-          let html = `
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Product</th>
-                                <th>Location</th>
-                                <th>Stock Level</th>
-                                <th>Demand</th>
-                                <th>Avg Cost</th>
-                                <th>Total Value</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                `;
-
-          stock.forEach((item) => {
-            const statusClass =
-              item.status === "LOW"
-                ? "badge-danger"
-                : item.status === "HIGH"
-                ? "badge-warning"
-                : "badge-normal";
-
-            // Calculate demand (placeholder - will be from API later)
-            const demand = item.demand || 0;
-            const demandColor =
-              demand > 0 ? "var(--warning-color)" : "var(--gray-400)";
-
-            html += `
-                        <tr>
-                            <td>
-                                <strong style="color: var(--gray-900);">${
-                                  item.product_name
-                                }</strong><br>
-                                <small style="color: var(--gray-500); text-transform: uppercase;">${
-                                  item.family_group
-                                }</small>
-                            </td>
-                            <td>${item.location_name}</td>
-                            <td><strong style="color: var(--success-color);">${formatNumber(
-                              item.quantity
-                            )}</strong></td>
-                            <td><strong style="color: ${demandColor};">${formatNumber(
-              demand
-            )}</strong></td>
-                            <td>${formatCurrency(item.average_cost)}</td>
-                            <td><strong>${formatCurrency(
-                              item.total_value
-                            )}</strong></td>
-                            <td><span class="badge ${statusClass}">${
-              item.status
-            }</span></td>
-                        </tr>
-                    `;
-          });
-
-          html += "</tbody></table>";
-          container.innerHTML = html;
-
-          // Add search functionality
-          const searchBox = document.getElementById("searchStock");
-          searchBox.addEventListener("input", filterStock);
-        } catch (error) {
-          console.error("Error loading stock:", error);
-          document.getElementById("stockTableContainer").innerHTML =
-            '<div class="loading"><p>Error loading stock data</p></div>';
-        }
-      }
-
-      // Filter stock table
-      function filterStock() {
-        const searchTerm = document
-          .getElementById("searchStock")
-          .value.toLowerCase();
-        const rows = document.querySelectorAll("#stockTableContainer tbody tr");
-
-        rows.forEach((row) => {
-          const text = row.textContent.toLowerCase();
-          row.style.display = text.includes(searchTerm) ? "" : "none";
-        });
-      }
-
-      // Refresh stock
-      function refreshStock() {
-        document.getElementById("stockTableContainer").innerHTML = `
-                <div class="loading">
-                    <div class="spinner"></div>
-                    <p>Refreshing...</p>
-                </div>
-            `;
-        loadCurrentStock();
-        loadDashboardSummary();
-        loadTodayMovements();
-      }
-
-      // Initialize dashboard
-      document.addEventListener("DOMContentLoaded", () => {
-        loadDashboardSummary();
-        loadTodayMovements();
-        loadCurrentStock();
-      });
-    </script>
+    <!-- External JavaScript -->
+    <script src="/js/dashboard.js"></script>
   </body>
 </html>
