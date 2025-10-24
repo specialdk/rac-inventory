@@ -469,3 +469,41 @@ window.onclick = function (event) {
     event.target.style.display = "none";
   }
 };
+
+// ============================================================
+// OPERATIONS PAGE - ADD MOVEMENT TYPE FILTER FUNCTION
+// Add this to the END of your operations.js file
+// ============================================================
+
+// Filter movements by type
+function filterMovementsByType() {
+  const filterValue = document
+    .getElementById("movementTypeFilter")
+    .value.toUpperCase();
+  const tbody = document.querySelector("#movementsTableContainer tbody");
+
+  if (!tbody) return;
+
+  const rows = tbody.querySelectorAll("tr");
+
+  rows.forEach((row) => {
+    if (filterValue === "" || filterValue === "ALL") {
+      // Show all rows
+      row.style.display = "";
+    } else {
+      // Get the movement type badge from the second column
+      const badge = row.querySelector("td:nth-child(2) .badge");
+
+      if (badge) {
+        const movementType = badge.textContent.trim().toUpperCase();
+
+        // Show row if it matches the filter
+        if (movementType === filterValue) {
+          row.style.display = "";
+        } else {
+          row.style.display = "none";
+        }
+      }
+    }
+  });
+}

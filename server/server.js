@@ -86,6 +86,9 @@ app.use("/api/customers", require("./routes/customers"));
 app.use("/api/vehicles", require("./routes/vehicles"));
 app.use("/api/drivers", require("./routes/drivers"));
 
+// Report Routes
+app.use("/api", require("./routes/account-detail-report-api"));
+
 // Serve index.html for root
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "../public/index.html"));
@@ -116,4 +119,6 @@ app.listen(PORT, () => {
   console.log(`   - /api/customers`);
   console.log(`   - /api/vehicles`);
   console.log(`   - /api/drivers`);
+  console.log(`   - /api/reports/account-detail (GET)`);
+  console.log(`   - /api/reports/account-detail/email (POST)`);
 });

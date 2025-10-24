@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Account Detail Report - RAC Inventory</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f5f5f5;
+        padding: 20px;
+      }
+
+      .page-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        padding: 30px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      /* Filter Section */
+      .filter-section {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+      }
+
+      .filter-row {
+        display: flex;
+        gap: 15px;
+        align-items: flex-end;
+        flex-wrap: wrap;
+      }
+
+      .filter-group {
+        flex: 1;
+        min-width: 200px;
+      }
+
+      .filter-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 600;
+        color: #333;
+        font-size: 14px;
+      }
+
+      .filter-group input,
+      .filter-group select {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+
+      .action-buttons {
+        display: flex;
+        gap: 10px;
+      }
+
+      .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.3s;
+      }
+
+      .btn-primary {
+        background: #007bff;
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: #0056b3;
+      }
+
+      .btn-success {
+        background: #28a745;
+        color: white;
+      }
+
+      .btn-success:hover {
+        background: #218838;
+      }
+
+      .btn-secondary {
+        background: #6c757d;
+        color: white;
+      }
+
+      .btn-secondary:hover {
+        background: #5a6268;
+      }
+
+      /* Report Header */
+      .report-header {
+        border-bottom: 3px solid #000;
+        padding-bottom: 20px;
+        margin-bottom: 20px;
+      }
+
+      .company-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 20px;
+      }
+
+      .company-details h1 {
+        font-size: 24px;
+        margin-bottom: 5px;
+      }
+
+      .company-details p {
+        font-size: 12px;
+        color: #666;
+        line-height: 1.4;
+      }
+
+      .company-logo {
+        width: 100px;
+        height: 100px;
+        background: #ff1493;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 40px;
+      }
+
+      .report-title-section {
+        text-align: center;
+        margin: 20px 0;
+      }
+
+      .report-title {
+        background: #000;
+        color: white;
+        padding: 10px;
+        display: inline-block;
+        font-size: 20px;
+        font-weight: bold;
+      }
+
+      .report-metadata {
+        display: flex;
+        justify-content: space-between;
+        margin: 20px 0;
+        font-size: 14px;
+      }
+
+      .metadata-item {
+        display: flex;
+        gap: 10px;
+      }
+
+      .metadata-label {
+        font-weight: bold;
+      }
+
+      /* Report Table */
+      .report-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+      }
+
+      .report-table thead {
+        background: #f8f9fa;
+      }
+
+      .report-table th {
+        padding: 12px 8px;
+        text-align: left;
+        font-size: 12px;
+        font-weight: 600;
+        border-bottom: 2px solid #dee2e6;
+        white-space: nowrap;
+      }
+
+      .report-table td {
+        padding: 10px 8px;
+        font-size: 13px;
+        border-bottom: 1px solid #dee2e6;
+      }
+
+      .report-table tbody tr:hover {
+        background: #f8f9fa;
+      }
+
+      .text-right {
+        text-align: right;
+      }
+
+      .text-center {
+        text-align: center;
+      }
+
+      /* Totals Section */
+      .totals-section {
+        margin-top: 30px;
+        border-top: 3px solid #000;
+        padding-top: 20px;
+      }
+
+      .totals-table {
+        width: 400px;
+        margin-left: auto;
+        border-collapse: collapse;
+      }
+
+      .totals-table td {
+        padding: 8px;
+        font-size: 14px;
+      }
+
+      .totals-table .label-col {
+        text-align: right;
+        font-weight: 600;
+        width: 200px;
+      }
+
+      .totals-table .value-col {
+        text-align: right;
+        width: 200px;
+        border-bottom: 1px solid #dee2e6;
+      }
+
+      .totals-table .total-row {
+        border-top: 2px solid #000;
+        font-size: 16px;
+        font-weight: bold;
+      }
+
+      /* Empty State */
+      .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #666;
+      }
+
+      .empty-state-icon {
+        font-size: 48px;
+        margin-bottom: 20px;
+        opacity: 0.3;
+      }
+
+      /* Loading State */
+      .loading {
+        text-align: center;
+        padding: 40px;
+        color: #666;
+      }
+
+      .spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #007bff;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Print Styles */
+      @media print {
+        body {
+          background: white;
+          padding: 0;
+        }
+
+        .page-container {
+          box-shadow: none;
+          padding: 0;
+          max-width: 100%;
+        }
+
+        .filter-section,
+        .action-buttons,
+        .no-print {
+          display: none !important;
+        }
+
+        .report-header {
+          page-break-after: avoid;
+        }
+
+        .report-table {
+          page-break-inside: avoid;
+        }
+
+        .report-table thead {
+          display: table-header-group;
+        }
+
+        .report-table tr {
+          page-break-inside: avoid;
+        }
+
+        .totals-section {
+          page-break-inside: avoid;
+        }
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
+        .filter-row {
+          flex-direction: column;
+        }
+
+        .company-info {
+          flex-direction: column;
+          gap: 20px;
+        }
+
+        .report-metadata {
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .report-table {
+          font-size: 11px;
+        }
+
+        .report-table th,
+        .report-table td {
+          padding: 6px 4px;
+        }
+
+        .totals-table {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-container">
+      <!-- Filter Section -->
+      <div class="filter-section no-print">
+        <div class="filter-row">
+          <div class="filter-group">
+            <label for="dateFrom">Date From</label>
+            <input type="date" id="dateFrom" value="" />
+          </div>
+          <div class="filter-group">
+            <label for="dateTo">Date To</label>
+            <input type="date" id="dateTo" value="" />
+          </div>
+          <div class="filter-group">
+            <label for="customerFilter">Customer</label>
+            <select id="customerFilter">
+              <option value="">All Customers</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="productFilter">Product</label>
+            <select id="productFilter">
+              <option value="">All Products</option>
+            </select>
+          </div>
+        </div>
+        <div class="action-buttons" style="margin-top: 15px">
+          <button class="btn btn-primary" onclick="generateReport()">
+            📊 Generate Report
+          </button>
+          <button class="btn btn-success" onclick="printReport()">
+            🖨️ Print
+          </button>
+          <button class="btn btn-secondary" onclick="emailReport()">
+            📧 Email Report
+          </button>
+        </div>
+      </div>
+
+      <!-- Report Content -->
+      <div id="reportContent" style="display: none">
+        <!-- Company Header -->
+        <div class="report-header">
+          <div class="company-info">
+            <div class="company-details">
+              <h1>Rirratjingu Mining Pty Ltd</h1>
+              <p>Melville Rd, Nhulunbuy NT 0881</p>
+              <p>Ph. 08 8987 3433</p>
+              <p>Fax 08 8987 2304</p>
+              <p>ABN 15 129 907 660</p>
+            </div>
+            <div class="company-logo">🏔️</div>
+          </div>
+
+          <div class="report-title-section">
+            <div class="report-title">Account Detail Report</div>
+          </div>
+
+          <div class="report-metadata">
+            <div class="metadata-item">
+              <span class="metadata-label">Account:</span>
+              <span id="accountName">-</span>
+            </div>
+            <div class="metadata-item">
+              <span class="metadata-label">Date:</span>
+              <span id="reportDate">-</span>
+            </div>
+          </div>
+
+          <div class="report-metadata">
+            <div class="metadata-item">
+              <span class="metadata-label">Docket #:</span>
+              <span id="docketRange">-</span>
+            </div>
+            <div class="metadata-item">
+              <span class="metadata-label">Completed Dockets for:</span>
+              <span id="dateRange">-</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Report Table -->
+        <table class="report-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Docket #</th>
+              <th>Customer</th>
+              <th>Product</th>
+              <th class="text-right">Qty (t)</th>
+              <th class="text-right">Net Wt</th>
+              <th class="text-right">Fee</th>
+              <th class="text-right">GST</th>
+              <th class="text-right">Total</th>
+            </tr>
+          </thead>
+          <tbody id="reportTableBody">
+            <!-- Data will be inserted here -->
+          </tbody>
+        </table>
+
+        <!-- Totals Section -->
+        <div class="totals-section">
+          <h3 style="margin-bottom: 15px">Total for this account:</h3>
+          <table class="totals-table">
+            <tr>
+              <td class="label-col">Qty pickup</td>
+              <td class="value-col text-right" id="totalQtyPickup">0 t</td>
+            </tr>
+            <tr>
+              <td class="label-col">Qty pickup</td>
+              <td class="value-col text-right" id="totalQtyPickup2">0 t</td>
+            </tr>
+            <tr>
+              <td class="label-col">Qty pickup</td>
+              <td class="value-col text-right" id="totalQtyPickup3">0 t</td>
+            </tr>
+            <tr class="total-row">
+              <td class="label-col">Not Weight</td>
+              <td class="value-col text-right" id="totalNetWeight">$0.00</td>
+            </tr>
+            <tr>
+              <td class="label-col"></td>
+              <td class="value-col text-right" id="totalFee">$0.00</td>
+            </tr>
+            <tr>
+              <td class="label-col"></td>
+              <td class="value-col text-right" id="totalGST">$0.00</td>
+            </tr>
+            <tr class="total-row">
+              <td class="label-col"></td>
+              <td class="value-col text-right" id="grandTotal">$0.00</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div id="emptyState" class="empty-state" style="display: none">
+        <div class="empty-state-icon">📋</div>
+        <h3>No Data Available</h3>
+        <p>Select date range and filters, then click "Generate Report"</p>
+      </div>
+
+      <!-- Loading State -->
+      <div id="loadingState" class="loading" style="display: none">
+        <div class="spinner"></div>
+        <p>Loading report data...</p>
+      </div>
+    </div>
+
+    <script>
+      // Configuration
+      const API_BASE_URL = "/api"; // Adjust to your API endpoint
+
+      // Initialize page
+      document.addEventListener("DOMContentLoaded", function () {
+        // Set default dates (current month)
+        const today = new Date();
+        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+
+        document.getElementById("dateFrom").valueAsDate = firstDay;
+        document.getElementById("dateTo").valueAsDate = today;
+
+        // Load filter options
+        loadCustomers();
+        loadProducts();
+
+        // Show empty state initially
+        showEmptyState();
+      });
+
+      // Load customers for filter dropdown
+      async function loadCustomers() {
+        try {
+          const response = await fetch(`${API_BASE_URL}/customers`);
+          const customers = await response.json();
+
+          const select = document.getElementById("customerFilter");
+          customers.forEach((customer) => {
+            const option = document.createElement("option");
+            option.value = customer.customer_id;
+            option.textContent = customer.customer_name;
+            select.appendChild(option);
+          });
+        } catch (error) {
+          console.error("Error loading customers:", error);
+        }
+      }
+
+      // Load products for filter dropdown
+      async function loadProducts() {
+        try {
+          const response = await fetch(`${API_BASE_URL}/products`);
+          const products = await response.json();
+
+          const select = document.getElementById("productFilter");
+          products.forEach((product) => {
+            const option = document.createElement("option");
+            option.value = product.product_id;
+            option.textContent = product.product_name;
+            select.appendChild(option);
+          });
+        } catch (error) {
+          console.error("Error loading products:", error);
+        }
+      }
+
+      // Generate Report
+      async function generateReport() {
+        const dateFrom = document.getElementById("dateFrom").value;
+        const dateTo = document.getElementById("dateTo").value;
+        const customerId = document.getElementById("customerFilter").value;
+        const productId = document.getElementById("productFilter").value;
+
+        if (!dateFrom || !dateTo) {
+          alert("Please select date range");
+          return;
+        }
+
+        showLoading();
+
+        try {
+          // Build query parameters
+          const params = new URLSearchParams({
+            dateFrom,
+            dateTo,
+            ...(customerId && { customerId }),
+            ...(productId && { productId }),
+          });
+
+          // Fetch report data
+          const response = await fetch(
+            `${API_BASE_URL}/reports/account-detail?${params}`
+          );
+          const data = await response.json();
+
+          if (data.dockets && data.dockets.length > 0) {
+            displayReport(data);
+          } else {
+            showEmptyState();
+          }
+        } catch (error) {
+          console.error("Error generating report:", error);
+          alert("Error generating report. Please try again.");
+          showEmptyState();
+        }
+      }
+
+      // Display Report Data
+      function displayReport(data) {
+        // Update metadata
+        document.getElementById("accountName").textContent =
+          data.accountName || "All Accounts";
+        document.getElementById("reportDate").textContent =
+          new Date().toLocaleDateString();
+        document.getElementById("docketRange").textContent = `${
+          data.dockets[0].docket_no
+        } - ${data.dockets[data.dockets.length - 1].docket_no}`;
+
+        const dateFrom = document.getElementById("dateFrom").value;
+        const dateTo = document.getElementById("dateTo").value;
+        document.getElementById("dateRange").textContent = `${formatDate(
+          dateFrom
+        )} to ${formatDate(dateTo)}`;
+
+        // Populate table
+        const tbody = document.getElementById("reportTableBody");
+        tbody.innerHTML = "";
+
+        let totalQty = 0;
+        let totalNetWt = 0;
+        let totalFee = 0;
+        let totalGST = 0;
+        let totalAmount = 0;
+
+        data.dockets.forEach((docket) => {
+          const row = document.createElement("tr");
+
+          const netWt = parseFloat(docket.net_weight) || 0;
+          const fee = parseFloat(docket.fee) || 0;
+          const gst = parseFloat(docket.gst) || 0;
+          const total = parseFloat(docket.total) || 0;
+
+          row.innerHTML = `
+                    <td>${formatDate(
+                      docket.movement_date
+                    )}<br><small>${formatTime(
+            docket.movement_date
+          )}</small></td>
+                    <td>${docket.docket_no}</td>
+                    <td>${docket.customer_name}</td>
+                    <td><small>${docket.product_name}</small></td>
+                    <td class="text-right">${netWt.toFixed(2)} t</td>
+                    <td class="text-right">${netWt.toFixed(2)}</td>
+                    <td class="text-right">$${fee.toFixed(2)}</td>
+                    <td class="text-right">$${gst.toFixed(2)}</td>
+                    <td class="text-right">$${total.toFixed(2)}</td>
+                `;
+          tbody.appendChild(row);
+
+          totalQty += netWt;
+          totalNetWt += netWt;
+          totalFee += fee;
+          totalGST += gst;
+          totalAmount += total;
+        });
+
+        // Update totals
+        document.getElementById(
+          "totalQtyPickup"
+        ).textContent = `${totalQty.toFixed(1)} t`;
+        document.getElementById(
+          "totalQtyPickup2"
+        ).textContent = `${totalQty.toFixed(1)} t`;
+        document.getElementById(
+          "totalQtyPickup3"
+        ).textContent = `${totalQty.toFixed(1)} t`;
+        document.getElementById(
+          "totalNetWeight"
+        ).textContent = `$${totalNetWt.toFixed(2)}`;
+        document.getElementById("totalFee").textContent = `$${totalFee.toFixed(
+          2
+        )}`;
+        document.getElementById("totalGST").textContent = `$${totalGST.toFixed(
+          2
+        )}`;
+        document.getElementById(
+          "grandTotal"
+        ).textContent = `$${totalAmount.toFixed(2)}`;
+
+        // Show report
+        showReport();
+      }
+
+      // Print Report
+      function printReport() {
+        const reportContent = document.getElementById("reportContent");
+        if (reportContent.style.display === "none") {
+          alert("Please generate a report first");
+          return;
+        }
+        window.print();
+      }
+
+      // Email Report
+      async function emailReport() {
+        const reportContent = document.getElementById("reportContent");
+        if (reportContent.style.display === "none") {
+          alert("Please generate a report first");
+          return;
+        }
+
+        const email = prompt("Enter email address:");
+        if (!email) return;
+
+        try {
+          const dateFrom = document.getElementById("dateFrom").value;
+          const dateTo = document.getElementById("dateTo").value;
+          const customerId = document.getElementById("customerFilter").value;
+          const productId = document.getElementById("productFilter").value;
+
+          const params = new URLSearchParams({
+            dateFrom,
+            dateTo,
+            email,
+            ...(customerId && { customerId }),
+            ...(productId && { productId }),
+          });
+
+          showLoading();
+
+          const response = await fetch(
+            `${API_BASE_URL}/reports/account-detail/email?${params}`,
+            {
+              method: "POST",
+            }
+          );
+
+          const result = await response.json();
+
+          if (result.success) {
+            alert("Report sent successfully to " + email);
+            showReport();
+          } else {
+            throw new Error(result.message || "Failed to send email");
+          }
+        } catch (error) {
+          console.error("Error emailing report:", error);
+          alert("Error sending email. Please try again.");
+          showReport();
+        }
+      }
+
+      // Helper functions
+      function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString("en-AU", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        });
+      }
+
+      function formatTime(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleTimeString("en-AU", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        });
+      }
+
+      function showReport() {
+        document.getElementById("reportContent").style.display = "block";
+        document.getElementById("emptyState").style.display = "none";
+        document.getElementById("loadingState").style.display = "none";
+      }
+
+      function showEmptyState() {
+        document.getElementById("reportContent").style.display = "none";
+        document.getElementById("emptyState").style.display = "block";
+        document.getElementById("loadingState").style.display = "none";
+      }
+
+      function showLoading() {
+        document.getElementById("reportContent").style.display = "none";
+        document.getElementById("emptyState").style.display = "none";
+        document.getElementById("loadingState").style.display = "block";
+      }
+    </script>
+  </body>
+</html>
