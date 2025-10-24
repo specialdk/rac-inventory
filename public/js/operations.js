@@ -90,18 +90,20 @@ async function loadDropdowns() {
     // Load locations
     const locationsRes = await fetch("/api/locations");
     locationsData = await locationsRes.json();
-    const locationSelects = [
-      document.getElementById("productionLocation"),
-      document.getElementById("saleLocation"),
-    ];
 
+    // Load production locations
+    const productionLocationSelect =
+      document.getElementById("productionLocation");
     locationsData.forEach((location) => {
-      locationSelects.forEach((select) => {
-        if (select) {
-          select.add(new Option(location.location_name, location.location_id));
-        }
-      });
+      if (productionLocationSelect) {
+        productionLocationSelect.add(
+          new Option(location.location_name, location.location_id)
+        );
+      }
     });
+
+    // Load sale locations using the smart function (will filter by product when selected)
+    await loadStockpileDropdown(null, "saleLocation");
 
     // Load customers
     const customersRes = await fetch("/api/customers");
@@ -142,6 +144,75 @@ async function loadDropdowns() {
     driversData.forEach((driver) => {
       prodOperatorSelect.add(new Option(driver.driver_name, driver.driver_id));
       saleDriverSelect.add(new Option(driver.driver_name, driver.driver_id));
+    });
+
+    // Reusable function to load stockpile dropdown with optional product filter
+    async function loadStockpileDropdown(
+      productId = null,
+      targetSelectId = "sale_from"
+    ) {
+      const saleFromSelect = document.getElementById(targetSelectId);
+      saleFromSelect.innerHTML =
+        '<option value="">Select From Stockpile</option>';
+
+      try {
+        if (productId) {
+          // Filter by product stock
+          const stockRes = await fetch(`/api/stock?product_id=${productId}`);
+          const stockData = await stockRes.json();
+
+          const locationsWithStock = stockData.filter(
+            (stock) => stock.quantity > 0
+          );
+
+          if (locationsWithStock.length > 0) {
+            locationsWithStock.forEach((stock) => {
+              saleFromSelect.add(
+                new Option(
+                  `${stock.location_name} (${stock.quantity.toFixed(
+                    1
+                  )}t available)`,
+                  stock.location_id
+                )
+              );
+            });
+
+            // Auto-select if only one option
+            if (locationsWithStock.length === 1) {
+              saleFromSelect.value = locationsWithStock[0].location_id;
+            }
+            return;
+          }
+        }
+
+        // Default: load all stockpiles
+        const locationsRes = await fetch(
+          "/api/locations?location_type=STOCKPILE&is_active=true"
+        );
+        const locations = await locationsRes.json();
+
+        locations.forEach((location) => {
+          saleFromSelect.add(
+            new Option(location.location_name, location.location_id)
+          );
+        });
+      } catch (error) {
+        console.error("Error loading stockpile dropdown:", error);
+      }
+    }
+
+    // When sale product changes, filter stockpile locations
+    document.addEventListener("DOMContentLoaded", () => {
+      const saleProductSelect = document.getElementById("saleProduct");
+
+      if (saleProductSelect) {
+        saleProductSelect.addEventListener("change", async (e) => {
+          const productId = e.target.value;
+          if (productId) {
+            await loadStockpileDropdown(productId, "saleLocation");
+          }
+        });
+      }
     });
 
     // Set active counts
