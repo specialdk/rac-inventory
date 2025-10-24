@@ -286,6 +286,12 @@ async function loadRecentMovements() {
     const movements = await response.json();
 
     const tbody = document.querySelector("#movementsTableContainer tbody");
+
+    // Some pages don't have movements table - skip silently
+    if (!tbody) {
+      return;
+    }
+
     tbody.innerHTML = "";
 
     movements.forEach((movement) => {
