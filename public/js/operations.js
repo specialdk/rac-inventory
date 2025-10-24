@@ -185,11 +185,10 @@ async function loadStockpileDropdown(
 
       if (locationsWithStock.length > 0) {
         locationsWithStock.forEach((stock) => {
+          const qty = parseFloat(stock.quantity) || 0;
           saleFromSelect.add(
             new Option(
-              `${stock.location_name} (${stock.quantity.toFixed(
-                1
-              )}t available)`,
+              `${stock.location_name} (${qty.toFixed(1)}t available)`,
               stock.location_id
             )
           );
@@ -500,8 +499,12 @@ function closeSalesModal() {
 function updateSalePrice() {
   const selectedOption =
     document.getElementById("saleProduct").selectedOptions[0];
+  const priceInput = document.getElementById("salePrice");
+
   if (selectedOption && selectedOption.dataset.price) {
-    document.getElementById("salePrice").value = selectedOption.dataset.price;
+    priceInput.value = selectedOption.dataset.price;
+  } else {
+    priceInput.value = "";
   }
 }
 
