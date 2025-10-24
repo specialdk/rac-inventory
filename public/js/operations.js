@@ -160,20 +160,18 @@ async function loadStockpileDropdown(
   productId = null,
   targetSelectId = "saleLocation"
 ) {
-  console.log("🎯 loadStockpileDropdown called with:", {
-    productId,
-    targetSelectId,
-  });
-
+  console.log("🎯 loadStockpileDropdown called with:", { productId, targetSelectId });
+  
   const saleFromSelect = document.getElementById(targetSelectId);
-
+  
   if (!saleFromSelect) {
     console.error("❌ Could not find element:", targetSelectId);
     return;
   }
-
+  
   console.log("✅ Found dropdown element");
-  saleFromSelect.innerHTML = '<option value="">Select From Stockpile</option>';
+  saleFromSelect.innerHTML =
+    '<option value="">Select From Stockpile</option>';
 
   try {
     if (productId) {
@@ -224,14 +222,14 @@ async function loadStockpileDropdown(
 // When sale product changes, filter stockpile locations
 function setupSaleProductListener() {
   const saleProductSelect = document.getElementById("saleProduct");
-
+  
   if (saleProductSelect) {
     console.log("✅ Found saleProduct element, adding listener");
-
+    
     saleProductSelect.addEventListener("change", async (e) => {
       const productId = e.target.value;
       console.log("🔍 Product changed to:", productId);
-
+      
       if (productId) {
         console.log("📞 Calling loadStockpileDropdown...");
         await loadStockpileDropdown(productId, "saleLocation");
@@ -249,7 +247,9 @@ async function loadStats() {
     const today = new Date().toISOString().split("T")[0];
 
     // Production stats
-    const prodRes = await fetch(`/api/movements?type=Production&date=${today}`);
+    const prodRes = await fetch(
+      `/api/movements?type=Production&date=${today}`
+    );
     const prodData = await prodRes.json();
     const prodTotal = prodData.reduce(
       (sum, item) => sum + parseFloat(item.quantity),
@@ -267,7 +267,7 @@ async function loadStats() {
     // Update UI
     const todayProdElement = document.getElementById("todayProduction");
     const todaySalesElement = document.getElementById("todaySales");
-
+    
     if (todayProdElement) {
       todayProdElement.textContent = prodTotal.toFixed(1);
     }
@@ -285,13 +285,35 @@ async function loadRecentMovements() {
     const response = await fetch("/api/movements?limit=10");
     const movements = await response.json();
 
-    const tbody = document.querySelector("#movementsTableContainer tbody");
-
-    // Some pages don't have movements table - skip silently
-    if (!tbody) {
+    const container = document.getElementById("movementsTableContainer");
+    
+    // Some pages don't have movements table container - skip silently
+    if (!container) {
       return;
     }
-
+    
+    // Create table structure if it doesn't exist
+    let table = container.querySelector("table");
+    if (!table) {
+      container.innerHTML = `
+        <table class="movements-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Product</th>
+              <th>Location</th>
+              <th class="text-right">Quantity</th>
+              <th>Reference</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      `;
+      table = container.querySelector("table");
+    }
+    
+    const tbody = table.querySelector("tbody");
     tbody.innerHTML = "";
 
     movements.forEach((movement) => {
@@ -312,17 +334,14 @@ async function loadRecentMovements() {
       let badgeClass = "badge-primary";
       if (movement.movement_type === "Production") badgeClass = "badge-success";
       if (movement.movement_type === "Sales") badgeClass = "badge-info";
-      if (movement.movement_type === "Adjustment") badgeClass = "badge-warning";
+      if (movement.movement_type === "Adjustment")
+        badgeClass = "badge-warning";
 
       row.innerHTML = `
         <td>${dateStr}<br><small class="text-muted">${timeStr}</small></td>
-        <td><span class="badge ${badgeClass}">${
-        movement.movement_type
-      }</span></td>
+        <td><span class="badge ${badgeClass}">${movement.movement_type}</span></td>
         <td>${movement.product_name || "-"}</td>
-        <td>${
-          movement.to_location_name || movement.from_location_name || "-"
-        }</td>
+        <td>${movement.to_location_name || movement.from_location_name || "-"}</td>
         <td class="text-right">${parseFloat(movement.quantity).toFixed(1)}t</td>
         <td class="text-muted">${movement.reference_number || "-"}</td>
       `;
@@ -580,3 +599,9 @@ function filterMovementsByType() {
     }
   });
 }
+
+
+
+
+
+
