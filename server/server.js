@@ -36,6 +36,47 @@ app.get("/api/health", async (req, res) => {
   }
 });
 
+// Dashboard statistics endpoint
+app.get("/api/dashboard/stats", async (req, res) => {
+  try {
+    // Get products with stock
+    const productsResult = await pool.query(
+      "SELECT COUNT(DISTINCT product_id) as count FROM current_stock WHERE quantity > 0"
+    );
+
+    // Get total inventory value
+    const valueResult = await pool.query(
+      "SELECT COALESCE(SUM(total_value), 0) as total FROM current_stock"
+    );
+
+    // Get MTD production (current month)
+    const productionResult = await pool.query(
+      `SELECT COALESCE(SUM(quantity), 0) as total 
+       FROM stock_movements 
+       WHERE movement_type = 'PRODUCTION' 
+       AND movement_date >= DATE_TRUNC('month', CURRENT_DATE)`
+    );
+
+    // Get MTD sales (current month)
+    const salesResult = await pool.query(
+      `SELECT COALESCE(SUM(ABS(quantity)), 0) as total 
+       FROM stock_movements 
+       WHERE movement_type = 'SALE' 
+       AND movement_date >= DATE_TRUNC('month', CURRENT_DATE)`
+    );
+
+    res.json({
+      productsWithStock: parseInt(productsResult.rows[0].count) || 0,
+      totalInventoryValue: parseFloat(valueResult.rows[0].total) || 0,
+      mtdProduction: parseFloat(productionResult.rows[0].total) || 0,
+      mtdSales: parseFloat(salesResult.rows[0].total) || 0,
+    });
+  } catch (error) {
+    console.error("Error getting dashboard stats:", error);
+    res.status(500).json({ error: "Failed to load dashboard stats" });
+  }
+});
+
 // API Routes
 app.use("/api/products", require("./routes/products"));
 app.use("/api/stock", require("./routes/stock"));
