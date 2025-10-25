@@ -61,7 +61,7 @@ app.get("/api/dashboard/stats", async (req, res) => {
     const salesResult = await pool.query(
       `SELECT COALESCE(SUM(ABS(quantity)), 0) as total 
        FROM stock_movements 
-       WHERE movement_type = 'SALE' 
+       WHERE movement_type = 'SALES' 
        AND movement_date >= DATE_TRUNC('month', CURRENT_DATE)`
     );
 
