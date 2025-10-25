@@ -241,23 +241,28 @@ function setupSaleProductListener() {
 }
 
 // Load today's stats
+// FIXED: Use correct API parameters
 async function loadStats() {
   try {
     const today = new Date().toISOString().split("T")[0];
 
-    // Production stats
-    const prodRes = await fetch(`/api/movements?type=Production&date=${today}`);
+    // Production stats - FIXED PARAMETERS
+    const prodRes = await fetch(
+      `/api/movements?movement_type=PRODUCTION&date_from=${today}&date_to=${today}`
+    );
     const prodData = await prodRes.json();
     const prodTotal = prodData.reduce(
       (sum, item) => sum + parseFloat(item.quantity),
       0
     );
 
-    // Sales stats
-    const salesRes = await fetch(`/api/movements?type=Sales&date=${today}`);
+    // Sales stats - FIXED PARAMETERS
+    const salesRes = await fetch(
+      `/api/movements?movement_type=SALES&date_from=${today}&date_to=${today}`
+    );
     const salesData = await salesRes.json();
     const salesTotal = salesData.reduce(
-      (sum, item) => sum + parseFloat(item.quantity),
+      (sum, item) => sum + Math.abs(parseFloat(item.quantity)),
       0
     );
 
@@ -271,6 +276,11 @@ async function loadStats() {
     if (todaySalesElement) {
       todaySalesElement.textContent = salesTotal.toFixed(1);
     }
+
+    console.log("✅ Stats loaded:", {
+      production: prodTotal.toFixed(1),
+      sales: salesTotal.toFixed(1),
+    });
   } catch (error) {
     console.error("Error loading stats:", error);
   }
@@ -329,9 +339,10 @@ async function loadRecentMovements() {
 
       // Movement type badge
       let badgeClass = "badge-primary";
-      if (movement.movement_type === "Production") badgeClass = "badge-success";
-      if (movement.movement_type === "Sales") badgeClass = "badge-info";
-      if (movement.movement_type === "Adjustment") badgeClass = "badge-warning";
+      if (movement.movement_type === "PRODUCTION") badgeClass = "badge-success";
+      if (movement.movement_type === "SALES") badgeClass = "badge-info";
+      if (movement.movement_type === "ADJUSTMENT") badgeClass = "badge-warning";
+      if (movement.movement_type === "DEMAND") badgeClass = "badge-secondary";
 
       row.innerHTML = `
         <td>${dateStr}<br><small class="text-muted">${timeStr}</small></td>
