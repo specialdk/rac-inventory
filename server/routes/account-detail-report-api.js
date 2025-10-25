@@ -5,7 +5,7 @@
 
 const express = require("express");
 const router = express.Router();
-const pool = require('../config/database'); // PostgreSQL connection pool
+const pool = require("../config/database"); // PostgreSQL connection pool
 
 // ============================================
 // GET ACCOUNT DETAIL REPORT DATA
@@ -19,12 +19,12 @@ router.get("/reports/account-detail", async (req, res) => {
       SELECT 
         sm.movement_id,
         sm.movement_date,
-        sm.reference_no as docket_no,
+        sm.docket_number as docket_no,
         sm.quantity as net_weight,
-        sm.unit_cost,
-        sm.total_cost as fee,
-        sm.gst_amount as gst,
-        (sm.total_cost + sm.gst_amount) as total,
+        sm.unit_price,
+        sm.total_revenue as fee,
+        (sm.total_revenue * 0.10) as gst,
+        (sm.total_revenue * 1.10) as total,
         c.customer_name,
         p.product_name
       FROM stock_movements sm
