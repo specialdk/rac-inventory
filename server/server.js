@@ -85,6 +85,7 @@ app.use("/api/locations", require("./routes/locations"));
 app.use("/api/customers", require("./routes/customers"));
 app.use("/api/vehicles", require("./routes/vehicles"));
 app.use("/api/drivers", require("./routes/drivers"));
+app.use("/api/deliveries", require("./routes/deliveries"));
 
 // Report Routes
 app.use("/api", require("./routes/account-detail-report-api"));
