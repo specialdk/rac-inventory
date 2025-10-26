@@ -436,15 +436,16 @@
           </div>
         </div>
 
-        <!-- Report Table -->
+        <!-- Report Table with CORRECT column structure -->
         <table class="report-table">
           <thead>
             <tr>
+              <th>Account</th>
               <th>Date</th>
               <th>Docket #</th>
-              <th>Customer</th>
+              <th>Rego</th>
               <th>Product</th>
-              <th class="text-right">Qty (t)</th>
+              <th>Destination</th>
               <th class="text-right">Net Wt</th>
               <th class="text-right">Fee</th>
               <th class="text-right">GST</th>
@@ -461,31 +462,19 @@
           <h3 style="margin-bottom: 15px">Total for this account:</h3>
           <table class="totals-table">
             <tr>
-              <td class="label-col">Qty pickup</td>
-              <td class="value-col text-right" id="totalQtyPickup">0 t</td>
+              <td class="label-col">Total Net Weight</td>
+              <td class="value-col text-right" id="totalNetWeight">0 t</td>
             </tr>
             <tr>
-              <td class="label-col">Qty pickup</td>
-              <td class="value-col text-right" id="totalQtyPickup2">0 t</td>
-            </tr>
-            <tr>
-              <td class="label-col">Qty pickup</td>
-              <td class="value-col text-right" id="totalQtyPickup3">0 t</td>
-            </tr>
-            <tr class="total-row">
-              <td class="label-col">Not Weight</td>
-              <td class="value-col text-right" id="totalNetWeight">$0.00</td>
-            </tr>
-            <tr>
-              <td class="label-col"></td>
+              <td class="label-col">Subtotal</td>
               <td class="value-col text-right" id="totalFee">$0.00</td>
             </tr>
             <tr>
-              <td class="label-col"></td>
+              <td class="label-col">GST</td>
               <td class="value-col text-right" id="totalGST">$0.00</td>
             </tr>
             <tr class="total-row">
-              <td class="label-col"></td>
+              <td class="label-col">Grand Total</td>
               <td class="value-col text-right" id="grandTotal">$0.00</td>
             </tr>
           </table>
@@ -508,7 +497,7 @@
 
     <script>
       // Configuration
-      const API_BASE_URL = "/api"; // Adjust to your API endpoint
+      const API_BASE_URL = "/api";
 
       // Initialize page
       document.addEventListener("DOMContentLoaded", function () {
@@ -621,11 +610,10 @@
           dateFrom
         )} to ${formatDate(dateTo)}`;
 
-        // Populate table
+        // Populate table with CORRECT column structure
         const tbody = document.getElementById("reportTableBody");
         tbody.innerHTML = "";
 
-        let totalQty = 0;
         let totalNetWt = 0;
         let totalFee = 0;
         let totalGST = 0;
@@ -640,23 +628,19 @@
           const total = parseFloat(docket.total) || 0;
 
           row.innerHTML = `
-                    <td>${formatDate(
-                      docket.movement_date
-                    )}<br><small>${formatTime(
-            docket.movement_date
-          )}</small></td>
-                    <td>${docket.docket_no}</td>
-                    <td>${docket.customer_name}</td>
-                    <td><small>${docket.product_name}</small></td>
-                    <td class="text-right">${netWt.toFixed(2)} t</td>
-                    <td class="text-right">${netWt.toFixed(2)}</td>
-                    <td class="text-right">$${fee.toFixed(2)}</td>
-                    <td class="text-right">$${gst.toFixed(2)}</td>
-                    <td class="text-right">$${total.toFixed(2)}</td>
-                `;
+            <td><small>${docket.account || "-"}</small></td>
+            <td>${formatDate(docket.movement_date)}</td>
+            <td>${docket.docket_no}</td>
+            <td>${docket.rego || "-"}</td>
+            <td><small>${docket.product_name}</small></td>
+            <td><small>${docket.destination || "-"}</small></td>
+            <td class="text-right">${netWt.toFixed(2)} t</td>
+            <td class="text-right">$${fee.toFixed(2)}</td>
+            <td class="text-right">$${gst.toFixed(2)}</td>
+            <td class="text-right">$${total.toFixed(2)}</td>
+          `;
           tbody.appendChild(row);
 
-          totalQty += netWt;
           totalNetWt += netWt;
           totalFee += fee;
           totalGST += gst;
@@ -665,17 +649,8 @@
 
         // Update totals
         document.getElementById(
-          "totalQtyPickup"
-        ).textContent = `${totalQty.toFixed(1)} t`;
-        document.getElementById(
-          "totalQtyPickup2"
-        ).textContent = `${totalQty.toFixed(1)} t`;
-        document.getElementById(
-          "totalQtyPickup3"
-        ).textContent = `${totalQty.toFixed(1)} t`;
-        document.getElementById(
           "totalNetWeight"
-        ).textContent = `$${totalNetWt.toFixed(2)}`;
+        ).textContent = `${totalNetWt.toFixed(1)} t`;
         document.getElementById("totalFee").textContent = `$${totalFee.toFixed(
           2
         )}`;
@@ -711,42 +686,7 @@
         const email = prompt("Enter email address:");
         if (!email) return;
 
-        try {
-          const dateFrom = document.getElementById("dateFrom").value;
-          const dateTo = document.getElementById("dateTo").value;
-          const customerId = document.getElementById("customerFilter").value;
-          const productId = document.getElementById("productFilter").value;
-
-          const params = new URLSearchParams({
-            dateFrom,
-            dateTo,
-            email,
-            ...(customerId && { customerId }),
-            ...(productId && { productId }),
-          });
-
-          showLoading();
-
-          const response = await fetch(
-            `${API_BASE_URL}/reports/account-detail/email?${params}`,
-            {
-              method: "POST",
-            }
-          );
-
-          const result = await response.json();
-
-          if (result.success) {
-            alert("Report sent successfully to " + email);
-            showReport();
-          } else {
-            throw new Error(result.message || "Failed to send email");
-          }
-        } catch (error) {
-          console.error("Error emailing report:", error);
-          alert("Error sending email. Please try again.");
-          showReport();
-        }
+        alert("Email functionality to be implemented");
       }
 
       // Helper functions
@@ -756,15 +696,6 @@
           day: "2-digit",
           month: "short",
           year: "numeric",
-        });
-      }
-
-      function formatTime(dateString) {
-        const date = new Date(dateString);
-        return date.toLocaleTimeString("en-AU", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: true,
         });
       }
 

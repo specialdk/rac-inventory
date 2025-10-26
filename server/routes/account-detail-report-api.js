@@ -1,11 +1,11 @@
 // ============================================
-// BACKEND API ENDPOINT FOR ACCOUNT DETAIL REPORT
-// Fixed for PostgreSQL with proper syntax
+// ACCOUNT DETAIL REPORT API - UPDATED VERSION
+// With vehicle registration and delivery destination
 // ============================================
 
 const express = require("express");
 const router = express.Router();
-const pool = require("../config/database"); // PostgreSQL connection pool
+const pool = require("../config/database");
 
 // ============================================
 // GET ACCOUNT DETAIL REPORT DATA
@@ -21,22 +21,26 @@ router.get("/reports/account-detail", async (req, res) => {
     console.log("👤 Customer ID:", customerId || "All Customers");
     console.log("📦 Product ID:", productId || "All Products");
 
-    // Build SQL query with filters
+    // Build SQL query with proper joins and Net Weight calculation
     let query = `
       SELECT 
         sm.movement_id,
         sm.movement_date,
         sm.docket_number as docket_no,
-        sm.quantity as net_weight,
+        v.registration as rego,
+        p.product_name,
+        del.delivery_type as destination,
+        (sm.quantity - COALESCE(sm.tare_weight, 0)) as net_weight,
         sm.unit_price,
         sm.total_revenue as fee,
         (sm.total_revenue * 0.10) as gst,
         (sm.total_revenue * 1.10) as total,
-        c.customer_name,
-        p.product_name
+        c.customer_name as account
       FROM stock_movements sm
       LEFT JOIN customers c ON sm.customer_id = c.customer_id
       LEFT JOIN products p ON sm.product_id = p.product_id
+      LEFT JOIN vehicles v ON sm.vehicle_id = v.vehicle_id
+      LEFT JOIN deliveries del ON sm.delivery_id = del.delivery_id
       WHERE sm.movement_type = 'SALES'
         AND sm.movement_date BETWEEN $1 AND $2
     `;
@@ -62,7 +66,7 @@ router.get("/reports/account-detail", async (req, res) => {
     console.log(query);
     console.log("📊 Parameters:", params);
 
-    // Execute query with PostgreSQL pool
+    // Execute query
     const docketsResult = await pool.query(query, params);
     const dockets = docketsResult.rows;
 
@@ -109,11 +113,3 @@ router.get("/reports/account-detail", async (req, res) => {
 });
 
 module.exports = router;
-
-// ============================================
-// USAGE IN YOUR MAIN SERVER FILE (server.js)
-// ============================================
-/*
-const accountDetailRoutes = require('./routes/account-detail-report-api');
-app.use('/api', accountDetailRoutes);
-*/
