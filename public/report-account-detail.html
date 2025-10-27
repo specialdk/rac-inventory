@@ -175,7 +175,7 @@
       .report-table {
         width: 100%;
         border-collapse: collapse;
-        margin-bottom: 20px;
+        margin-bottom: 0;
         margin-top: 20px;
       }
 
@@ -203,43 +203,20 @@
         background: #f8f9fa;
       }
 
-      /* Totals Section */
+      /* Totals Row */
       .totals-section {
-        margin-top: 30px;
-        border-top: 3px solid #000;
-        padding-top: 20px;
+        margin-top: 0;
       }
 
-      .totals-row-container {
-        margin-top: 10px;
-      }
-
-      .totals-table {
-        border-collapse: collapse;
-        font-size: 13px;
-      }
-
-      .totals-table td {
-        padding: 6px 15px 6px 0;
-        border-bottom: 1px solid #dee2e6;
-        text-align: left;
-      }
-
-      .totals-table .label-col {
-        font-weight: 600;
-        min-width: 150px;
-      }
-
-      .totals-table .value-col {
-        min-width: 100px;
-      }
-
-      .totals-table .total-row td {
+      .totals-row {
+        font-weight: bold;
         border-top: 2px solid #000;
         border-bottom: 2px solid #000;
-        font-weight: bold;
-        font-size: 14px;
-        padding: 10px 15px 10px 0;
+      }
+
+      .totals-row td {
+        font-size: 12px;
+        padding: 10px 8px;
       }
 
       /* Empty State */
@@ -368,11 +345,7 @@
               <p>ABN 15 129 907 660</p>
             </div>
             <div class="company-logo">
-              <img
-                src="RAC_Mining_Logo.png"
-                alt="RAC Mining Logo"
-                onerror="this.style.display='none'"
-              />
+              <img src="/RAC_Mining_Logo.png" alt="RAC Mining Logo" />
             </div>
           </div>
 
@@ -406,25 +379,18 @@
           <tbody id="reportTableBody"></tbody>
         </table>
 
-        <!-- Totals Section -->
+        <!-- Totals Section - Single Row -->
         <div class="totals-section">
-          <table class="totals-table">
-            <tr>
-              <td class="label-col">Total Net Weight</td>
-              <td class="value-col" id="totalNetWeight">0 t</td>
-            </tr>
-            <tr>
-              <td class="label-col">Subtotal</td>
-              <td class="value-col" id="totalFee">$0.00</td>
-            </tr>
-            <tr>
-              <td class="label-col">GST</td>
-              <td class="value-col" id="totalGST">$0.00</td>
-            </tr>
-            <tr class="total-row">
-              <td class="label-col">Grand Total</td>
-              <td class="value-col" id="grandTotal">$0.00</td>
-            </tr>
+          <table class="report-table">
+            <tbody>
+              <tr class="totals-row">
+                <td colspan="6"><strong>Grand Total</strong></td>
+                <td id="totalNetWeight">0 t</td>
+                <td id="totalFee">$0.00</td>
+                <td id="totalGST">$0.00</td>
+                <td id="grandTotal">$0.00</td>
+              </tr>
+            </tbody>
           </table>
         </div>
       </div>
