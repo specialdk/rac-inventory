@@ -230,11 +230,11 @@
           <div class="stat-label">Available Reports</div>
         </div>
         <div class="stat-card">
-          <div class="stat-value" id="activeReports">1</div>
+          <div class="stat-value" id="activeReports">2</div>
           <div class="stat-label">Active Now</div>
         </div>
         <div class="stat-card">
-          <div class="stat-value" id="comingSoon">4</div>
+          <div class="stat-value" id="comingSoon">3</div>
           <div class="stat-label">Coming Soon</div>
         </div>
       </div>
@@ -271,8 +271,11 @@
         </div>
 
         <!-- Weighbridge Delivery Docket -->
-        <div class="report-card coming-soon">
-          <span class="status-badge coming-soon">Coming Soon</span>
+        <div
+          class="report-card active"
+          onclick="openReport('/weighbridge-delivery-docket.html')"
+        >
+          <span class="status-badge active">✓ Active</span>
           <div class="report-icon orange">🚛</div>
           <div class="report-title">Weighbridge Delivery Docket</div>
           <div class="report-description">
