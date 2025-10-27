@@ -108,7 +108,7 @@
       .report-header {
         border-bottom: 3px solid #000;
         padding-bottom: 20px;
-        margin-bottom: 20px;
+        margin-bottom: 0;
       }
 
       .company-info {
@@ -130,15 +130,13 @@
       }
 
       .company-logo {
-        width: 100px;
-        height: 100px;
-        background: #ff1493;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 40px;
+        width: 120px;
+        height: auto;
+      }
+
+      .company-logo img {
+        width: 100%;
+        height: auto;
       }
 
       .report-title-section {
@@ -165,8 +163,17 @@
       .report-metadata {
         display: flex;
         justify-content: space-between;
-        margin: 20px 0;
+        margin: 20px 0 0 0;
+        padding-bottom: 0;
         font-size: 14px;
+      }
+
+      .metadata-left {
+        flex: 1;
+      }
+
+      .metadata-right {
+        text-align: right;
       }
 
       /* Report Table */
@@ -174,6 +181,7 @@
         width: 100%;
         border-collapse: collapse;
         margin-bottom: 20px;
+        margin-top: 0;
       }
 
       .report-table thead {
@@ -181,17 +189,17 @@
       }
 
       .report-table th {
-        padding: 12px 8px;
+        padding: 10px 8px;
         text-align: left;
-        font-size: 12px;
+        font-size: 11px;
         font-weight: 600;
-        border-bottom: 2px solid #dee2e6;
+        border-bottom: 2px solid #000;
         white-space: nowrap;
       }
 
       .report-table td {
-        padding: 10px 8px;
-        font-size: 13px;
+        padding: 8px 8px;
+        font-size: 11px;
         border-bottom: 1px solid #dee2e6;
       }
 
@@ -210,42 +218,39 @@
         padding-top: 20px;
       }
 
-      .totals-grid {
+      .totals-row-container {
         display: flex;
         justify-content: flex-end;
-        gap: 100px;
-        font-size: 14px;
+        margin-top: 10px;
       }
 
-      .totals-column {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
+      .totals-table {
+        width: auto;
+        border-collapse: collapse;
+        font-size: 13px;
       }
 
-      .totals-row {
-        display: flex;
-        justify-content: space-between;
-        gap: 40px;
-        padding: 6px 0;
+      .totals-table td {
+        padding: 6px 15px;
         border-bottom: 1px solid #dee2e6;
       }
 
-      .totals-row.total-final {
-        border-top: 2px solid #000;
-        border-bottom: 2px solid #000;
-        font-weight: bold;
-        font-size: 16px;
-        padding: 10px 0;
-      }
-
-      .totals-label {
+      .totals-table .label-col {
+        text-align: right;
         font-weight: 600;
       }
 
-      .totals-value {
+      .totals-table .value-col {
         text-align: right;
-        min-width: 120px;
+        min-width: 100px;
+      }
+
+      .totals-table .total-row td {
+        border-top: 2px solid #000;
+        border-bottom: 2px solid #000;
+        font-weight: bold;
+        font-size: 14px;
+        padding: 10px 15px;
       }
 
       /* Empty State */
@@ -318,10 +323,6 @@
           flex-direction: column;
           gap: 10px;
         }
-        .totals-grid {
-          flex-direction: column;
-          gap: 20px;
-        }
       }
     </style>
   </head>
@@ -376,7 +377,13 @@
               <p>Fax 08 8987 2304</p>
               <p>ABN 15 129 907 660</p>
             </div>
-            <div class="company-logo">🏔️</div>
+            <div class="company-logo">
+              <img
+                src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+                alt="RAC Mining Logo"
+                id="companyLogo"
+              />
+            </div>
           </div>
 
           <div class="report-title-section">
@@ -387,10 +394,11 @@
           </div>
 
           <div class="report-metadata">
-            <div><strong>Account:</strong> <span id="accountName">-</span></div>
-            <div><strong>Date:</strong> <span id="reportDate">-</span></div>
-            <div>
-              <strong>Docket #:</strong> <span id="docketRange">-</span>
+            <div class="metadata-left">
+              <span id="accountName">-</span>
+            </div>
+            <div class="metadata-right">
+              <strong>Printed on:</strong> <span id="reportDate">-</span>
             </div>
           </div>
         </div>
@@ -417,25 +425,25 @@
         <!-- Totals Section -->
         <div class="totals-section">
           <h3 style="margin-bottom: 15px">Total for this account:</h3>
-          <div class="totals-grid">
-            <div class="totals-column">
-              <div class="totals-row">
-                <span class="totals-label">Total Net Weight</span>
-                <span class="totals-value" id="totalNetWeight">0 t</span>
-              </div>
-              <div class="totals-row">
-                <span class="totals-label">Subtotal</span>
-                <span class="totals-value" id="totalFee">$0.00</span>
-              </div>
-              <div class="totals-row">
-                <span class="totals-label">GST</span>
-                <span class="totals-value" id="totalGST">$0.00</span>
-              </div>
-              <div class="totals-row total-final">
-                <span class="totals-label">Grand Total</span>
-                <span class="totals-value" id="grandTotal">$0.00</span>
-              </div>
-            </div>
+          <div class="totals-row-container">
+            <table class="totals-table">
+              <tr>
+                <td class="label-col">Total Net Weight</td>
+                <td class="value-col" id="totalNetWeight">0 t</td>
+              </tr>
+              <tr>
+                <td class="label-col">Subtotal</td>
+                <td class="value-col" id="totalFee">$0.00</td>
+              </tr>
+              <tr>
+                <td class="label-col">GST</td>
+                <td class="value-col" id="totalGST">$0.00</td>
+              </tr>
+              <tr class="total-row">
+                <td class="label-col">Grand Total</td>
+                <td class="value-col" id="grandTotal">$0.00</td>
+              </tr>
+            </table>
           </div>
         </div>
       </div>
@@ -456,6 +464,12 @@
 
     <script>
       const API_BASE_URL = "/api";
+
+      // Load and set the logo
+      const logoImg = document.getElementById("companyLogo");
+      if (logoImg) {
+        logoImg.src = "/RAC_Mining_Logo.png";
+      }
 
       document.addEventListener("DOMContentLoaded", function () {
         const today = new Date();
@@ -542,9 +556,6 @@
           data.accountName || "All Accounts";
         document.getElementById("reportDate").textContent =
           new Date().toLocaleDateString("en-AU");
-        document.getElementById("docketRange").textContent = `${
-          data.dockets[0].docket_no
-        } - ${data.dockets[data.dockets.length - 1].docket_no}`;
 
         const dateFrom = document.getElementById("dateFrom").value;
         const dateTo = document.getElementById("dateTo").value;
