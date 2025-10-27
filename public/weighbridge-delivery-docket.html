@@ -303,8 +303,8 @@
     <div class="page-container">
       <!-- Controls -->
       <div class="controls no-print">
-        <label for="movementId">Movement ID:</label>
-        <input type="number" id="movementId" placeholder="Enter Movement ID" />
+        <label for="docketNumber">Docket Number:</label>
+        <input type="text" id="docketNumber" placeholder="Enter Docket #" />
         <button class="btn btn-primary" onclick="loadDocket()">
           📄 Load Docket
         </button>
@@ -325,7 +325,7 @@
       <!-- Error State -->
       <div id="errorState" class="error-state" style="display: none">
         <h3>⚠️ Error Loading Docket</h3>
-        <p id="errorMessage">Please enter a valid Movement ID</p>
+        <p id="errorMessage">Please enter a valid Docket Number</p>
       </div>
 
       <!-- Docket Content -->
@@ -355,7 +355,7 @@
         <div class="info-row">
           <div><strong>Date / Time :</strong> <span id="dateTime">-</span></div>
           <div class="docket-number">
-            <strong>Docket No. :</strong> <span id="docketNumber">-</span>
+            <strong>Docket No. :</strong> <span id="docketNo">-</span>
           </div>
         </div>
 
@@ -461,19 +461,21 @@
     <script>
       const API_BASE_URL = "/api";
 
-      // Load docket by movement ID
+      // Load docket by docket number
       async function loadDocket() {
-        const movementId = document.getElementById("movementId").value;
+        const docketNumber = document.getElementById("docketNumber").value;
 
-        if (!movementId) {
-          showError("Please enter a Movement ID");
+        if (!docketNumber) {
+          showError("Please enter a Docket Number");
           return;
         }
 
         showLoading();
 
         try {
-          const response = await fetch(`${API_BASE_URL}/dockets/${movementId}`);
+          const response = await fetch(
+            `${API_BASE_URL}/dockets/${docketNumber}`
+          );
           const data = await response.json();
 
           if (data.success && data.docket) {
@@ -495,8 +497,8 @@
           const response = await fetch(`${API_BASE_URL}/dockets/latest/sales`);
           const data = await response.json();
 
-          if (data.success && data.movementId) {
-            document.getElementById("movementId").value = data.movementId;
+          if (data.success && data.docketNumber) {
+            document.getElementById("docketNumber").value = data.docketNumber;
             await loadDocket();
           } else {
             showError("No sales dockets found");
@@ -515,7 +517,7 @@
         );
 
         // Docket Number
-        document.getElementById("docketNumber").textContent =
+        document.getElementById("docketNo").textContent =
           docket.docket_number || "-";
 
         // Customer
@@ -635,13 +637,13 @@
       // Auto-load from URL parameter
       window.addEventListener("DOMContentLoaded", function () {
         const urlParams = new URLSearchParams(window.location.search);
-        const movementId = urlParams.get("id");
+        const docketNumber = urlParams.get("docket");
 
-        if (movementId) {
-          document.getElementById("movementId").value = movementId;
+        if (docketNumber) {
+          document.getElementById("docketNumber").value = docketNumber;
           loadDocket();
         } else {
-          showError("Enter a Movement ID to load a docket");
+          showError("Enter a Docket Number to load a docket");
         }
       });
     </script>

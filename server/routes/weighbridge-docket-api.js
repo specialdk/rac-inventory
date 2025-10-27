@@ -7,14 +7,14 @@ const router = express.Router();
 const pool = require("../config/database");
 
 // ============================================
-// GET DOCKET DATA BY MOVEMENT ID
+// GET DOCKET DATA BY DOCKET NUMBER
 // ============================================
-router.get("/dockets/:movementId", async (req, res) => {
+router.get("/dockets/:docketNumber", async (req, res) => {
   console.log("🔵 Weighbridge Docket API Called");
-  console.log("📝 Movement ID:", req.params.movementId);
+  console.log("📝 Docket Number:", req.params.docketNumber);
 
   try {
-    const { movementId } = req.params;
+    const { docketNumber } = req.params;
 
     // Get complete docket data with all joins
     const query = `
@@ -46,16 +46,16 @@ router.get("/dockets/:movementId", async (req, res) => {
       LEFT JOIN locations l ON sm.to_location_id = l.location_id
       LEFT JOIN drivers d ON sm.driver_id = d.driver_id
       LEFT JOIN deliveries del ON sm.delivery_id = del.delivery_id
-      WHERE sm.movement_id = $1
+      WHERE sm.docket_number = $1
         AND sm.movement_type = 'SALES'
     `;
 
-    console.log("🔍 Executing Query for Movement ID:", movementId);
+    console.log("🔍 Executing Query for Docket Number:", docketNumber);
 
-    const result = await pool.query(query, [movementId]);
+    const result = await pool.query(query, [docketNumber]);
 
     if (result.rows.length === 0) {
-      console.log("❌ No docket found for movement ID:", movementId);
+      console.log("❌ No docket found for docket number:", docketNumber);
       return res.status(404).json({
         success: false,
         message: "Docket not found",
@@ -88,9 +88,10 @@ router.get("/dockets/:movementId", async (req, res) => {
 router.get("/dockets/latest/sales", async (req, res) => {
   try {
     const query = `
-      SELECT movement_id
+      SELECT docket_number
       FROM stock_movements
       WHERE movement_type = 'SALES'
+        AND docket_number IS NOT NULL
       ORDER BY movement_date DESC, movement_id DESC
       LIMIT 1
     `;
@@ -106,7 +107,7 @@ router.get("/dockets/latest/sales", async (req, res) => {
 
     res.json({
       success: true,
-      movementId: result.rows[0].movement_id,
+      docketNumber: result.rows[0].docket_number,
     });
   } catch (error) {
     console.error("Error getting latest docket:", error);
