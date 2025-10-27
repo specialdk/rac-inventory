@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Weighbridge Delivery Docket - RAC Inventory</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f5f5f5;
+        padding: 20px;
+      }
+
+      .page-container {
+        max-width: 900px;
+        margin: 0 auto;
+        background: white;
+        padding: 40px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      /* Controls (no-print) */
+      .controls {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        display: flex;
+        gap: 15px;
+        align-items: center;
+      }
+
+      .controls label {
+        font-weight: 600;
+        color: #333;
+      }
+
+      .controls input {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        width: 150px;
+      }
+
+      .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.3s;
+      }
+
+      .btn-primary {
+        background: #007bff;
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: #0056b3;
+      }
+
+      .btn-success {
+        background: #28a745;
+        color: white;
+      }
+
+      .btn-success:hover {
+        background: #218838;
+      }
+
+      /* Docket Header */
+      .docket-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 20px;
+      }
+
+      .company-details {
+        flex: 1;
+      }
+
+      .company-details h1 {
+        font-size: 16px;
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: #000;
+      }
+
+      .company-details p {
+        font-size: 11px;
+        color: #000;
+        line-height: 1.4;
+        margin: 0;
+      }
+
+      .company-logo {
+        width: 100px;
+        height: auto;
+      }
+
+      .company-logo img {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+
+      /* Title Section */
+      .docket-title {
+        text-align: center;
+        margin: 20px 0;
+      }
+
+      .docket-title h2 {
+        background: #000;
+        color: #fff;
+        padding: 8px 20px;
+        display: inline-block;
+        font-size: 18px;
+        font-weight: bold;
+        box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3);
+      }
+
+      /* Horizontal Line */
+      .divider {
+        border: none;
+        border-top: 2px solid #000;
+        margin: 20px 0;
+      }
+
+      /* Date and Docket Row */
+      .info-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 15px;
+        font-size: 13px;
+      }
+
+      .info-row strong {
+        font-weight: bold;
+      }
+
+      .docket-number {
+        position: relative;
+      }
+
+      .docket-number::after {
+        content: "/";
+        color: red;
+        font-size: 18px;
+        margin-left: 5px;
+      }
+
+      /* Main Content Area */
+      .docket-content {
+        display: grid;
+        grid-template-columns: 1fr 250px;
+        gap: 20px;
+        margin-top: 20px;
+      }
+
+      /* Left Column */
+      .left-column {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .field {
+        font-size: 13px;
+        line-height: 1.6;
+      }
+
+      .field strong {
+        font-weight: bold;
+        display: inline-block;
+        min-width: 180px;
+      }
+
+      /* Right Column - Boxes */
+      .right-column {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      .info-box {
+        border: 2px solid #000;
+        padding: 12px;
+        border-radius: 4px;
+      }
+
+      .info-box-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 4px 0;
+        font-size: 13px;
+      }
+
+      .info-box-row strong {
+        font-weight: bold;
+      }
+
+      .info-box-row.highlight {
+        font-weight: bold;
+        border-top: 2px solid #000;
+        padding-top: 8px;
+        margin-top: 4px;
+      }
+
+      /* Signature Section */
+      .signature-section {
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 2px solid #000;
+      }
+
+      .signature-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 40px;
+        margin-bottom: 30px;
+      }
+
+      .signature-field {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .signature-field label {
+        font-size: 12px;
+        font-weight: bold;
+      }
+
+      .signature-line {
+        border-bottom: 1px solid #000;
+        height: 30px;
+      }
+
+      /* Print Styles */
+      @media print {
+        body {
+          background: white;
+          padding: 0;
+        }
+
+        .page-container {
+          box-shadow: none;
+          padding: 20px;
+          max-width: 100%;
+        }
+
+        .controls,
+        .no-print {
+          display: none !important;
+        }
+
+        .company-logo img {
+          display: block !important;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+      }
+
+      /* Loading/Empty States */
+      .loading,
+      .error-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #666;
+      }
+
+      .spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #007bff;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-container">
+      <!-- Controls -->
+      <div class="controls no-print">
+        <label for="movementId">Movement ID:</label>
+        <input type="number" id="movementId" placeholder="Enter Movement ID" />
+        <button class="btn btn-primary" onclick="loadDocket()">
+          📄 Load Docket
+        </button>
+        <button class="btn btn-primary" onclick="loadLatestDocket()">
+          🔄 Load Latest
+        </button>
+        <button class="btn btn-success" onclick="printDocket()">
+          🖨️ Print
+        </button>
+      </div>
+
+      <!-- Loading State -->
+      <div id="loadingState" class="loading" style="display: none">
+        <div class="spinner"></div>
+        <p>Loading docket...</p>
+      </div>
+
+      <!-- Error State -->
+      <div id="errorState" class="error-state" style="display: none">
+        <h3>⚠️ Error Loading Docket</h3>
+        <p id="errorMessage">Please enter a valid Movement ID</p>
+      </div>
+
+      <!-- Docket Content -->
+      <div id="docketContent" style="display: none">
+        <!-- Header -->
+        <div class="docket-header">
+          <div class="company-details">
+            <h1>Rirratjingu Mining Pty Ltd</h1>
+            <p>Melville Rd, Nhulunbuy NT 0881</p>
+            <p>Ph. 08 8987 3433</p>
+            <p>Fax 08 8987 2304</p>
+            <p>ABN 15 129 907 660</p>
+          </div>
+          <div class="company-logo">
+            <img src="/RAC_Mining_Logo.png" alt="RAC Mining Logo" />
+          </div>
+        </div>
+
+        <!-- Title -->
+        <div class="docket-title">
+          <h2>Weighbridge Delivery Docket</h2>
+        </div>
+
+        <hr class="divider" />
+
+        <!-- Date and Docket Number -->
+        <div class="info-row">
+          <div><strong>Date / Time :</strong> <span id="dateTime">-</span></div>
+          <div class="docket-number">
+            <strong>Docket No. :</strong> <span id="docketNumber">-</span>
+          </div>
+        </div>
+
+        <!-- Customer -->
+        <div class="field">
+          <strong>Customer :</strong> <span id="customerName">-</span>
+        </div>
+
+        <!-- Destination -->
+        <div class="field">
+          <strong>Destination/Job :</strong> <span id="destination">-</span>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="docket-content">
+          <!-- Left Column -->
+          <div class="left-column">
+            <div class="field">
+              <strong>Carrier :</strong> <span id="carrier">-</span>
+            </div>
+            <div class="field">
+              <strong>Vehicle :</strong> <span id="vehicle">-</span>
+            </div>
+            <div class="field">
+              <strong>Product :</strong> <span id="product">-</span>
+            </div>
+            <div class="field">
+              <strong>Stockpile Lot No :</strong>
+              <span id="stockpileLot">-</span>
+            </div>
+            <div class="field">
+              <strong>Purchase Order / Job No. :</strong>
+              <span id="poNumber">-</span>
+            </div>
+            <div class="field">
+              <strong>Notes :</strong> <span id="notes">-</span>
+            </div>
+          </div>
+
+          <!-- Right Column -->
+          <div class="right-column">
+            <!-- Weight Box -->
+            <div class="info-box">
+              <div class="info-box-row">
+                <strong>Gross Wt :</strong>
+                <span id="grossWeight">0.00 t</span>
+              </div>
+              <div class="info-box-row">
+                <strong>Tare Wt :</strong>
+                <span id="tareWeight">0.00 t</span>
+              </div>
+              <div class="info-box-row highlight">
+                <strong>Net Wt :</strong> <span id="netWeight">0.00 t</span>
+              </div>
+            </div>
+
+            <!-- Pricing Box -->
+            <div class="info-box">
+              <div class="info-box-row">
+                <strong>Docket Fee $</strong>
+                <span id="docketFee">$0.00</span>
+              </div>
+              <div class="info-box-row">
+                <strong>Docket GST $</strong>
+                <span id="docketGST">$0.00</span>
+              </div>
+              <div class="info-box-row highlight">
+                <strong>Docket Total $</strong>
+                <span id="docketTotal">$0.00</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <hr class="divider" />
+
+        <!-- Signature Section -->
+        <div class="signature-section">
+          <div class="signature-row">
+            <div class="signature-field">
+              <label>Receivers Name :</label>
+              <div class="signature-line"></div>
+            </div>
+            <div class="signature-field">
+              <label>Drivers Name :</label>
+              <div class="signature-line" id="driverName"></div>
+            </div>
+          </div>
+          <div class="signature-row">
+            <div class="signature-field">
+              <label>Receivers Signature :</label>
+              <div class="signature-line"></div>
+            </div>
+            <div class="signature-field">
+              <label>Drivers Signature :</label>
+              <div class="signature-line"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const API_BASE_URL = "/api";
+
+      // Load docket by movement ID
+      async function loadDocket() {
+        const movementId = document.getElementById("movementId").value;
+
+        if (!movementId) {
+          showError("Please enter a Movement ID");
+          return;
+        }
+
+        showLoading();
+
+        try {
+          const response = await fetch(`${API_BASE_URL}/dockets/${movementId}`);
+          const data = await response.json();
+
+          if (data.success && data.docket) {
+            displayDocket(data.docket);
+          } else {
+            showError(data.message || "Docket not found");
+          }
+        } catch (error) {
+          console.error("Error loading docket:", error);
+          showError("Error loading docket. Please try again.");
+        }
+      }
+
+      // Load latest docket
+      async function loadLatestDocket() {
+        showLoading();
+
+        try {
+          const response = await fetch(`${API_BASE_URL}/dockets/latest/sales`);
+          const data = await response.json();
+
+          if (data.success && data.movementId) {
+            document.getElementById("movementId").value = data.movementId;
+            await loadDocket();
+          } else {
+            showError("No sales dockets found");
+          }
+        } catch (error) {
+          console.error("Error loading latest docket:", error);
+          showError("Error loading latest docket. Please try again.");
+        }
+      }
+
+      // Display docket data
+      function displayDocket(docket) {
+        // Date/Time
+        document.getElementById("dateTime").textContent = formatDateTime(
+          docket.movement_date
+        );
+
+        // Docket Number
+        document.getElementById("docketNumber").textContent =
+          docket.docket_number || "-";
+
+        // Customer
+        document.getElementById("customerName").textContent =
+          docket.customer_name || "-";
+
+        // Destination
+        document.getElementById("destination").textContent =
+          docket.destination || "Delivery";
+
+        // Carrier (same as customer for now)
+        document.getElementById("carrier").textContent =
+          docket.customer_name || "-";
+
+        // Vehicle
+        document.getElementById("vehicle").textContent =
+          docket.vehicle_rego || "-";
+
+        // Product
+        const productText = docket.product_code
+          ? `${docket.product_name} (${docket.product_code})`
+          : docket.product_name || "-";
+        document.getElementById("product").textContent = productText;
+
+        // Stockpile Lot
+        document.getElementById("stockpileLot").textContent =
+          docket.stockpile_lot || "-";
+
+        // PO Number
+        document.getElementById("poNumber").textContent =
+          docket.po_number || "-";
+
+        // Notes
+        document.getElementById("notes").textContent = docket.notes || "";
+
+        // Weights
+        const grossWt = parseFloat(docket.gross_weight) || 0;
+        const tareWt = parseFloat(docket.tare_weight) || 0;
+        const netWt = parseFloat(docket.net_weight) || 0;
+
+        document.getElementById("grossWeight").textContent = `${grossWt.toFixed(
+          2
+        )} t`;
+        document.getElementById("tareWeight").textContent = `${tareWt.toFixed(
+          2
+        )} t`;
+        document.getElementById("netWeight").textContent = `${netWt.toFixed(
+          2
+        )} t`;
+
+        // Pricing
+        const fee = parseFloat(docket.docket_fee) || 0;
+        const gst = parseFloat(docket.docket_gst) || 0;
+        const total = parseFloat(docket.docket_total) || 0;
+
+        document.getElementById("docketFee").textContent = `$${fee.toFixed(2)}`;
+        document.getElementById("docketGST").textContent = `$${gst.toFixed(2)}`;
+        document.getElementById("docketTotal").textContent = `$${total.toFixed(
+          2
+        )}`;
+
+        // Driver Name (pre-fill if available)
+        if (docket.driver_name) {
+          document.getElementById("driverName").textContent =
+            docket.driver_name;
+        }
+
+        showDocket();
+      }
+
+      // Format date and time
+      function formatDateTime(dateString) {
+        const date = new Date(dateString);
+        const dateStr = date.toLocaleDateString("en-AU", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        });
+        const timeStr = date.toLocaleTimeString("en-AU", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        });
+        return `${dateStr} ${timeStr}`;
+      }
+
+      // Print docket
+      function printDocket() {
+        const docketContent = document.getElementById("docketContent");
+        if (docketContent.style.display === "none") {
+          alert("Please load a docket first");
+          return;
+        }
+        window.print();
+      }
+
+      // UI State Management
+      function showLoading() {
+        document.getElementById("loadingState").style.display = "block";
+        document.getElementById("errorState").style.display = "none";
+        document.getElementById("docketContent").style.display = "none";
+      }
+
+      function showError(message) {
+        document.getElementById("errorMessage").textContent = message;
+        document.getElementById("loadingState").style.display = "none";
+        document.getElementById("errorState").style.display = "block";
+        document.getElementById("docketContent").style.display = "none";
+      }
+
+      function showDocket() {
+        document.getElementById("loadingState").style.display = "none";
+        document.getElementById("errorState").style.display = "none";
+        document.getElementById("docketContent").style.display = "block";
+      }
+
+      // Auto-load from URL parameter
+      window.addEventListener("DOMContentLoaded", function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        const movementId = urlParams.get("id");
+
+        if (movementId) {
+          document.getElementById("movementId").value = movementId;
+          loadDocket();
+        } else {
+          showError("Enter a Movement ID to load a docket");
+        }
+      });
+    </script>
+  </body>
+</html>

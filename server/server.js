@@ -89,6 +89,7 @@ app.use("/api/deliveries", require("./routes/deliveries"));
 
 // Report Routes
 app.use("/api", require("./routes/account-detail-report-api"));
+app.use("/api", require("./routes/weighbridge-docket-api"));
 
 // Serve index.html for root
 app.get("/", (req, res) => {
