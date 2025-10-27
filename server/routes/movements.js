@@ -221,6 +221,23 @@ router.post("/sales", async (req, res) => {
       throw new Error("Missing required fields");
     }
 
+    // VALIDATION: Docket number is mandatory for sales
+    if (!docket_number || docket_number.trim() === "") {
+      throw new Error("Docket number is required for sales");
+    }
+
+    // VALIDATION: Check if docket number already exists
+    const docketCheck = await client.query(
+      "SELECT movement_id FROM stock_movements WHERE docket_number = $1 AND movement_type = 'SALES'",
+      [docket_number]
+    );
+
+    if (docketCheck.rows.length > 0) {
+      throw new Error(
+        `Docket number ${docket_number} already exists. Please use a unique docket number.`
+      );
+    }
+
     // Check if sufficient stock exists
     const stockCheck = await client.query(
       "SELECT quantity FROM current_stock WHERE product_id = $1 AND location_id = $2",

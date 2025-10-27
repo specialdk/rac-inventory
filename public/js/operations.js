@@ -554,7 +554,7 @@ async function saveSales() {
     notes: document.getElementById("saleNotes").value,
   };
 
-  // Validate
+  // Validate required fields
   if (
     !formData.movement_date ||
     !formData.product_id ||
@@ -564,6 +564,13 @@ async function saveSales() {
     !formData.customer_id
   ) {
     alert("Please fill in all required fields");
+    return;
+  }
+
+  // Validate docket number (mandatory for sales)
+  if (!formData.docket_number || formData.docket_number.trim() === "") {
+    alert("Docket Number is required for sales");
+    document.getElementById("saleDocket").focus();
     return;
   }
 
