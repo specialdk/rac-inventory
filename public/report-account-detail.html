@@ -209,15 +209,15 @@
       }
 
       .totals-row {
-        font-weight: bold;
         border-top: 2px solid #000;
         border-bottom: 2px solid #000;
       }
 
       .totals-row td {
-        font-size: 12px;
+        font-size: 11px;
+        font-weight: bold;
         padding: 10px 8px;
-        text-align: left; /* Add this line */
+        text-align: left;
       }
 
       /* Empty State */
@@ -274,6 +274,11 @@
         .action-buttons,
         .no-print {
           display: none !important;
+        }
+        .company-logo img {
+          display: block !important;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
         }
       }
 
@@ -380,12 +385,17 @@
           <tbody id="reportTableBody"></tbody>
         </table>
 
-        <!-- Totals Section - Single Row -->
+        <!-- Totals Section - Fixed alignment -->
         <div class="totals-section">
           <table class="report-table">
             <tbody>
               <tr class="totals-row">
-                <td colspan="6"><strong>Grand Total</strong></td>
+                <td>Grand Total</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
                 <td id="totalNetWeight">0 t</td>
                 <td id="totalFee">$0.00</td>
                 <td id="totalGST">$0.00</td>
