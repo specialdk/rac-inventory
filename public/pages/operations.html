@@ -416,13 +416,15 @@
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label required">Quantity Sold (tonnes)</label>
+              <label class="form-label required">Gross Weight (tonnes)</label>
               <input
                 type="number"
                 class="form-control"
-                id="saleQuantity"
+                id="saleGrossWeight"
                 step="0.01"
                 required
+                oninput="calculateNetWeight()"
+                placeholder="e.g., 100.0"
               />
             </div>
           </div>
@@ -473,14 +475,32 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label">Tare Weight (tonnes)</label>
+              <label class="form-label required">Tare Weight (tonnes)</label>
               <input
                 type="number"
                 class="form-control"
                 id="saleTareWeight"
                 step="0.01"
-                placeholder="e.g., 12.5"
+                required
+                oninput="calculateNetWeight()"
+                placeholder="e.g., 20.0"
               />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Net Weight (tonnes)</label>
+              <input
+                type="number"
+                class="form-control"
+                id="saleNetWeight"
+                step="0.01"
+                readonly
+                style="background-color: #f0f0f0; font-weight: bold"
+                placeholder="Auto-calculated"
+              />
+              <small style="color: #666"
+                >Gross - Tare = Net (actual product sold)</small
+              >
             </div>
           </div>
 

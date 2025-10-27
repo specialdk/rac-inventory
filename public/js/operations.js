@@ -537,22 +537,58 @@ function updateSalePrice() {
 }
 
 async function saveSales() {
+  const grossWeight =
+    parseFloat(document.getElementById("saleGrossWeight").value) || 0;
+  const tareWeight =
+    parseFloat(document.getElementById("saleTareWeight").value) || 0;
+  const netWeight = grossWeight - tareWeight;
+
   const formData = {
     movement_date: document.getElementById("saleDate").value,
     product_id: document.getElementById("saleProduct").value,
     from_location_id: document.getElementById("saleLocation").value,
-    quantity: parseFloat(document.getElementById("saleQuantity").value),
+    gross_weight: grossWeight,
+    tare_weight: tareWeight,
+    quantity: netWeight, // NET weight goes into quantity field
     unit_price: parseFloat(document.getElementById("salePrice").value),
     customer_id: document.getElementById("saleCustomer").value,
     vehicle_id: document.getElementById("saleVehicle").value || null,
     driver_id: document.getElementById("saleDriver").value || null,
-    delivery_id: document.getElementById("saleDelivery").value || null, // NEW
-    tare_weight:
-      parseFloat(document.getElementById("saleTareWeight").value) || null, // NEW
+    delivery_id: document.getElementById("saleDelivery").value || null,
     docket_number: document.getElementById("saleDocket").value,
     reference_number: document.getElementById("saleReference").value,
     notes: document.getElementById("saleNotes").value,
   };
+
+  // ============================================
+  // AUTO-CALCULATE NET WEIGHT FOR SALES
+  // ============================================
+  function calculateNetWeight() {
+    const grossWeight =
+      parseFloat(document.getElementById("saleGrossWeight").value) || 0;
+    const tareWeight =
+      parseFloat(document.getElementById("saleTareWeight").value) || 0;
+    const netWeight = grossWeight - tareWeight;
+
+    const netWeightInput = document.getElementById("saleNetWeight");
+
+    if (netWeight > 0) {
+      netWeightInput.value = netWeight.toFixed(2);
+      netWeightInput.style.color = "#28a745"; // Green for valid
+    } else if (grossWeight > 0 || tareWeight > 0) {
+      netWeightInput.value = netWeight.toFixed(2);
+      netWeightInput.style.color = "#dc3545"; // Red for negative
+    } else {
+      netWeightInput.value = "";
+      netWeightInput.style.color = "#000";
+    }
+  }
+
+  // Validate net weight is positive
+  if (netWeight <= 0) {
+    alert("Net Weight must be positive. Check Gross and Tare weights.");
+    return;
+  }
 
   // Validate required fields
   if (
