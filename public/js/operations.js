@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   setDefaultDate();
   await loadDropdowns();
   await loadStats();
-  await loadRecentMovements();
+  await loadRecentMovementsWithFilter();
   setupSaleProductListener(); // Setup sale product listener
 
   // ============================================
@@ -322,6 +322,8 @@ async function loadRecentMovements() {
               <th>Date</th>
               <th>Type</th>
               <th>Product</th>
+              <th>Customer</th>
+              <th>Docket #</th>
               <th>Location</th>
               <th class="text-right">Quantity</th>
               <th>Reference</th>
@@ -358,17 +360,19 @@ async function loadRecentMovements() {
       if (movement.movement_type === "DEMAND") badgeClass = "badge-secondary";
 
       row.innerHTML = `
-        <td>${dateStr}<br><small class="text-muted">${timeStr}</small></td>
-        <td><span class="badge ${badgeClass}">${
-        movement.movement_type
-      }</span></td>
-        <td>${movement.product_name || "-"}</td>
-        <td>${
-          movement.to_location_name || movement.from_location_name || "-"
-        }</td>
-        <td class="text-right">${parseFloat(movement.quantity).toFixed(1)}t</td>
-        <td class="text-muted">${movement.reference_number || "-"}</td>
-      `;
+  <td>${dateStr}<br><small class="text-muted">${timeStr}</small></td>
+  <td><span class="badge ${badgeClass}">${movement.movement_type}</span></td>
+  <td>${movement.product_name || "-"}</td>
+  <td>${movement.customer_name || "-"}</td>
+  <td>${
+    movement.docket_number
+      ? `<a href="/weighbridge-delivery-docket.html?docket=${movement.docket_number}" target="_blank" style="color: #007bff; text-decoration: none;">${movement.docket_number}</a>`
+      : "-"
+  }</td>
+  <td>${movement.to_location_name || movement.from_location_name || "-"}</td>
+  <td class="text-right">${parseFloat(movement.quantity).toFixed(1)}t</td>
+  <td class="text-muted">${movement.reference_number || "-"}</td>
+`;
 
       tbody.appendChild(row);
     });
@@ -434,7 +438,7 @@ async function saveProduction() {
 
     alert("Production saved successfully!");
     closeProductionModal();
-    await loadRecentMovements();
+    await loadRecentMovementsWithFilter();
     await loadStats();
   } catch (error) {
     console.error("Error saving production:", error);
@@ -499,7 +503,7 @@ async function saveDemand() {
 
     alert("Demand saved successfully!");
     closeDemandModal();
-    await loadRecentMovements();
+    await loadRecentMovementsWithFilter();
     await loadStats();
   } catch (error) {
     console.error("Error saving demand:", error);
@@ -576,9 +580,17 @@ async function saveSales() {
       return;
     }
 
-    alert("Sale saved successfully!");
+    const result = await response.json();
+    const docketNumber = result.docket_number || formData.docket_number;
+
+    // Close the sales modal first
     closeSalesModal();
-    await loadRecentMovements();
+
+    // Show docket action modal
+    showDocketModal(docketNumber);
+
+    // Refresh data
+    await loadRecentMovementsWithFilter();
     await loadStats();
   } catch (error) {
     console.error("Error saving sale:", error);
@@ -629,4 +641,250 @@ function filterMovementsByType() {
       }
     }
   });
+}
+
+// ============================================
+// DOCKET ACTION MODAL
+// ============================================
+function showDocketModal(docketNumber) {
+  // Create modal HTML
+  const modalHTML = `
+    <div id="docketActionModal" class="modal" style="display: flex;">
+      <div class="modal-content" style="max-width: 500px;">
+        <h2 style="margin-bottom: 20px;">✅ Sale Saved Successfully!</h2>
+        
+        <p style="font-size: 16px; margin-bottom: 30px;">
+          Docket <strong>${docketNumber}</strong> has been created.
+        </p>
+        
+        <div style="display: flex; gap: 15px; justify-content: center;">
+          <button class="btn-primary" onclick="printDocket('${docketNumber}')">
+            🖨️ Print Now
+          </button>
+          <button class="btn-secondary" onclick="viewDocket('${docketNumber}')">
+            📄 View Docket
+          </button>
+          <button class="btn-secondary" onclick="closeDocketModal()">
+            ✕ Close
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Add to body
+  document.body.insertAdjacentHTML("beforeend", modalHTML);
+}
+
+function printDocket(docketNumber) {
+  // Open docket in new window and trigger print
+  const printWindow = window.open(
+    `/weighbridge-delivery-docket.html?docket=${docketNumber}&autoprint=true`,
+    "_blank",
+    "width=900,height=800"
+  );
+  closeDocketModal();
+}
+
+function viewDocket(docketNumber) {
+  // Open docket in new tab
+  window.open(
+    `/weighbridge-delivery-docket.html?docket=${docketNumber}`,
+    "_blank"
+  );
+  closeDocketModal();
+}
+
+function closeDocketModal() {
+  const modal = document.getElementById("docketActionModal");
+  if (modal) {
+    modal.remove();
+  }
+}
+
+// ============================================
+// FILTER MOVEMENTS
+// ============================================
+
+// Store all movements for filtering
+let allMovements = [];
+
+// Modified loadRecentMovements to store data
+async function loadRecentMovementsWithFilter() {
+  try {
+    const response = await fetch("/api/movements?limit=50"); // Get more for filtering
+    allMovements = await response.json();
+
+    // Populate customer filter dropdown
+    populateCustomerFilter();
+
+    // Display filtered movements
+    filterMovements();
+  } catch (error) {
+    console.error("Error loading recent movements:", error);
+  }
+}
+
+// Populate customer filter dropdown
+function populateCustomerFilter() {
+  const customerFilter = document.getElementById("customerFilter");
+
+  if (!customerFilter) return;
+
+  // Get unique customers from movements
+  const customers = [
+    ...new Set(
+      allMovements.filter((m) => m.customer_name).map((m) => m.customer_name)
+    ),
+  ].sort();
+
+  // Clear existing options (except "All Customers")
+  customerFilter.innerHTML = '<option value="">All Customers</option>';
+
+  // Add customer options
+  customers.forEach((customer) => {
+    const option = document.createElement("option");
+    option.value = customer;
+    option.textContent = customer;
+    customerFilter.appendChild(option);
+  });
+}
+
+// Filter movements based on selected filters
+function filterMovements() {
+  const customerFilter = document
+    .getElementById("customerFilter")
+    ?.value.toLowerCase();
+  const typeFilter = document.getElementById("typeFilter")?.value.toUpperCase();
+  const searchText = document
+    .getElementById("searchMovements")
+    ?.value.toLowerCase();
+
+  // Filter movements
+  let filtered = allMovements.filter((movement) => {
+    // Customer filter
+    if (
+      customerFilter &&
+      (!movement.customer_name ||
+        !movement.customer_name.toLowerCase().includes(customerFilter))
+    ) {
+      return false;
+    }
+
+    // Type filter
+    if (typeFilter && movement.movement_type !== typeFilter) {
+      return false;
+    }
+
+    // Search filter (searches across multiple fields)
+    if (searchText) {
+      const searchableText = [
+        movement.product_name,
+        movement.customer_name,
+        movement.docket_number,
+        movement.reference_number,
+        movement.to_location_name,
+        movement.from_location_name,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      if (!searchableText.includes(searchText)) {
+        return false;
+      }
+    }
+
+    return true;
+  });
+
+  // Display filtered movements
+  displayMovements(filtered);
+}
+
+// Display movements in table
+function displayMovements(movements) {
+  const container = document.getElementById("movementsTableContainer");
+
+  if (!container) return;
+
+  // Create table structure if it doesn't exist
+  let table = container.querySelector("table");
+  if (!table) {
+    container.innerHTML = `
+      <table class="movements-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Type</th>
+            <th>Product</th>
+            <th>Customer</th>
+            <th>Docket #</th>
+            <th>Location</th>
+            <th class="text-right">Quantity</th>
+            <th>Reference</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    `;
+    table = container.querySelector("table");
+  }
+
+  const tbody = table.querySelector("tbody");
+  tbody.innerHTML = "";
+
+  if (movements.length === 0) {
+    tbody.innerHTML =
+      '<tr><td colspan="8" style="text-align: center; padding: 20px; color: #999;">No movements found</td></tr>';
+    return;
+  }
+
+  movements.forEach((movement) => {
+    const row = document.createElement("tr");
+
+    // Format date
+    const date = new Date(movement.movement_date);
+    const dateStr = date.toLocaleDateString("en-AU", {
+      day: "2-digit",
+      month: "short",
+    });
+    const timeStr = date.toLocaleTimeString("en-AU", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    // Movement type badge
+    let badgeClass = "badge-primary";
+    if (movement.movement_type === "PRODUCTION") badgeClass = "badge-success";
+    if (movement.movement_type === "SALES") badgeClass = "badge-info";
+    if (movement.movement_type === "ADJUSTMENT") badgeClass = "badge-warning";
+    if (movement.movement_type === "DEMAND") badgeClass = "badge-secondary";
+
+    row.innerHTML = `
+      <td>${dateStr}<br><small class="text-muted">${timeStr}</small></td>
+      <td><span class="badge ${badgeClass}">${
+      movement.movement_type
+    }</span></td>
+      <td>${movement.product_name || "-"}</td>
+      <td>${movement.customer_name || "-"}</td>
+      <td>${
+        movement.docket_number
+          ? `<a href="/weighbridge-delivery-docket.html?docket=${movement.docket_number}" target="_blank" style="color: #007bff; text-decoration: none;">${movement.docket_number}</a>`
+          : "-"
+      }</td>
+      <td>${
+        movement.to_location_name || movement.from_location_name || "-"
+      }</td>
+      <td class="text-right">${parseFloat(movement.quantity).toFixed(1)}t</td>
+      <td class="text-muted">${movement.reference_number || "-"}</td>
+    `;
+
+    tbody.appendChild(row);
+  });
+}
+
+// Refresh movements (reload from API)
+async function refreshMovements() {
+  await loadRecentMovementsWithFilter();
 }

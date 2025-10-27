@@ -636,16 +636,24 @@
 
       // Auto-load from URL parameter
       window.addEventListener("DOMContentLoaded", function () {
-        const urlParams = new URLSearchParams(window.location.search);
-        const docketNumber = urlParams.get("docket");
+  const urlParams = new URLSearchParams(window.location.search);
+  const docketNumber = urlParams.get("docket");
+  const autoPrint = urlParams.get("autoprint");
 
-        if (docketNumber) {
-          document.getElementById("docketNumber").value = docketNumber;
-          loadDocket();
-        } else {
-          showError("Enter a Docket Number to load a docket");
-        }
-      });
+  if (docketNumber) {
+    document.getElementById("docketNumber").value = docketNumber;
+    loadDocket().then(() => {
+      // Auto-print if requested
+      if (autoPrint === "true") {
+        setTimeout(() => {
+          window.print();
+        }, 500);
+      }
+    });
+  } else {
+    showError("Enter a Docket Number to load a docket");
+  }
+});
     </script>
   </body>
 </html>

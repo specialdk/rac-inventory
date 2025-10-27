@@ -126,14 +126,45 @@
       <div class="data-table">
         <div class="table-header">
           <h2 class="table-title">Recent Movements</h2>
-          <div class="table-actions">
+          <div
+            class="table-actions"
+            style="display: flex; gap: 10px; align-items: center"
+          >
+            <!-- Customer Filter -->
+            <select
+              class="form-control"
+              id="customerFilter"
+              onchange="filterMovements()"
+              style="width: 200px; padding: 8px"
+            >
+              <option value="">All Customers</option>
+            </select>
+
+            <!-- Type Filter -->
+            <select
+              class="form-control"
+              id="typeFilter"
+              onchange="filterMovements()"
+              style="width: 150px; padding: 8px"
+            >
+              <option value="">All Types</option>
+              <option value="PRODUCTION">Production</option>
+              <option value="SALES">Sales</option>
+              <option value="DEMAND">Demand</option>
+              <option value="ADJUSTMENT">Adjustment</option>
+            </select>
+
+            <!-- Search Box -->
             <input
               type="text"
               class="search-box"
               id="searchMovements"
-              placeholder="Search movements..."
-              onkeyup="loadRecentMovements()"
+              placeholder="Search..."
+              onkeyup="filterMovements()"
+              style="width: 180px; padding: 8px"
             />
+
+            <!-- Refresh Button -->
             <button
               class="btn btn-secondary btn-sm"
               onclick="refreshMovements()"
