@@ -29,7 +29,7 @@ router.get("/reports/account-detail", async (req, res) => {
         sm.docket_number as docket_no,
         v.registration as rego,
         p.product_name,
-        del.delivery_type as destination,
+        del.delivery_name as destination,
         (sm.quantity - COALESCE(sm.tare_weight, 0)) as net_weight,
         sm.unit_price,
         sm.total_revenue as fee,
