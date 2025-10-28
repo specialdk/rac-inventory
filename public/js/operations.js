@@ -363,7 +363,7 @@ async function loadRecentMovements() {
       if (movement.movement_type === "DEMAND") badgeClass = "badge-secondary";
 
       row.innerHTML = `
-  <td>${dateStr}<br><small class="text-muted">${timeStr}</small></td>
+  <td>${dateStr} <small class="text-muted">${timeStr}</small></td>
   <td><span class="badge ${badgeClass}">${movement.movement_type}</span></td>
   <td>${movement.product_name || "-"}</td>
   <td>${movement.customer_name || "-"}</td>
@@ -924,7 +924,7 @@ function displayMovements(movements) {
     if (movement.movement_type === "DEMAND") badgeClass = "badge-secondary";
 
     row.innerHTML = `
-      <td>${dateStr}<br><small class="text-muted">${timeStr}</small></td>
+      <td>${dateStr} <small class="text-muted">${timeStr}</small></td>
       <td><span class="badge ${badgeClass}">${
       movement.movement_type
     }</span></td>
