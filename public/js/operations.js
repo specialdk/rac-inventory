@@ -469,14 +469,25 @@ function closeDemandModal() {
 }
 
 async function saveDemand() {
+  const futureSaleDate = document.getElementById("demandDate").value;
+  const userNotes = document.getElementById("demandNotes").value;
+
+  // Use TODAY for movement_date (when demand was recorded)
+  const today = new Date().toISOString().split("T")[0];
+
+  // Add future date to notes
+  const combinedNotes = `Requested delivery: ${futureSaleDate}${
+    userNotes ? "\n" + userNotes : ""
+  }`;
+
   const formData = {
-    movement_date: document.getElementById("demandDate").value,
+    movement_date: today, // TODAY (when demand was entered)
     product_id: document.getElementById("demandProduct").value,
     quantity: parseFloat(document.getElementById("demandQuantity").value),
     customer_id: document.getElementById("demandCustomer").value,
     po_number: document.getElementById("demandPO").value,
     reference_number: document.getElementById("demandReference").value,
-    notes: document.getElementById("demandNotes").value,
+    notes: combinedNotes, // Include the requested delivery date
   };
 
   // Validate
