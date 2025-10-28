@@ -3,420 +3,353 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Reports - RAC Inventory</title>
-    <link rel="stylesheet" href="../css/styles.css" />
-    <style>
-      .reports-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-        gap: 25px;
-        padding: 20px 0;
-      }
-
-      .report-card {
-        background: white;
-        border: 1px solid #e0e0e0;
-        border-radius: 12px;
-        padding: 25px;
-        transition: all 0.3s ease;
-        cursor: pointer;
-        position: relative;
-        overflow: hidden;
-      }
-
-      .report-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-        border-color: #ff6b35;
-      }
-
-      .report-card.active {
-        border-color: #48bb78;
-        background: #f0fff4;
-      }
-
-      .report-card.coming-soon {
-        opacity: 0.6;
-        cursor: not-allowed;
-      }
-
-      .report-card.coming-soon:hover {
-        transform: none;
-        box-shadow: none;
-      }
-
-      .report-icon {
-        width: 60px;
-        height: 60px;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 30px;
-        margin-bottom: 15px;
-      }
-
-      .report-icon.blue {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      }
-
-      .report-icon.orange {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-      }
-
-      .report-icon.green {
-        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-      }
-
-      .report-icon.purple {
-        background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-      }
-
-      .report-icon.red {
-        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
-      }
-
-      .report-title {
-        font-size: 18px;
-        font-weight: 700;
-        color: #2d3748;
-        margin-bottom: 10px;
-      }
-
-      .report-description {
-        font-size: 14px;
-        color: #718096;
-        line-height: 1.6;
-        margin-bottom: 15px;
-      }
-
-      .report-meta {
-        display: flex;
-        gap: 15px;
-        font-size: 13px;
-        color: #a0aec0;
-        margin-top: 15px;
-        padding-top: 15px;
-        border-top: 1px solid #e2e8f0;
-      }
-
-      .report-meta-item {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-      }
-
-      .status-badge {
-        position: absolute;
-        top: 15px;
-        right: 15px;
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 11px;
-        font-weight: 600;
-        text-transform: uppercase;
-      }
-
-      .status-badge.active {
-        background: #c6f6d5;
-        color: #22543d;
-      }
-
-      .status-badge.coming-soon {
-        background: #fed7d7;
-        color: #742a2a;
-      }
-
-      .page-header {
-        margin-bottom: 30px;
-      }
-
-      .page-title {
-        font-size: 28px;
-        font-weight: 700;
-        color: #2d3748;
-        margin-bottom: 8px;
-      }
-
-      .page-subtitle {
-        font-size: 16px;
-        color: #718096;
-      }
-
-      .quick-stats {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 20px;
-        margin-bottom: 30px;
-      }
-
-      .stat-card {
-        background: white;
-        border: 1px solid #e0e0e0;
-        border-radius: 8px;
-        padding: 20px;
-        text-align: center;
-      }
-
-      .stat-value {
-        font-size: 32px;
-        font-weight: 700;
-        color: #ff6b35;
-        margin-bottom: 5px;
-      }
-
-      .stat-label {
-        font-size: 14px;
-        color: #718096;
-      }
-    </style>
+    <title>Reports - RAC Inventory System</title>
+    <link rel="stylesheet" href="/css/styles.css" />
   </head>
   <body>
-    <!-- Navigation -->
-    <nav class="top-nav">
-      <div class="nav-brand">
-        <span class="brand-icon">🏔️</span>
-        <div class="brand-text">
-          <div class="brand-title">Rirratjingu Mining Inventory System</div>
-          <div class="brand-subtitle">
-            Quarry production and inventory management
+    <!-- Header -->
+    <header class="header">
+      <div class="header-content">
+        <div class="logo-section">
+          <div class="logo">📦</div>
+          <div class="site-title">
+            <h1>Rirratjingu Mining Inventory System</h1>
+            <p>Quarry production and inventory management</p>
+          </div>
+        </div>
+        <div class="header-stats">
+          <div class="stat-item">
+            <div class="stat-label">Total Inventory Value</div>
+            <div class="stat-value" id="headerTotalValue">$0</div>
+          </div>
+          <div class="user-info">
+            <span>👤</span>
+            <span>Admin User</span>
           </div>
         </div>
       </div>
-      <div class="nav-right">
-        <span class="total-value-label">Total Inventory Value</span>
-        <span class="total-value" id="totalValue">$0</span>
-        <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
-        <div class="user-menu">
-          <span class="user-icon">👤</span>
-          <span class="user-name">Admin User</span>
-        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="nav">
+      <div class="nav-content">
+        <a href="dashboard.html" class="nav-item">📊 Dashboard</a>
+        <a href="operations.html" class="nav-item">⚙️ Operations</a>
+        <a href="maintenance.html" class="nav-item">🔧 Maintenance</a>
+        <a href="reports.html" class="nav-item active">📈 Reports</a>
       </div>
     </nav>
 
-    <!-- Main Navigation Tabs -->
-    <div class="main-tabs">
-      <a href="dashboard.html" class="tab-link">
-        <span class="tab-icon">📊</span>
-        <span class="tab-text">Dashboard</span>
-      </a>
-      <a href="operations.html" class="tab-link">
-        <span class="tab-icon">⚡</span>
-        <span class="tab-text">Operations</span>
-      </a>
-      <a href="maintenance.html" class="tab-link">
-        <span class="tab-icon">🔧</span>
-        <span class="tab-text">Maintenance</span>
-      </a>
-      <a href="reports.html" class="tab-link active">
-        <span class="tab-icon">📈</span>
-        <span class="tab-text">Reports</span>
-      </a>
-    </div>
-
     <!-- Main Content -->
-    <div class="main-content">
+    <div class="container">
       <div class="page-header">
-        <h1 class="page-title">📊 Reports & Analytics</h1>
+        <h1 class="page-title">📈 Reports & Analytics</h1>
         <p class="page-subtitle">
           Access inventory reports, sales analysis, and operational insights
         </p>
       </div>
 
-      <!-- Quick Stats -->
-      <div class="quick-stats">
-        <div class="stat-card">
-          <div class="stat-value" id="reportCount">5</div>
-          <div class="stat-label">Available Reports</div>
+      <!-- Report Summary Cards -->
+      <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr)">
+        <div class="stat-card primary">
+          <div class="stat-card-header">
+            <div class="stat-card-title">Available Reports</div>
+            <div class="stat-card-icon">📄</div>
+          </div>
+          <div class="stat-card-value">5</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-value" id="activeReports">2</div>
-          <div class="stat-label">Active Now</div>
+
+        <div class="stat-card success">
+          <div class="stat-card-header">
+            <div class="stat-card-title">Active Now</div>
+            <div class="stat-card-icon">✅</div>
+          </div>
+          <div class="stat-card-value">2</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-value" id="comingSoon">3</div>
-          <div class="stat-label">Coming Soon</div>
+
+        <div class="stat-card warning">
+          <div class="stat-card-header">
+            <div class="stat-card-title">Coming Soon</div>
+            <div class="stat-card-icon">🚧</div>
+          </div>
+          <div class="stat-card-value">3</div>
         </div>
       </div>
 
       <!-- Reports Grid -->
-      <div class="reports-grid">
-        <!-- Account Detail Report -->
+      <div class="action-cards" style="grid-template-columns: repeat(2, 1fr)">
+        <!-- Account Detail Report - ACTIVE -->
         <div
-          class="report-card active"
-          onclick="openReport('/report-account-detail.html')"
+          class="action-card success"
+          onclick="window.location.href='/report-account-detail.html'"
+          style="cursor: pointer"
         >
-          <span class="status-badge active">✓ Active</span>
-          <div class="report-icon blue">📋</div>
-          <div class="report-title">Account Detail Report</div>
-          <div class="report-description">
-            Customer-specific sales dockets with date range filtering. Shows
-            detailed transaction breakdown with fees, GST, and totals. Perfect
-            for monthly customer statements.
+          <div style="position: absolute; top: 10px; right: 10px">
+            <span class="badge badge-success">✅ ACTIVE</span>
           </div>
-          <div class="report-meta">
-            <div class="report-meta-item">
-              <span>📅</span>
-              <span>Date Range</span>
-            </div>
-            <div class="report-meta-item">
-              <span>👥</span>
-              <span>Customer Filter</span>
-            </div>
-            <div class="report-meta-item">
-              <span>🖨️</span>
-              <span>Printable</span>
-            </div>
+          <div class="action-card-icon">📋</div>
+          <div class="action-card-title">Account Detail Report</div>
+          <div class="action-card-description">
+            Customer-specific sales dockets with date range. Includes docket
+            numbers, net weight, fees, GST, and totals. Perfect for Rio Tinto
+            quarterly reviews.
+          </div>
+          <div
+            style="
+              margin-top: 15px;
+              display: flex;
+              gap: 10px;
+              flex-wrap: wrap;
+              justify-content: center;
+            "
+          >
+            <span class="badge" style="background: #e8f5e9; color: #2e7d32"
+              >📅 Date Range</span
+            >
+            <span class="badge" style="background: #e3f2fd; color: #1565c0"
+              >👤 Customer Filter</span
+            >
+            <span class="badge" style="background: #fff3e0; color: #e65100"
+              >🖨️ Printable</span
+            >
           </div>
         </div>
 
-        <!-- Weighbridge Delivery Docket -->
+        <!-- Weighbridge Delivery Docket - ACTIVE -->
         <div
-          class="report-card active"
-          onclick="openReport('/weighbridge-delivery-docket.html')"
+          class="action-card success"
+          onclick="alert('Use Sales Entry → Save to generate dockets automatically')"
+          style="cursor: pointer"
         >
-          <span class="status-badge active">✓ Active</span>
-          <div class="report-icon orange">🚛</div>
-          <div class="report-title">Weighbridge Delivery Docket</div>
-          <div class="report-description">
+          <div style="position: absolute; top: 10px; right: 10px">
+            <span class="badge badge-success">✅ ACTIVE</span>
+          </div>
+          <div class="action-card-icon">⚖️</div>
+          <div class="action-card-title">Weighbridge Delivery Docket</div>
+          <div class="action-card-description">
             Auto-generated PDF docket for each sale. Includes gross/tare/net
-            weights, customer details, and pricing. Replaces manual iWEIGH
-            dockets.
+            weights, customer details, vehicle info, and pricing. Replaces
+            manual iWEIGH dockets.
           </div>
-          <div class="report-meta">
-            <div class="report-meta-item">
-              <span>📄</span>
-              <span>PDF Format</span>
-            </div>
-            <div class="report-meta-item">
-              <span>📧</span>
-              <span>Email Capable</span>
-            </div>
-            <div class="report-meta-item">
-              <span>⚡</span>
-              <span>Auto-Generated</span>
-            </div>
+          <div
+            style="
+              margin-top: 15px;
+              display: flex;
+              gap: 10px;
+              flex-wrap: wrap;
+              justify-content: center;
+            "
+          >
+            <span class="badge" style="background: #e8f5e9; color: #2e7d32"
+              >📧 Email Capable</span
+            >
+            <span class="badge" style="background: #fff3e0; color: #e65100"
+              >🖨️ Auto-Generated</span
+            >
           </div>
         </div>
 
-        <!-- Daily Summary Report -->
-        <div class="report-card coming-soon">
-          <span class="status-badge coming-soon">Coming Soon</span>
-          <div class="report-icon green">📊</div>
-          <div class="report-title">Daily Summary Report</div>
-          <div class="report-description">
+        <!-- Daily Summary Report - COMING SOON -->
+        <div class="action-card" style="opacity: 0.6; cursor: not-allowed">
+          <div style="position: absolute; top: 10px; right: 10px">
+            <span class="badge" style="background: #fff3e0; color: #e65100"
+              >🚧 COMING SOON</span
+            >
+          </div>
+          <div class="action-card-icon">📊</div>
+          <div class="action-card-title">Daily Summary Report</div>
+          <div class="action-card-description">
             Daily snapshot of operations: production totals, sales summary,
             stock movements, and alerts. Perfect for morning briefings and shift
             handovers.
           </div>
-          <div class="report-meta">
-            <div class="report-meta-item">
-              <span>📆</span>
-              <span>Daily View</span>
-            </div>
-            <div class="report-meta-item">
-              <span>📈</span>
-              <span>Trend Analysis</span>
-            </div>
-            <div class="report-meta-item">
-              <span>🔔</span>
-              <span>Alerts Included</span>
-            </div>
+          <div
+            style="
+              margin-top: 15px;
+              display: flex;
+              gap: 10px;
+              flex-wrap: wrap;
+              justify-content: center;
+            "
+          >
+            <span class="badge" style="background: #f3e5f5; color: #6a1b9a"
+              >📅 Daily View</span
+            >
+            <span class="badge" style="background: #fff9c4; color: #f57f17"
+              >📈 Trend Analysis</span
+            >
+            <span class="badge" style="background: #e3f2fd; color: #1565c0"
+              >🔔 Alerts Included</span
+            >
           </div>
         </div>
 
-        <!-- Demand Overview Report -->
-        <div class="report-card coming-soon">
-          <span class="status-badge coming-soon">Coming Soon</span>
-          <div class="report-icon purple">📦</div>
-          <div class="report-title">Demand Overview Report</div>
-          <div class="report-description">
-            Track future orders and commitments. Shows POs due within 60 days,
-            customer requirements, and potential stockouts. Essential for
-            production planning.
+        <!-- Demand Overview Report - COMING SOON -->
+        <div class="action-card" style="opacity: 0.6; cursor: not-allowed">
+          <div style="position: absolute; top: 10px; right: 10px">
+            <span class="badge" style="background: #fff3e0; color: #e65100"
+              >🚧 COMING SOON</span
+            >
           </div>
-          <div class="report-meta">
-            <div class="report-meta-item">
-              <span>⏰</span>
-              <span>Due Date Tracking</span>
-            </div>
-            <div class="report-meta-item">
-              <span>🎯</span>
-              <span>Priority Sorting</span>
-            </div>
-            <div class="report-meta-item">
-              <span>⚠️</span>
-              <span>Capacity Alerts</span>
-            </div>
+          <div class="action-card-icon">📋</div>
+          <div class="action-card-title">Demand Overview Report</div>
+          <div class="action-card-description">
+            Track future orders and commitments. Shows PO details, requested
+            delivery dates, customer requirements, and production planning.
+            Essential for production scheduling.
+          </div>
+          <div
+            style="
+              margin-top: 15px;
+              display: flex;
+              gap: 10px;
+              flex-wrap: wrap;
+              justify-content: center;
+            "
+          >
+            <span class="badge" style="background: #e3f2fd; color: #1565c0"
+              >📅 Date Due</span
+            >
+            <span class="badge" style="background: #e8f5e9; color: #2e7d32"
+              >📈 Capacity vs Demand</span
+            >
+            <span class="badge" style="background: #f3e5f5; color: #6a1b9a"
+              >👤 By Customer</span
+            >
           </div>
         </div>
 
-        <!-- Stock Movement Report -->
-        <div class="report-card coming-soon">
-          <span class="status-badge coming-soon">Coming Soon</span>
-          <div class="report-icon red">📈</div>
-          <div class="report-title">Stock Movement Report</div>
-          <div class="report-description">
+        <!-- Stock Movement Report - COMING SOON -->
+        <div class="action-card" style="opacity: 0.6; cursor: not-allowed">
+          <div style="position: absolute; top: 10px; right: 10px">
+            <span class="badge" style="background: #fff3e0; color: #e65100"
+              >🚧 COMING SOON</span
+            >
+          </div>
+          <div class="action-card-icon">📦</div>
+          <div class="action-card-title">Stock Movement Report</div>
+          <div class="action-card-description">
             Comprehensive audit trail of all inventory movements. Filter by
-            product, location, date range, or movement type. Essential for
-            quarterly reconciliation.
+            product, location, movement type, and date range. Supports quarterly
+            reconciliation and audits.
           </div>
-          <div class="report-meta">
-            <div class="report-meta-item">
-              <span>🔍</span>
-              <span>Advanced Filters</span>
-            </div>
-            <div class="report-meta-item">
-              <span>📊</span>
-              <span>Excel Export</span>
-            </div>
-            <div class="report-meta-item">
-              <span>🔐</span>
-              <span>Audit Trail</span>
-            </div>
+          <div
+            style="
+              margin-top: 15px;
+              display: flex;
+              gap: 10px;
+              flex-wrap: wrap;
+              justify-content: center;
+            "
+          >
+            <span class="badge" style="background: #fff9c4; color: #f57f17"
+              >🔍 Advanced Filters</span
+            >
+            <span class="badge" style="background: #e3f2fd; color: #1565c0"
+              >📊 Text Export</span
+            >
+            <span class="badge" style="background: #e8f5e9; color: #2e7d32"
+              >📈 Audit Trail</span
+            >
           </div>
+        </div>
+      </div>
+
+      <!-- Help Section -->
+      <div class="data-table" style="margin-top: 2rem">
+        <div class="table-header">
+          <h2 class="table-title">📚 Report Guidance</h2>
+        </div>
+        <div style="padding: 1.5rem">
+          <h3
+            style="
+              color: var(--gray-700);
+              font-size: 14px;
+              font-weight: 600;
+              margin-bottom: 0.75rem;
+            "
+          >
+            ACTIVE REPORTS:
+          </h3>
+          <ul style="list-style: none; padding: 0; margin-bottom: 1.5rem">
+            <li
+              style="
+                padding: 0.5rem 0;
+                border-bottom: 1px solid var(--gray-100);
+              "
+            >
+              <strong>Account Detail Report:</strong> Click the card above to
+              access. Filter by customer (e.g., Rio Tinto) and date range. Use
+              for quarterly reviews and invoicing.
+            </li>
+            <li
+              style="
+                padding: 0.5rem 0;
+                border-bottom: 1px solid var(--gray-100);
+              "
+            >
+              <strong>Weighbridge Delivery Docket:</strong> Automatically
+              generated when you save a sale in Operations → Sales Entry. View
+              via the Recent Movements table by clicking the docket number link.
+            </li>
+          </ul>
+
+          <h3
+            style="
+              color: var(--gray-700);
+              font-size: 14px;
+              font-weight: 600;
+              margin-bottom: 0.75rem;
+            "
+          >
+            COMING SOON:
+          </h3>
+          <ul style="list-style: none; padding: 0">
+            <li
+              style="
+                padding: 0.5rem 0;
+                border-bottom: 1px solid var(--gray-100);
+              "
+            >
+              <strong>Daily Summary Report:</strong> Daily operations snapshot
+              for briefings
+            </li>
+            <li
+              style="
+                padding: 0.5rem 0;
+                border-bottom: 1px solid var(--gray-100);
+              "
+            >
+              <strong>Demand Overview:</strong> Track future orders and
+              production planning
+            </li>
+            <li style="padding: 0.5rem 0">
+              <strong>Stock Movement Report:</strong> Comprehensive movement
+              audit trail
+            </li>
+          </ul>
         </div>
       </div>
     </div>
 
     <script>
-      // Load dashboard stats
-      async function loadStats() {
+      // Update header inventory value
+      async function updateHeaderValue() {
         try {
-          const response = await fetch("/api/dashboard/stats");
-          const stats = await response.json();
-
-          if (stats.totalInventoryValue) {
-            document.getElementById(
-              "totalValue"
-            ).textContent = `$${stats.totalInventoryValue.toLocaleString()}`;
-          }
+          const response = await fetch("/api/stock/summary");
+          const data = await response.json();
+          const totalValue = data.total_inventory_value || 0;
+          document.getElementById("headerTotalValue").textContent =
+            new Intl.NumberFormat("en-AU", {
+              style: "currency",
+              currency: "AUD",
+              minimumFractionDigits: 0,
+            }).format(totalValue);
         } catch (error) {
-          console.error("Error loading stats:", error);
+          console.error("Error loading header value:", error);
         }
       }
-
-      // Open report
-      function openReport(url) {
-        window.location.href = url;
-      }
-
-      // Theme toggle
-      function toggleTheme() {
-        document.body.classList.toggle("dark-mode");
-        localStorage.setItem(
-          "theme",
-          document.body.classList.contains("dark-mode") ? "dark" : "light"
-        );
-      }
-
-      // Load theme preference
-      if (localStorage.getItem("theme") === "dark") {
-        document.body.classList.add("dark-mode");
-      }
-
-      // Initialize
-      loadStats();
+      updateHeaderValue();
     </script>
   </body>
 </html>
