@@ -572,6 +572,7 @@ tbody tr:last-child td {
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  padding: 20px 24px;
 }
 
 .modal-header {
