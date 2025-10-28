@@ -341,13 +341,16 @@ async function loadRecentMovements() {
     movements.forEach((movement) => {
       const row = document.createElement("tr");
 
-      // Format date
+      // Format date (use movement_date for the DATE)
       const date = new Date(movement.movement_date);
       const dateStr = date.toLocaleDateString("en-AU", {
         day: "2-digit",
         month: "short",
       });
-      const timeStr = date.toLocaleTimeString("en-AU", {
+
+      // Format time (use created_at for the actual TIME)
+      const createdDate = new Date(movement.created_at);
+      const timeStr = createdDate.toLocaleTimeString("en-AU", {
         hour: "2-digit",
         minute: "2-digit",
       });
@@ -536,6 +539,30 @@ function updateSalePrice() {
   }
 }
 
+// ============================================
+// AUTO-CALCULATE NET WEIGHT FOR SALES
+// ============================================
+function calculateNetWeight() {
+  const grossWeight =
+    parseFloat(document.getElementById("saleGrossWeight").value) || 0;
+  const tareWeight =
+    parseFloat(document.getElementById("saleTareWeight").value) || 0;
+  const netWeight = grossWeight - tareWeight;
+
+  const netWeightInput = document.getElementById("saleNetWeight");
+
+  if (netWeight > 0) {
+    netWeightInput.value = netWeight.toFixed(2);
+    netWeightInput.style.color = "#28a745"; // Green for valid
+  } else if (grossWeight > 0 || tareWeight > 0) {
+    netWeightInput.value = netWeight.toFixed(2);
+    netWeightInput.style.color = "#dc3545"; // Red for negative
+  } else {
+    netWeightInput.value = "";
+    netWeightInput.style.color = "#000";
+  }
+}
+
 async function saveSales() {
   const grossWeight =
     parseFloat(document.getElementById("saleGrossWeight").value) || 0;
@@ -560,29 +587,7 @@ async function saveSales() {
     notes: document.getElementById("saleNotes").value,
   };
 
-  // ============================================
-  // AUTO-CALCULATE NET WEIGHT FOR SALES
-  // ============================================
-  function calculateNetWeight() {
-    const grossWeight =
-      parseFloat(document.getElementById("saleGrossWeight").value) || 0;
-    const tareWeight =
-      parseFloat(document.getElementById("saleTareWeight").value) || 0;
-    const netWeight = grossWeight - tareWeight;
-
-    const netWeightInput = document.getElementById("saleNetWeight");
-
-    if (netWeight > 0) {
-      netWeightInput.value = netWeight.toFixed(2);
-      netWeightInput.style.color = "#28a745"; // Green for valid
-    } else if (grossWeight > 0 || tareWeight > 0) {
-      netWeightInput.value = netWeight.toFixed(2);
-      netWeightInput.style.color = "#dc3545"; // Red for negative
-    } else {
-      netWeightInput.value = "";
-      netWeightInput.style.color = "#000";
-    }
-  }
+  // Validate net weight is positive
 
   // Validate net weight is positive
   if (netWeight <= 0) {
@@ -886,13 +891,16 @@ function displayMovements(movements) {
   movements.forEach((movement) => {
     const row = document.createElement("tr");
 
-    // Format date
+    // Format date (use movement_date for the DATE)
     const date = new Date(movement.movement_date);
     const dateStr = date.toLocaleDateString("en-AU", {
       day: "2-digit",
       month: "short",
     });
-    const timeStr = date.toLocaleTimeString("en-AU", {
+
+    // Format time (use created_at for the actual TIME)
+    const createdDate = new Date(movement.created_at);
+    const timeStr = createdDate.toLocaleTimeString("en-AU", {
       hour: "2-digit",
       minute: "2-digit",
     });

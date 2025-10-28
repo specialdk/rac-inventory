@@ -1,0 +1,15 @@
+-- Step 1: Reset all tables
+SET session_replication_role = 'replica';
+TRUNCATE TABLE stock_movements RESTART IDENTITY CASCADE;
+TRUNCATE TABLE current_stock RESTART IDENTITY CASCADE;
+TRUNCATE TABLE product_cost_history RESTART IDENTITY CASCADE;
+TRUNCATE TABLE deliveries RESTART IDENTITY CASCADE;
+TRUNCATE TABLE drivers RESTART IDENTITY CASCADE;
+TRUNCATE TABLE vehicles RESTART IDENTITY CASCADE;
+TRUNCATE TABLE customers RESTART IDENTITY CASCADE;
+TRUNCATE TABLE locations RESTART IDENTITY CASCADE;
+TRUNCATE TABLE products RESTART IDENTITY CASCADE;
+SET session_replication_role = 'origin';
+
+-- Step 2: Run your saved RAC_MASTER_DATA.sql script
+-- (Copy/paste the entire contents)
