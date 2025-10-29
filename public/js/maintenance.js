@@ -86,7 +86,7 @@ async function loadProducts() {
                     <td>$${parseFloat(product.current_price).toFixed(2)}</td>
                     <td>${product.min_stock_level}t</td>
                     <td>${product.max_stock_level}t</td>
-                    <td>${product.unit === "TONNES" ? "tonnes" : "m³"}</td>
+                    <td>tonnes</td>
                     <td>
                         <button class="btn-icon" onclick="editProduct(${
                           product.product_id
