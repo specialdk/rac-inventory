@@ -115,6 +115,11 @@
         background: #e0a800;
       }
 
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
       /* Report Header */
       .report-header {
         border-bottom: 3px solid #000;
@@ -351,7 +356,11 @@
           <button class="btn btn-info" onclick="downloadReportPDF()">
             📥 Download Report PDF
           </button>
-          <button class="btn btn-warning" onclick="downloadReportWithDockets()">
+          <button
+            class="btn btn-warning"
+            id="downloadZipBtn"
+            onclick="downloadReportWithDockets()"
+          >
             📦 Download Report + All Dockets
           </button>
         </div>
@@ -630,8 +639,38 @@
           return;
         }
 
-        alert("ZIP download with all dockets will be implemented next!");
-        // TODO: Implement ZIP download endpoint
+        const downloadBtn = document.getElementById("downloadZipBtn");
+        const originalText = downloadBtn.innerHTML;
+
+        // Disable button and show loading
+        downloadBtn.disabled = true;
+        downloadBtn.innerHTML = "⏳ Generating ZIP...";
+
+        const dateFrom = document.getElementById("dateFrom").value;
+        const dateTo = document.getElementById("dateTo").value;
+        const customerId = document.getElementById("customerFilter").value;
+        const productId = document.getElementById("productFilter").value;
+
+        const params = new URLSearchParams({
+          dateFrom,
+          dateTo,
+          ...(customerId && { customerId }),
+          ...(productId && { productId }),
+        });
+
+        // Create a hidden link and trigger download
+        const link = document.createElement("a");
+        link.href = `${API_BASE_URL}/reports/account-detail/pdf-with-dockets?${params}`;
+        link.download = `Account_Detail_Report_${dateFrom}_to_${dateTo}.zip`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // Re-enable button after a delay
+        setTimeout(() => {
+          downloadBtn.disabled = false;
+          downloadBtn.innerHTML = originalText;
+        }, 3000);
       }
 
       function formatDate(dateString) {
