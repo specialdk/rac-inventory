@@ -189,25 +189,7 @@ async function saveProduct() {
 }
 
 function editProduct(productId) {
-  const product = productsData.find((p) => p.product_id === productId);
-  if (!product) return;
-
-  document.getElementById("productId").value = product.product_id;
-  document.getElementById("productCode").value = product.product_code;
-  document.getElementById("productName").value = product.product_name;
-  document.getElementById("familyGroup").value = product.family_group;
-  document.getElementById("unit").value = product.unit;
-  document.getElementById("avgCostPerUnit").value =
-    product.production_cost_per_unit || 0;
-  document.getElementById("sellingPricePerUnit").value =
-    product.standard_price_per_unit || 0;
-  document.getElementById("minStockLevel").value = product.min_stock_level || 0;
-  document.getElementById("maxStockLevel").value = product.max_stock_level || 0;
-  document.getElementById("productDescription").value =
-    product.description || "";
-
-  document.getElementById("productModalTitle").textContent = "Edit Product";
-  document.getElementById("productModal").style.display = "flex";
+  openProductModal(productId);
 }
 
 async function deleteProduct(productId) {
