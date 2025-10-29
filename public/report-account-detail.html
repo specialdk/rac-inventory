@@ -65,6 +65,7 @@
       .action-buttons {
         display: flex;
         gap: 10px;
+        flex-wrap: wrap;
       }
 
       .btn {
@@ -75,6 +76,7 @@
         font-size: 14px;
         font-weight: 600;
         transition: all 0.3s;
+        white-space: nowrap;
       }
 
       .btn-primary {
@@ -95,13 +97,22 @@
         background: #218838;
       }
 
-      .btn-secondary {
-        background: #6c757d;
+      .btn-info {
+        background: #17a2b8;
         color: white;
       }
 
-      .btn-secondary:hover {
-        background: #5a6268;
+      .btn-info:hover {
+        background: #138496;
+      }
+
+      .btn-warning {
+        background: #ffc107;
+        color: #333;
+      }
+
+      .btn-warning:hover {
+        background: #e0a800;
       }
 
       /* Report Header */
@@ -261,6 +272,11 @@
 
       /* Print Styles */
       @media print {
+        @page {
+          size: A4 landscape;
+          margin: 0.5in;
+        }
+
         body {
           background: white;
           padding: 0;
@@ -332,8 +348,11 @@
           <button class="btn btn-success" onclick="printReport()">
             🖨️ Print
           </button>
-          <button class="btn btn-secondary" onclick="emailReport()">
-            📧 Email Report
+          <button class="btn btn-info" onclick="downloadReportPDF()">
+            📥 Download Report PDF
+          </button>
+          <button class="btn btn-warning" onclick="downloadReportWithDockets()">
+            📦 Download Report + All Dockets
           </button>
         </div>
       </div>
@@ -423,6 +442,7 @@
 
     <script>
       const API_BASE_URL = "/api";
+      let currentReportData = null; // Store current report data for downloads
 
       document.addEventListener("DOMContentLoaded", function () {
         const today = new Date();
@@ -493,13 +513,16 @@
           const data = await response.json();
 
           if (data.dockets && data.dockets.length > 0) {
+            currentReportData = data; // Store for downloads
             displayReport(data);
           } else {
+            currentReportData = null;
             showEmptyState();
           }
         } catch (error) {
           console.error("Error generating report:", error);
           alert("Error generating report. Please try again.");
+          currentReportData = null;
           showEmptyState();
         }
       }
@@ -576,14 +599,39 @@
         window.print();
       }
 
-      function emailReport() {
-        const reportContent = document.getElementById("reportContent");
-        if (reportContent.style.display === "none") {
+      function downloadReportPDF() {
+        if (!currentReportData) {
           alert("Please generate a report first");
           return;
         }
-        const email = prompt("Enter email address:");
-        if (email) alert("Email functionality to be implemented");
+
+        const dateFrom = document.getElementById("dateFrom").value;
+        const dateTo = document.getElementById("dateTo").value;
+        const customerId = document.getElementById("customerFilter").value;
+        const productId = document.getElementById("productFilter").value;
+
+        const params = new URLSearchParams({
+          dateFrom,
+          dateTo,
+          ...(customerId && { customerId }),
+          ...(productId && { productId }),
+        });
+
+        // Open PDF in new window/download
+        window.open(
+          `${API_BASE_URL}/reports/account-detail/pdf?${params}`,
+          "_blank"
+        );
+      }
+
+      function downloadReportWithDockets() {
+        if (!currentReportData) {
+          alert("Please generate a report first");
+          return;
+        }
+
+        alert("ZIP download with all dockets will be implemented next!");
+        // TODO: Implement ZIP download endpoint
       }
 
       function formatDate(dateString) {
