@@ -132,10 +132,13 @@ async function loadProductData(productId) {
     document.getElementById("productName").value = product.product_name;
     document.getElementById("familyGroup").value = product.family_group;
     document.getElementById("unit").value = product.unit;
-    document.getElementById("standardCost").value = product.standard_cost;
-    document.getElementById("currentPrice").value = product.current_price;
+    document.getElementById("avgCostPerUnit").value = product.standard_cost;
+    document.getElementById("sellingPricePerUnit").value =
+      product.current_price;
     document.getElementById("minStockLevel").value = product.min_stock_level;
     document.getElementById("maxStockLevel").value = product.max_stock_level;
+    document.getElementById("productDescription").value =
+      product.description || "";
   } catch (error) {
     console.error("Error loading product:", error);
     alert("Failed to load product data");
