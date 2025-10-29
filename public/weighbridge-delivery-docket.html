@@ -644,7 +644,10 @@
             }
           });
         } else {
-          showError("Enter a Docket Number to load a docket");
+          // Show a neutral instruction state instead of error
+          document.getElementById("loadingState").style.display = "none";
+          document.getElementById("errorState").style.display = "none";
+          document.getElementById("docketContent").style.display = "none";
         }
       });
     </script>
