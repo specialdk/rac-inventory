@@ -643,8 +643,12 @@
               }, 500);
             }
           });
+        } else {
+          // Show controls only, no error message - ready for manual docket entry
+          document.getElementById("loadingState").style.display = "none";
+          document.getElementById("errorState").style.display = "none";
+          document.getElementById("docketContent").style.display = "none";
         }
-        // If no docket number, just show controls - no error message
       });
     </script>
   </body>
