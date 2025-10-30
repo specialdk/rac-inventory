@@ -586,6 +586,9 @@ function generateWeighbridgeDocketPDF(doc, docket) {
       width: 500,
     });
 
+  // ADD HERE:
+  doc.moveTo(50, 160).lineTo(550, 160).lineWidth(2).stroke();
+
   // Date/Time and Docket Number
   let yPos = 180;
   doc.fontSize(10).font("Helvetica");
@@ -638,6 +641,9 @@ function generateWeighbridgeDocketPDF(doc, docket) {
       leftCol + 100,
       yPos
     );
+
+  // ADD HERE:
+  doc.moveTo(50, 160).lineTo(550, 160).lineWidth(2).stroke();
 
   // Driver
   doc.font("Helvetica-Bold").text("Driver:", rightCol, yPos);
@@ -697,6 +703,10 @@ function generateWeighbridgeDocketPDF(doc, docket) {
     .fontSize(11)
     .font("Helvetica-Bold")
     .text("Total (inc GST):", leftCol, yPos);
+
+  // ADD HERE:
+  doc.moveTo(50, 160).lineTo(550, 160).lineWidth(2).stroke();
+
   doc
     .font("Helvetica-Bold")
     .text(`$${docketTotal.toFixed(2)}`, leftCol + 100, yPos);
