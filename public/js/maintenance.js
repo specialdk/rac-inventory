@@ -59,6 +59,9 @@ async function loadSectionData(section) {
     case "drivers":
       loadDrivers();
       break;
+    case "carriers":
+      loadCarriers();
+      break;
   }
 }
 
@@ -824,6 +827,124 @@ async function deleteDriver(driverId) {
 
 function closeDriverModal() {
   document.getElementById("driverModal").style.display = "none";
+}
+
+// ============================================
+// CARRIERS SECTION
+// ============================================
+
+async function loadCarriers() {
+  try {
+    const response = await fetch("/api/carriers");
+    const carriers = await response.json();
+    const tbody = document.getElementById("carriersTableBody");
+    tbody.innerHTML = "";
+
+    carriers.forEach((carrier) => {
+      const row = `
+        <tr>
+          <td>${carrier.carrier_name}</td>
+          <td>
+            <button class="btn-icon" onclick="editCarrier(${carrier.carrier_id})" title="Edit">✏️</button>
+            <button class="btn-icon" onclick="deleteCarrier(${carrier.carrier_id})" title="Delete">🗑️</button>
+          </td>
+        </tr>
+      `;
+      tbody.innerHTML += row;
+    });
+  } catch (error) {
+    console.error("Error loading carriers:", error);
+    alert("Failed to load carriers");
+  }
+}
+
+function openCarrierModal(carrierId = null) {
+  const modal = document.getElementById("carrierModal");
+  const form = document.getElementById("carrierForm");
+  const title = document.getElementById("carrierModalTitle");
+
+  if (carrierId) {
+    title.textContent = "Edit Carrier";
+    loadCarrierData(carrierId);
+  } else {
+    title.textContent = "Add Carrier";
+    form.reset();
+    document.getElementById("carrierId").value = "";
+  }
+  modal.style.display = "flex";
+}
+
+async function loadCarrierData(carrierId) {
+  try {
+    const response = await fetch(`/api/carriers/${carrierId}`);
+    const carrier = await response.json();
+    document.getElementById("carrierId").value = carrier.carrier_id;
+    document.getElementById("carrierName").value = carrier.carrier_name;
+  } catch (error) {
+    console.error("Error loading carrier:", error);
+    alert("Failed to load carrier data");
+  }
+}
+
+async function saveCarrier() {
+  const carrierId = document.getElementById("carrierId").value;
+  const carrierData = {
+    carrier_name: document.getElementById("carrierName").value,
+  };
+
+  try {
+    const url = carrierId ? `/api/carriers/${carrierId}` : "/api/carriers";
+    const method = carrierId ? "PUT" : "POST";
+
+    const response = await fetch(url, {
+      method: method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(carrierData),
+    });
+
+    if (response.ok) {
+      closeCarrierModal();
+      loadCarriers();
+      alert(
+        carrierId
+          ? "Carrier updated successfully!"
+          : "Carrier created successfully!"
+      );
+    } else {
+      alert("Failed to save carrier");
+    }
+  } catch (error) {
+    console.error("Error saving carrier:", error);
+    alert("Failed to save carrier");
+  }
+}
+
+function editCarrier(carrierId) {
+  openCarrierModal(carrierId);
+}
+
+async function deleteCarrier(carrierId) {
+  if (!confirm("Are you sure you want to delete this carrier?")) return;
+
+  try {
+    const response = await fetch(`/api/carriers/${carrierId}`, {
+      method: "DELETE",
+    });
+
+    if (response.ok) {
+      loadCarriers();
+      alert("Carrier deleted successfully!");
+    } else {
+      alert("Failed to delete carrier");
+    }
+  } catch (error) {
+    console.error("Error deleting carrier:", error);
+    alert("Failed to delete carrier");
+  }
+}
+
+function closeCarrierModal() {
+  document.getElementById("carrierModal").style.display = "none";
 }
 
 // ============================================

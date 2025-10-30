@@ -52,6 +52,7 @@
       </button>
       <button class="sub-nav-item" data-section="vehicles">🚛 Vehicles</button>
       <button class="sub-nav-item" data-section="drivers">👷 Drivers</button>
+      <button class="sub-nav-item" data-section="carriers">🚚 Carriers</button>
     </div>
 
     <div class="container">
@@ -279,6 +280,45 @@
             </tbody>
           </table>
         </div>
+      </div>
+    </div>
+
+    <!-- CARRIERS SECTION -->
+    <div
+      id="carriers-section"
+      class="maintenance-section"
+      style="display: none"
+    >
+      <div class="section-header">
+        <h2>Carriers Management</h2>
+        <button class="btn-primary" onclick="openCarrierModal()">
+          ➕ Add Carrier
+        </button>
+      </div>
+      <div class="search-bar">
+        <input
+          type="text"
+          id="carriersSearch"
+          placeholder="Search carriers..."
+          onkeyup="searchItems('carriers')"
+        />
+      </div>
+      <div class="data-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Carrier Name</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="carriersTableBody">
+            <tr>
+              <td colspan="2" style="text-align: center; padding: 2rem">
+                Loading carriers...
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
@@ -742,6 +782,41 @@
               Cancel
             </button>
             <button type="submit" class="btn-primary">💾 Save Driver</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Carrier Modal -->
+    <div id="carrierModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="carrierModalTitle">Add Carrier</h2>
+          <button class="modal-close" onclick="closeCarrierModal()">×</button>
+        </div>
+        <form
+          id="carrierForm"
+          onsubmit="event.preventDefault(); saveCarrier();"
+        >
+          <input type="hidden" id="carrierId" />
+          <div class="form-group">
+            <label for="carrierName">Carrier Name *</label>
+            <input
+              type="text"
+              id="carrierName"
+              required
+              placeholder="e.g., RAC Mining"
+            />
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn-secondary"
+              onclick="closeCarrierModal()"
+            >
+              Cancel
+            </button>
+            <button type="submit" class="btn-primary">💾 Save Carrier</button>
           </div>
         </form>
       </div>
