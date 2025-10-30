@@ -47,38 +47,25 @@ router.get("/carriers/:id", async (req, res) => {
 // POST create carrier
 router.post("/carriers", async (req, res) => {
   try {
-    const {
-      carrier_code,
-      carrier_name,
-      contact_person,
-      phone,
-      email,
-      address,
-      abn,
-    } = req.body;
+    const { carrier_name } = req.body;
 
-    if (!carrier_code || !carrier_name) {
+    if (!carrier_name) {
       return res.status(400).json({
-        error: "Missing required fields: carrier_code, carrier_name",
+        error: "Missing required field: carrier_name",
       });
     }
 
     const result = await query(
-      `INSERT INTO carriers 
-       (carrier_code, carrier_name, contact_person, phone, email, address, abn)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `INSERT INTO carriers (carrier_name)
+       VALUES ($1)
        RETURNING *`,
-      [carrier_code, carrier_name, contact_person, phone, email, address, abn]
+      [carrier_name]
     );
 
     res.status(201).json(result.rows[0]);
   } catch (error) {
     console.error("Error creating carrier:", error);
-    if (error.code === "23505") {
-      res.status(409).json({ error: "Carrier code already exists" });
-    } else {
-      res.status(500).json({ error: "Failed to create carrier" });
-    }
+    res.status(500).json({ error: "Failed to create carrier" });
   }
 });
 
@@ -86,40 +73,15 @@ router.post("/carriers", async (req, res) => {
 router.put("/carriers/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const {
-      carrier_code,
-      carrier_name,
-      contact_person,
-      phone,
-      email,
-      address,
-      abn,
-      is_active,
-    } = req.body;
+    const { carrier_name, is_active } = req.body;
 
     const result = await query(
       `UPDATE carriers 
-       SET carrier_code = COALESCE($1, carrier_code),
-           carrier_name = COALESCE($2, carrier_name),
-           contact_person = $3,
-           phone = $4,
-           email = $5,
-           address = $6,
-           abn = $7,
-           is_active = COALESCE($8, is_active)
-       WHERE carrier_id = $9
+       SET carrier_name = COALESCE($1, carrier_name),
+           is_active = COALESCE($2, is_active)
+       WHERE carrier_id = $3
        RETURNING *`,
-      [
-        carrier_code,
-        carrier_name,
-        contact_person,
-        phone,
-        email,
-        address,
-        abn,
-        is_active,
-        id,
-      ]
+      [carrier_name, is_active, id]
     );
 
     if (result.rows.length === 0) {
