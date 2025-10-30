@@ -147,6 +147,17 @@ async function loadDropdowns() {
       saleDriverSelect.add(new Option(driver.driver_name, driver.driver_id));
     });
 
+    // Load carriers
+    const carriersResponse = await fetch(`${API_BASE_URL}/carriers`);
+    const carriers = await carriersResponse.json();
+    const carrierSelect = document.getElementById("saleCarrier");
+    carriers.forEach((carrier) => {
+      const option = document.createElement("option");
+      option.value = carrier.carrier_id;
+      option.textContent = carrier.carrier_name;
+      carrierSelect.appendChild(option);
+    });
+
     // Load deliveries (NEW)
     const deliveriesRes = await fetch("/api/deliveries");
     const deliveriesData = await deliveriesRes.json();
@@ -593,6 +604,7 @@ async function saveSales() {
     vehicle_id: document.getElementById("saleVehicle").value || null,
     driver_id: document.getElementById("saleDriver").value || null,
     delivery_id: document.getElementById("saleDelivery").value || null,
+    carrier_id: document.getElementById("saleCarrier").value || null,
     docket_number: document.getElementById("saleDocket").value,
     reference_number: document.getElementById("saleReference").value,
     notes: document.getElementById("saleNotes").value,
