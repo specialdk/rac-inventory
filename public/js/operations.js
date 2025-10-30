@@ -148,7 +148,7 @@ async function loadDropdowns() {
     });
 
     // Load carriers
-    const carriersResponse = await fetch(`${API_BASE_URL}/carriers`);
+    const carriersResponse = await fetch("/api/carriers");
     const carriers = await carriersResponse.json();
     const carrierSelect = document.getElementById("saleCarrier");
     carriers.forEach((carrier) => {
