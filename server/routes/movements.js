@@ -893,4 +893,278 @@ router.post("/movements/transfer", async (req, res) => {
   }
 });
 
+// POST /api/movements/adjustment - Manual stock adjustment
+router.post("/adjustment", async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const {
+      movement_date,
+      product_id,
+      location_id,
+      quantity,
+      reason,
+      reference_number,
+      notes,
+    } = req.body;
+
+    // Validate
+    if (!movement_date || !product_id || !location_id || !quantity || !reason) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    if (quantity === 0) {
+      await client.query("ROLLBACK");
+      return res
+        .status(400)
+        .json({ error: "Adjustment quantity cannot be zero" });
+    }
+
+    // Get current stock
+    const stockCheck = await client.query(
+      `SELECT quantity, average_cost 
+       FROM current_stock 
+       WHERE product_id = $1 AND location_id = $2`,
+      [product_id, location_id]
+    );
+
+    const currentQty = stockCheck.rows[0]?.quantity || 0;
+    const avgCost = stockCheck.rows[0]?.average_cost || 0;
+    const newQty = parseFloat(currentQty) + parseFloat(quantity);
+
+    // Allow negative stock (as per requirement)
+    if (newQty < 0) {
+      console.log(
+        `⚠️ Warning: Stock will be negative after adjustment: ${newQty}t`
+      );
+    }
+
+    // Determine from/to based on quantity sign
+    const from_location_id = quantity < 0 ? location_id : null;
+    const to_location_id = quantity > 0 ? location_id : null;
+
+    // Create stock movement record
+    const movementResult = await client.query(
+      `INSERT INTO stock_movements (
+        movement_date, 
+        movement_type,
+        product_id,
+        from_location_id,
+        to_location_id,
+        quantity,
+        unit_cost,
+        reference_number,
+        notes
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      RETURNING movement_id`,
+      [
+        movement_date,
+        "ADJUSTMENT",
+        product_id,
+        from_location_id,
+        to_location_id,
+        quantity,
+        avgCost,
+        reference_number || `ADJ-${Date.now()}`,
+        `Reason: ${reason}${notes ? "\n" + notes : ""}`,
+      ]
+    );
+
+    // Update current_stock
+    if (stockCheck.rows.length > 0) {
+      await client.query(
+        `UPDATE current_stock 
+         SET quantity = $1,
+             total_value = $1 * average_cost,
+             updated_at = CURRENT_TIMESTAMP
+         WHERE product_id = $2 AND location_id = $3`,
+        [newQty, product_id, location_id]
+      );
+    } else {
+      await client.query(
+        `INSERT INTO current_stock (product_id, location_id, quantity, average_cost, total_value)
+         VALUES ($1, $2, $3, $4, $3 * $4)`,
+        [product_id, location_id, newQty, avgCost]
+      );
+    }
+
+    await client.query("COMMIT");
+
+    res.status(201).json({
+      message: "Stock adjustment saved successfully",
+      movement_id: movementResult.rows[0].movement_id,
+    });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    console.error("Error saving adjustment:", error);
+    res.status(500).json({ error: "Failed to save adjustment" });
+  } finally {
+    client.release();
+  }
+});
+
+// POST /api/movements/transfer - Transfer stock between locations
+router.post("/transfer", async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const {
+      movement_date,
+      product_id,
+      from_location_id,
+      to_location_id,
+      quantity,
+      reference_number,
+      notes,
+    } = req.body;
+
+    // Validate
+    if (
+      !movement_date ||
+      !product_id ||
+      !from_location_id ||
+      !to_location_id ||
+      !quantity
+    ) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    if (from_location_id === to_location_id) {
+      await client.query("ROLLBACK");
+      return res
+        .status(400)
+        .json({ error: "Cannot transfer to the same location" });
+    }
+
+    if (quantity <= 0) {
+      await client.query("ROLLBACK");
+      return res
+        .status(400)
+        .json({ error: "Transfer quantity must be positive" });
+    }
+
+    // Get FROM location stock
+    const fromStockCheck = await client.query(
+      `SELECT quantity, average_cost 
+       FROM current_stock 
+       WHERE product_id = $1 AND location_id = $2`,
+      [product_id, from_location_id]
+    );
+
+    if (fromStockCheck.rows.length === 0) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({ error: "No stock at source location" });
+    }
+
+    const fromQty = parseFloat(fromStockCheck.rows[0].quantity);
+    const avgCost = parseFloat(fromStockCheck.rows[0].average_cost);
+
+    // Check if enough stock (allow negative as per requirement)
+    if (fromQty < quantity) {
+      console.log(
+        `⚠️ Warning: Insufficient stock. Available: ${fromQty}t, Requested: ${quantity}t`
+      );
+    }
+
+    // Check TO location for product mixing prevention
+    const toStockCheck = await client.query(
+      `SELECT product_id, quantity 
+       FROM current_stock 
+       WHERE location_id = $1 AND quantity > 0`,
+      [to_location_id]
+    );
+
+    if (
+      toStockCheck.rows.length > 0 &&
+      toStockCheck.rows[0].product_id !== parseInt(product_id)
+    ) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({
+        error: "Cannot mix different products in the same location",
+      });
+    }
+
+    // Create stock movement record
+    const movementResult = await client.query(
+      `INSERT INTO stock_movements (
+        movement_date, 
+        movement_type,
+        product_id,
+        from_location_id,
+        to_location_id,
+        quantity,
+        unit_cost,
+        reference_number,
+        notes
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      RETURNING movement_id`,
+      [
+        movement_date,
+        "TRANSFER",
+        product_id,
+        from_location_id,
+        to_location_id,
+        quantity,
+        avgCost,
+        reference_number || `TRF-${Date.now()}`,
+        notes,
+      ]
+    );
+
+    // Update FROM location (subtract)
+    const newFromQty = fromQty - quantity;
+    await client.query(
+      `UPDATE current_stock 
+       SET quantity = $1,
+           total_value = $1 * average_cost,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE product_id = $2 AND location_id = $3`,
+      [newFromQty, product_id, from_location_id]
+    );
+
+    // Update TO location (add)
+    const toStock = await client.query(
+      `SELECT quantity FROM current_stock WHERE product_id = $1 AND location_id = $2`,
+      [product_id, to_location_id]
+    );
+
+    if (toStock.rows.length > 0) {
+      const newToQty = parseFloat(toStock.rows[0].quantity) + quantity;
+      await client.query(
+        `UPDATE current_stock 
+         SET quantity = $1,
+             total_value = $1 * average_cost,
+             updated_at = CURRENT_TIMESTAMP
+         WHERE product_id = $2 AND location_id = $3`,
+        [newToQty, product_id, to_location_id]
+      );
+    } else {
+      await client.query(
+        `INSERT INTO current_stock (product_id, location_id, quantity, average_cost, total_value)
+         VALUES ($1, $2, $3, $4, $3 * $4)`,
+        [product_id, to_location_id, quantity, avgCost, quantity * avgCost]
+      );
+    }
+
+    await client.query("COMMIT");
+
+    res.status(201).json({
+      message: "Stock transfer saved successfully",
+      movement_id: movementResult.rows[0].movement_id,
+    });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    console.error("Error saving transfer:", error);
+    res.status(500).json({ error: "Failed to save transfer" });
+  } finally {
+    client.release();
+  }
+});
+
 module.exports = router;
