@@ -984,10 +984,11 @@ router.post("/adjustment", async (req, res) => {
         [newQty, product_id, location_id]
       );
     } else {
+      const totalValue = newQty * avgCost;
       await client.query(
         `INSERT INTO current_stock (product_id, location_id, quantity, average_cost, total_value)
-         VALUES ($1, $2, $3, $4, $3 * $4)`,
-        [product_id, location_id, newQty, avgCost]
+   VALUES ($1, $2, $3, $4, $5)`,
+        [product_id, location_id, newQty, avgCost, totalValue]
       );
     }
 
@@ -1145,10 +1146,11 @@ router.post("/transfer", async (req, res) => {
         [newToQty, product_id, to_location_id]
       );
     } else {
+      const totalValue = quantity * avgCost;
       await client.query(
         `INSERT INTO current_stock (product_id, location_id, quantity, average_cost, total_value)
-         VALUES ($1, $2, $3, $4, $3 * $4)`,
-        [product_id, to_location_id, quantity, avgCost, quantity * avgCost]
+   VALUES ($1, $2, $3, $4, $5)`,
+        [product_id, to_location_id, quantity, avgCost, totalValue]
       );
     }
 
