@@ -85,7 +85,14 @@
             Adjust inventory to match physical stocktake
           </div>
         </div>
-      </div>
+
+        <div class="action-card warning" onclick="openAdjustmentModal()">
+          <div class="action-card-icon">⚖️</div>
+          <div class="action-card-title">Stock Adjustment</div>
+          <div class="action-card-description">
+            Adjust stock levels or transfer between locations
+          </div>
+        </div>
 
       <!-- Stats Row -->
       <div class="stats-grid">
@@ -566,6 +573,117 @@
       </div>
     </div>
 
+    <!-- Stock Adjustment Modal -->
+    <div id="adjustmentModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Stock Adjustment / Transfer</h2>
+          <button class="modal-close" onclick="closeAdjustmentModal()">×</button>
+        </div>
+        <form id="adjustmentForm" onsubmit="event.preventDefault(); saveAdjustment();">
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label required">Date</label>
+              <input type="date" class="form-control" id="adjustmentDate" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label required">Type</label>
+              <select class="form-control" id="adjustmentType" required onchange="toggleAdjustmentType()">
+                <option value="">Select Type</option>
+                <option value="ADJUSTMENT">Adjustment</option>
+                <option value="TRANSFER">Transfer</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- ADJUSTMENT FIELDS -->
+          <div id="adjustmentFields" style="display: none;">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label required">Product</label>
+                <select class="form-control" id="adjustmentProduct">
+                  <option value="">Select Product</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label required">Location</label>
+                <select class="form-control" id="adjustmentLocation">
+                  <option value="">Select Location</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label required">Adjustment Quantity (tonnes)</label>
+                <input type="number" class="form-control" id="adjustmentQuantity" step="0.01" placeholder="Use + or - (e.g., -50 or +100)" />
+                <small style="color: #666;">Negative to reduce stock, positive to increase</small>
+              </div>
+              <div class="form-group">
+                <label class="form-label required">Reason</label>
+                <select class="form-control" id="adjustmentReason">
+                  <option value="">Select Reason</option>
+                  <option value="Sales Overage">Sales Overage</option>
+                  <option value="Stocktake Correction">Stocktake Correction</option>
+                  <option value="Shrinkage">Shrinkage</option>
+                  <option value="Damage">Damage</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- TRANSFER FIELDS -->
+          <div id="transferFields" style="display: none;">
+            <div class="form-group">
+              <label class="form-label required">Product</label>
+              <select class="form-control" id="transferProduct" onchange="loadTransferLocations()">
+                <option value="">Select Product</option>
+              </select>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label required">From Location</label>
+                <select class="form-control" id="transferFromLocation">
+                  <option value="">Select From Location</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label required">To Location</label>
+                <select class="form-control" id="transferToLocation">
+                  <option value="">Select To Location</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label required">Transfer Quantity (tonnes)</label>
+              <input type="number" class="form-control" id="transferQuantity" step="0.01" min="0.01" placeholder="e.g., 50.5" />
+              <small style="color: #666;">Always positive - moving from one location to another</small>
+            </div>
+          </div>
+
+          <!-- COMMON FIELDS -->
+          <div class="form-group">
+            <label class="form-label">Reference</label>
+            <input type="text" class="form-control" id="adjustmentReference" placeholder="e.g., ADJ-001 or TRF-001" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Notes</label>
+            <textarea class="form-control" id="adjustmentNotes" rows="3" placeholder="Reason for adjustment or transfer details..."></textarea>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn-secondary" onclick="closeAdjustmentModal()">Cancel</button>
+            <button type="submit" class="btn-warning">⚖️ Save Adjustment</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    
     <script src="/js/operations.js"></script>
     <script>
       // Update header inventory value
