@@ -197,7 +197,7 @@ router.post("/sales", async (req, res) => {
       movement_date,
       product_id,
       from_location_id,
-      gross_weight, // NEW
+      gross_weight,
       tare_weight,
       quantity, // This is NET weight calculated by frontend
       unit_price,
@@ -205,7 +205,6 @@ router.post("/sales", async (req, res) => {
       vehicle_id,
       driver_id,
       delivery_id,
-      docket_number,
       reference_number,
       notes,
       created_by = "system",
@@ -222,22 +221,31 @@ router.post("/sales", async (req, res) => {
       throw new Error("Missing required fields");
     }
 
-    // VALIDATION: Docket number is mandatory for sales
-    if (!docket_number || docket_number.trim() === "") {
-      throw new Error("Docket number is required for sales");
-    }
-
-    // VALIDATION: Check if docket number already exists
-    const docketCheck = await client.query(
-      "SELECT movement_id FROM stock_movements WHERE docket_number = $1 AND movement_type = 'SALES'",
-      [docket_number]
+    // AUTO-ASSIGN DOCKET NUMBER
+    // Get the latest docket number
+    const latestDocketResult = await client.query(
+      `SELECT docket_number 
+       FROM stock_movements 
+       WHERE movement_type = 'SALES' 
+         AND docket_number IS NOT NULL 
+       ORDER BY movement_id DESC 
+       LIMIT 1`
     );
 
-    if (docketCheck.rows.length > 0) {
-      throw new Error(
-        `Docket number ${docket_number} already exists. Please use a unique docket number.`
-      );
+    let docket_number;
+    if (latestDocketResult.rows.length === 0) {
+      // First docket ever
+      docket_number = "DN00001";
+    } else {
+      const lastDocket = latestDocketResult.rows[0].docket_number;
+      // Extract the numeric part (e.g., "DN00005" -> "00005" -> 5)
+      const numericPart = parseInt(lastDocket.replace("DN", ""));
+      // Increment and format back to DN00006
+      const nextNumber = numericPart + 1;
+      docket_number = `DN${nextNumber.toString().padStart(5, "0")}`;
     }
+
+    console.log(`🎫 Auto-assigned docket number: ${docket_number}`);
 
     // Check if sufficient stock exists
     const stockCheck = await client.query(
