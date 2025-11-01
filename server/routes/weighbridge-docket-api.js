@@ -38,7 +38,8 @@ router.get("/dockets/:docketNumber", async (req, res) => {
         l.location_code as stockpile_lot,
         d.driver_name,
         del.delivery_name as destination,
-        sm.delivery_id
+        sm.delivery_id,
+        car.carrier_name
       FROM stock_movements sm
       LEFT JOIN customers c ON sm.customer_id = c.customer_id
       LEFT JOIN vehicles v ON sm.vehicle_id = v.vehicle_id
@@ -46,6 +47,7 @@ router.get("/dockets/:docketNumber", async (req, res) => {
       LEFT JOIN locations l ON sm.from_location_id = l.location_id
       LEFT JOIN drivers d ON sm.driver_id = d.driver_id
       LEFT JOIN deliveries del ON sm.delivery_id = del.delivery_id
+      LEFT JOIN carriers car ON sm.carrier_id = car.carrier_id
       WHERE sm.docket_number = $1
         AND sm.movement_type = 'SALES'
     `;
