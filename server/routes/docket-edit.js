@@ -5,7 +5,7 @@
 
 const express = require("express");
 const router = express.Router();
-const pool = require("../config/database");
+const { pool } = require("../config/database");
 
 // ============================================
 // POST /api/dockets/edit
