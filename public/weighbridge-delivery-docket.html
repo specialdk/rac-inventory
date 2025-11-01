@@ -293,9 +293,11 @@
     </style>
   </head>
   <body>
-    <div class="page-container">
-      <!-- Controls -->
-      <button class="btn btn-primary" onclick="loadDocket()">
+    <!-- Controls -->
+      <div class="controls no-print">
+        <label for="docketNumber">Docket Number:</label>
+        <input type="text" id="docketNumber" placeholder="Enter Docket #" />
+        <button class="btn btn-primary" onclick="loadDocket()">
           📄 Load Docket
         </button>
         <button class="btn btn-primary" onclick="loadLatestDocket()">
