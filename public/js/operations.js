@@ -142,21 +142,21 @@ async function loadDropdowns() {
     const prodOperatorSelect = document.getElementById("productionOperator");
     const saleDriverSelect = document.getElementById("saleDriver");
 
-    // Production Operator - load all drivers from database
-driversData.forEach((driver) => {
-  prodOperatorSelect.add(new Option(driver.driver_name, driver.driver_id));
-});
+    // Production Operator - hardcoded codes (RIA, RM, RE)
+    const productionOperators = [
+      { code: "RIA", name: "RIA" },
+      { code: "RM", name: "RM" },
+      { code: "RE", name: "RE" },
+    ];
 
-// Sales Operator - hardcoded codes (RIA, RM, RE)
-const salesOperators = [
-  { code: 'RIA', name: 'RIA' },
-  { code: 'RM', name: 'RM' },
-  { code: 'RE', name: 'RE' }
-];
+    productionOperators.forEach((operator) => {
+      prodOperatorSelect.add(new Option(operator.name, operator.code));
+    });
 
-salesOperators.forEach((operator) => {
-  saleDriverSelect.add(new Option(operator.name, operator.code));
-});
+    // Sales Driver - load all drivers from database
+    driversData.forEach((driver) => {
+      saleDriverSelect.add(new Option(driver.driver_name, driver.driver_id));
+    });
 
     // Load carriers
     const carriersResponse = await fetch("/api/carriers");
@@ -616,12 +616,9 @@ async function saveSales() {
     driver_id: document.getElementById("saleDriver").value || null,
     delivery_id: document.getElementById("saleDelivery").value || null,
     carrier_id: document.getElementById("saleCarrier").value || null,
-    docket_number: document.getElementById("saleDocket").value,
     reference_number: document.getElementById("saleReference").value,
     notes: document.getElementById("saleNotes").value,
   };
-
-  // Validate net weight is positive
 
   // Validate net weight is positive
   if (netWeight <= 0) {
@@ -642,12 +639,7 @@ async function saveSales() {
     return;
   }
 
-  // Validate docket number (mandatory for sales)
-  if (!formData.docket_number || formData.docket_number.trim() === "") {
-    alert("Docket Number is required for sales");
-    document.getElementById("saleDocket").focus();
-    return;
-  }
+  // Note: Docket number is now AUTO-ASSIGNED by backend
 
   try {
     const response = await fetch("/api/movements/sales", {
@@ -663,12 +655,12 @@ async function saveSales() {
     }
 
     const result = await response.json();
-    const docketNumber = result.docket_number || formData.docket_number;
+    const docketNumber = result.movement.docket_number;
 
     // Close the sales modal first
     closeSalesModal();
 
-    // Show docket action modal
+    // Show docket action modal with auto-assigned docket number
     showDocketModal(docketNumber);
 
     // Refresh data
@@ -980,11 +972,11 @@ async function refreshMovements() {
 function openAdjustmentModal() {
   document.getElementById("adjustmentModal").style.display = "flex";
   document.getElementById("adjustmentForm").reset();
-  
+
   // Set today's date
   const today = new Date().toISOString().split("T")[0];
   document.getElementById("adjustmentDate").value = today;
-  
+
   // Load products
   loadAdjustmentProducts();
   loadAdjustmentLocations();
@@ -998,7 +990,7 @@ function toggleAdjustmentType() {
   const type = document.getElementById("adjustmentType").value;
   const adjustmentFields = document.getElementById("adjustmentFields");
   const transferFields = document.getElementById("transferFields");
-  
+
   if (type === "ADJUSTMENT") {
     adjustmentFields.style.display = "block";
     transferFields.style.display = "none";
@@ -1015,13 +1007,18 @@ async function loadAdjustmentProducts() {
   try {
     const response = await fetch("/api/products");
     const products = await response.json();
-    
-    const adjustmentProductSelect = document.getElementById("adjustmentProduct");
+
+    const adjustmentProductSelect =
+      document.getElementById("adjustmentProduct");
     const transferProductSelect = document.getElementById("transferProduct");
-    
+
     products.forEach((product) => {
-      adjustmentProductSelect.add(new Option(product.product_name, product.product_id));
-      transferProductSelect.add(new Option(product.product_name, product.product_id));
+      adjustmentProductSelect.add(
+        new Option(product.product_name, product.product_id)
+      );
+      transferProductSelect.add(
+        new Option(product.product_name, product.product_id)
+      );
     });
   } catch (error) {
     console.error("Error loading products:", error);
@@ -1032,11 +1029,14 @@ async function loadAdjustmentLocations() {
   try {
     const response = await fetch("/api/locations?is_active=true");
     const locations = await response.json();
-    
-    const adjustmentLocationSelect = document.getElementById("adjustmentLocation");
-    
+
+    const adjustmentLocationSelect =
+      document.getElementById("adjustmentLocation");
+
     locations.forEach((location) => {
-      adjustmentLocationSelect.add(new Option(location.location_name, location.location_id));
+      adjustmentLocationSelect.add(
+        new Option(location.location_name, location.location_id)
+      );
     });
   } catch (error) {
     console.error("Error loading locations:", error);
@@ -1045,27 +1045,27 @@ async function loadAdjustmentLocations() {
 
 async function loadTransferLocations() {
   const productId = document.getElementById("transferProduct").value;
-  
+
   if (!productId) return;
-  
+
   try {
     // Load locations with stock for this product
     const stockRes = await fetch(`/api/stock/by-product/${productId}`);
     const stockData = await stockRes.json();
-    
+
     const fromSelect = document.getElementById("transferFromLocation");
     const toSelect = document.getElementById("transferToLocation");
-    
+
     // Clear existing
     fromSelect.innerHTML = '<option value="">Select From Location</option>';
     toSelect.innerHTML = '<option value="">Select To Location</option>';
-    
+
     // Get all locations
     const locationsRes = await fetch("/api/locations?is_active=true");
     const allLocations = await locationsRes.json();
-    
+
     const locationsWithStock = stockData.stock_locations || [];
-    
+
     // FROM: Only locations with stock
     locationsWithStock.forEach((stock) => {
       const qty = parseFloat(stock.quantity) || 0;
@@ -1078,7 +1078,7 @@ async function loadTransferLocations() {
         );
       }
     });
-    
+
     // TO: All active locations
     allLocations.forEach((location) => {
       toSelect.add(new Option(location.location_name, location.location_id));
@@ -1090,12 +1090,12 @@ async function loadTransferLocations() {
 
 async function saveAdjustment() {
   const type = document.getElementById("adjustmentType").value;
-  
+
   if (!type) {
     alert("Please select Adjustment or Transfer");
     return;
   }
-  
+
   if (type === "ADJUSTMENT") {
     await saveStockAdjustment();
   } else if (type === "TRANSFER") {
@@ -1113,31 +1113,37 @@ async function saveStockAdjustment() {
     reference_number: document.getElementById("adjustmentReference").value,
     notes: document.getElementById("adjustmentNotes").value,
   };
-  
+
   // Validate
-  if (!formData.movement_date || !formData.product_id || !formData.location_id || !formData.quantity || !formData.reason) {
+  if (
+    !formData.movement_date ||
+    !formData.product_id ||
+    !formData.location_id ||
+    !formData.quantity ||
+    !formData.reason
+  ) {
     alert("Please fill in all required fields");
     return;
   }
-  
+
   if (formData.quantity === 0) {
     alert("Adjustment quantity cannot be zero");
     return;
   }
-  
+
   try {
     const response = await fetch("/api/movements/adjustment", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(formData),
     });
-    
+
     if (!response.ok) {
       const error = await response.json();
       alert(error.error || "Failed to save adjustment");
       return;
     }
-    
+
     alert("Stock adjustment saved successfully!");
     closeAdjustmentModal();
     await loadRecentMovementsWithFilter();
@@ -1157,36 +1163,42 @@ async function saveStockTransfer() {
     reference_number: document.getElementById("adjustmentReference").value,
     notes: document.getElementById("adjustmentNotes").value,
   };
-  
+
   // Validate
-  if (!formData.movement_date || !formData.product_id || !formData.from_location_id || !formData.to_location_id || !formData.quantity) {
+  if (
+    !formData.movement_date ||
+    !formData.product_id ||
+    !formData.from_location_id ||
+    !formData.to_location_id ||
+    !formData.quantity
+  ) {
     alert("Please fill in all required fields");
     return;
   }
-  
+
   if (formData.from_location_id === formData.to_location_id) {
     alert("Cannot transfer to the same location");
     return;
   }
-  
+
   if (formData.quantity <= 0) {
     alert("Transfer quantity must be positive");
     return;
   }
-  
+
   try {
     const response = await fetch("/api/movements/transfer", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(formData),
     });
-    
+
     if (!response.ok) {
       const error = await response.json();
       alert(error.error || "Failed to save transfer");
       return;
     }
-    
+
     alert("Stock transfer saved successfully!");
     closeAdjustmentModal();
     await loadRecentMovementsWithFilter();
