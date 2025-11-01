@@ -364,19 +364,7 @@
             📦 Download Report + All Dockets
           </button>
         </div>
-        <div
-          style="
-            margin-top: 10px;
-            padding: 10px;
-            background: #fff3cd;
-            border: 1px solid #ffc107;
-            border-radius: 4px;
-          "
-        >
-          <strong>💡 Tip:</strong> To edit a docket, click the ✏️ icon in the
-          table below after generating a report.
-        </div>
-      </div>
+        
 
       <!-- Report Content -->
       <div id="reportContent" style="display: none">
@@ -420,7 +408,6 @@
               <th>Fee</th>
               <th>GST</th>
               <th>Total</th>
-              <th class="no-print">Edit</th>
             </tr>
           </thead>
           <tbody id="reportTableBody"></tbody>
@@ -716,10 +703,7 @@
         document.getElementById("loadingState").style.display = "block";
       }
 
-      function editDocket(docketNumber) {
-        // Redirect to edit page with docket number
-        window.location.href = `/edit-docket.html?docket=${docketNumber}`;
-      }
+      
     </script>
   </body>
 </html>

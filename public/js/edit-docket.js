@@ -186,9 +186,7 @@ function populateForm() {
   ).toFixed(2);
 
   // Editable fields - Find the correct ID from the original data
-  // Product - we need to find product_id from the docket data
-  // The API returns product_name, but we need product_id
-  // We'll need to match by name or get the ID another way
+  // Product - match by name
   const productSelect = document.getElementById("productId");
   for (let option of productSelect.options) {
     if (option.textContent === originalDocket.product_name) {
@@ -197,7 +195,7 @@ function populateForm() {
     }
   }
 
-  // Location - match by name
+  // Location - match by location code
   const locationSelect = document.getElementById("locationId");
   for (let option of locationSelect.options) {
     if (option.textContent.includes(originalDocket.stockpile_lot)) {
@@ -215,7 +213,7 @@ function populateForm() {
     }
   }
 
-  // Price
+  // Price - calculate from docket fee / net weight
   const unitPrice =
     parseFloat(originalDocket.net_weight) > 0
       ? parseFloat(originalDocket.docket_fee) /
@@ -226,7 +224,10 @@ function populateForm() {
   // Vehicle - match by rego
   const vehicleSelect = document.getElementById("vehicleId");
   for (let option of vehicleSelect.options) {
-    if (option.textContent.includes(originalDocket.vehicle_rego)) {
+    if (
+      originalDocket.vehicle_rego &&
+      option.textContent.includes(originalDocket.vehicle_rego)
+    ) {
       vehicleSelect.value = option.value;
       break;
     }
@@ -312,7 +313,10 @@ async function loadStockpileDropdown(productId) {
       locationSelect.value = currentValue;
 
       // Auto-select if only one option
-      if (locationsWithStock.length === 1) {
+      if (
+        locationsWithStock.length === 1 &&
+        locationsWithStock[0].quantity > 0
+      ) {
         locationSelect.value = locationsWithStock[0].location_id;
       }
     } else {

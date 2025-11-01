@@ -295,10 +295,7 @@
   <body>
     <div class="page-container">
       <!-- Controls -->
-      <div class="controls no-print">
-        <label for="docketNumber">Docket Number:</label>
-        <input type="text" id="docketNumber" placeholder="Enter Docket #" />
-        <button class="btn btn-primary" onclick="loadDocket()">
+      <button class="btn btn-primary" onclick="loadDocket()">
           📄 Load Docket
         </button>
         <button class="btn btn-primary" onclick="loadLatestDocket()">
@@ -306,6 +303,9 @@
         </button>
         <button class="btn btn-success" onclick="printDocket()">
           🖨️ Print
+        </button>
+        <button class="btn btn-warning" id="editDocketBtn" onclick="editDocket()" style="display: none;">
+          ✏️ Edit
         </button>
       </div>
 
@@ -625,6 +625,7 @@
         document.getElementById("loadingState").style.display = "none";
         document.getElementById("errorState").style.display = "none";
         document.getElementById("docketContent").style.display = "block";
+        document.getElementById("editDocketBtn").style.display = "inline-block";
       }
 
       // Auto-load from URL parameter
@@ -650,6 +651,16 @@
           document.getElementById("docketContent").style.display = "none";
         }
       });
+
+      // Edit docket function
+      function editDocket() {
+        const docketNumber = document.getElementById("docketNumber").value;
+        if (!docketNumber) {
+          alert("Please load a docket first");
+          return;
+        }
+        window.location.href = `/edit-docket.html?docket=${docketNumber}`;
+      }
     </script>
   </body>
 </html>
