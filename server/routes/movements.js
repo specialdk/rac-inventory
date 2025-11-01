@@ -222,11 +222,12 @@ router.post("/sales", async (req, res) => {
     }
 
     // AUTO-ASSIGN DOCKET NUMBER
-    // Get the latest docket number
+    // Get the latest docket number that matches DN##### format
     const latestDocketResult = await client.query(
       `SELECT docket_number 
        FROM stock_movements 
        WHERE movement_type = 'SALES' 
+         AND docket_number LIKE 'DN%'
          AND docket_number IS NOT NULL 
        ORDER BY movement_id DESC 
        LIMIT 1`
@@ -234,15 +235,24 @@ router.post("/sales", async (req, res) => {
 
     let docket_number;
     if (latestDocketResult.rows.length === 0) {
-      // First docket ever
+      // First docket ever with DN format
       docket_number = "DN00001";
     } else {
       const lastDocket = latestDocketResult.rows[0].docket_number;
       // Extract the numeric part (e.g., "DN00005" -> "00005" -> 5)
       const numericPart = parseInt(lastDocket.replace("DN", ""));
-      // Increment and format back to DN00006
-      const nextNumber = numericPart + 1;
-      docket_number = `DN${nextNumber.toString().padStart(5, "0")}`;
+
+      // Handle invalid formats gracefully
+      if (isNaN(numericPart)) {
+        console.warn(
+          `⚠️ Invalid docket format found: ${lastDocket}. Starting from DN00001`
+        );
+        docket_number = "DN00001";
+      } else {
+        // Increment and format back to DN00006
+        const nextNumber = numericPart + 1;
+        docket_number = `DN${nextNumber.toString().padStart(5, "0")}`;
+      }
     }
 
     console.log(`🎫 Auto-assigned docket number: ${docket_number}`);
