@@ -91,6 +91,7 @@ app.use("/api", require("./routes/carriers"));
 // Report Routes
 app.use("/api", require("./routes/account-detail-report-api"));
 app.use("/api", require("./routes/weighbridge-docket-api"));
+app.use("/api/dockets", require("./routes/docket-edit"));
 
 // Serve index.html for root
 app.get("/", (req, res) => {
@@ -124,4 +125,5 @@ app.listen(PORT, () => {
   console.log(`   - /api/drivers`);
   console.log(`   - /api/reports/account-detail (GET)`);
   console.log(`   - /api/reports/account-detail/email (POST)`);
+  console.log(`   - POST /api/dockets/edit (Edit Docket)`);
 });
