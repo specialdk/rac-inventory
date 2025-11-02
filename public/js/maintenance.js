@@ -74,7 +74,7 @@ async function loadSectionData(section) {
 
 async function loadProducts() {
   try {
-    const response = await fetch("/api/products");
+    const response = await fetch("/api/products?is_active=true");
     const products = await response.json();
 
     const tbody = document.getElementById("productsTableBody");
