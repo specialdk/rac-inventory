@@ -238,51 +238,47 @@
           </table>
         </div>
       </div>
+    </div>
 
-      <!-- DRIVERS SECTION -->
-      <div
-        id="drivers-section"
-        class="maintenance-section"
-        style="display: none"
-      >
-        <div class="section-header">
-          <h2>Drivers Management</h2>
-          <button class="btn-primary" onclick="openDriverModal()">
-            ➕ Add Driver
-          </button>
-        </div>
+    <!-- DRIVERS SECTION -->
+    <div id="drivers-section" class="maintenance-section" style="display: none">
+      <div class="section-header">
+        <h2>Drivers Management</h2>
+        <button class="btn-primary" onclick="openDriverModal()">
+          ➕ Add Driver
+        </button>
+      </div>
 
-        <div class="search-bar">
-          <input
-            type="text"
-            id="driversSearch"
-            placeholder="Search drivers..."
-            onkeyup="searchItems('drivers')"
-          />
-        </div>
+      <div class="search-bar">
+        <input
+          type="text"
+          id="driversSearch"
+          placeholder="Search drivers..."
+          onkeyup="searchItems('drivers')"
+        />
+      </div>
 
-        <div class="data-table">
-          <table>
-            <thead>
-              <tr>
-                <th>Code</th>
-                <th>Name</th>
-                <th>License</th>
-                <th>Class</th>
-                <th>Expiry</th>
-                <th>Certifications</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="driversTableBody">
-              <tr>
-                <td colspan="7" style="text-align: center; padding: 2rem">
-                  Loading drivers...
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+      <div class="data-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Name</th>
+              <th>License</th>
+              <th>Class</th>
+              <th>Expiry</th>
+              <th>Certifications</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="driversTableBody">
+            <tr>
+              <td colspan="7" style="text-align: center; padding: 2rem">
+                Loading drivers...
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
