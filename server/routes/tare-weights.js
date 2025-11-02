@@ -108,9 +108,9 @@ router.get("/tare-weights/recent/:vehicle_id", async (req, res) => {
       res.json({
         success: true,
         tare: result.rows[0],
-        message: `Recent tare found (${result.rows[0].hours_ago.toFixed(
-          1
-        )} hours ago)`,
+        message: `Recent tare found (${parseFloat(
+          result.rows[0].hours_ago
+        ).toFixed(1)} hours ago)`,
       });
     } else {
       res.json({
