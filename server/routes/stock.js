@@ -32,6 +32,7 @@ router.get("/current", async (req, res) => {
         p.product_code,
         p.product_name,
         p.family_group,
+        p.standard_sales_price,
         cs.location_id,
         l.location_code,
         l.location_name,

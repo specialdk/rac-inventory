@@ -149,9 +149,12 @@ function renderStockTable(data) {
         <td style="text-align: right; padding: 0.4rem 0.5rem; ${demandColor}">${formatNumber(
       item.demand || 0
     )}</td>
-        <td style="text-align: right; padding: 0.4rem 0.5rem;">${formatCurrency(
-          item.average_cost
-        )}</td>
+        <td style="text-align: right">$${parseFloat(
+          item.average_cost || 0
+        ).toFixed(2)}</td>
+        <td style="text-align: right">$${parseFloat(
+          item.standard_sales_price || 0
+        ).toFixed(2)}</td>
         <td style="text-align: right; padding: 0.4rem 0.5rem;">${formatCurrency(
           item.total_value
         )}</td>
