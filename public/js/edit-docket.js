@@ -495,7 +495,8 @@ async function submitEdit() {
       alert(
         "✅ Docket edited successfully!\n\nTwo audit records have been created:\n- REVERSAL movement\n- CORRECTION movement"
       );
-      window.history.back();
+      // Auto-reload the docket to show corrected data
+      window.location.href = `/weighbridge-delivery-docket.html?docket=${originalDocket.docket_number}`;
     } else {
       alert("❌ Error: " + (result.error || "Failed to edit docket"));
       submitButton.disabled = false;
