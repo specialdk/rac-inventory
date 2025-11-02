@@ -238,121 +238,125 @@
           </table>
         </div>
       </div>
-    </div>
 
-    <!-- DRIVERS SECTION -->
-    <div id="drivers-section" class="maintenance-section" style="display: none">
-      <div class="section-header">
-        <h2>Drivers Management</h2>
-        <button class="btn-primary" onclick="openDriverModal()">
-          ➕ Add Driver
-        </button>
-      </div>
+      <!-- DRIVERS SECTION -->
+      <div
+        id="drivers-section"
+        class="maintenance-section"
+        style="display: none"
+      >
+        <div class="section-header">
+          <h2>Drivers Management</h2>
+          <button class="btn-primary" onclick="openDriverModal()">
+            ➕ Add Driver
+          </button>
+        </div>
 
-      <div class="search-bar">
-        <input
-          type="text"
-          id="driversSearch"
-          placeholder="Search drivers..."
-          onkeyup="searchItems('drivers')"
-        />
-      </div>
+        <div class="search-bar">
+          <input
+            type="text"
+            id="driversSearch"
+            placeholder="Search drivers..."
+            onkeyup="searchItems('drivers')"
+          />
+        </div>
 
-      <div class="data-table">
-        <table>
-          <thead>
-            <tr>
-              <th>Code</th>
-              <th>Name</th>
-              <th>License</th>
-              <th>Class</th>
-              <th>Expiry</th>
-              <th>Certifications</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="driversTableBody">
-            <tr>
-              <td colspan="7" style="text-align: center; padding: 2rem">
-                Loading drivers...
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- CARRIERS SECTION -->
-    <div
-      id="carriers-section"
-      class="maintenance-section"
-      style="display: none"
-    >
-      <div class="section-header">
-        <h2>Carriers Management</h2>
-        <button class="btn-primary" onclick="openCarrierModal()">
-          ➕ Add Carrier
-        </button>
-      </div>
-      <div class="search-bar">
-        <input
-          type="text"
-          id="carriersSearch"
-          placeholder="Search carriers..."
-          onkeyup="searchItems('carriers')"
-        />
-      </div>
-      <div class="data-table">
-        <table>
-          <thead>
-            <tr>
-              <th>Carrier Name</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="carriersTableBody">
-            <tr>
-              <td colspan="2" style="text-align: center; padding: 2rem">
-                Loading carriers...
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Deliveries Section -->
-    <div
-      id="deliveries-section"
-      class="maintenance-section"
-      style="display: none"
-    >
-      <div class="section-header">
-        <h2>📍 Deliveries Management</h2>
-        <button class="btn btn-primary" onclick="openDeliveryModal()">
-          ➕ Add Delivery
-        </button>
+        <div class="data-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Name</th>
+                <th>License</th>
+                <th>Class</th>
+                <th>Expiry</th>
+                <th>Certifications</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="driversTableBody">
+              <tr>
+                <td colspan="7" style="text-align: center; padding: 2rem">
+                  Loading drivers...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      <div class="data-table">
-        <table>
-          <thead>
-            <tr>
-              <th>Delivery Name</th>
-              <th>Description</th>
-              <th>Charge per Tonne</th>
-              <th>Status</th>
-              <th style="width: 120px">Actions</th>
-            </tr>
-          </thead>
-          <tbody id="deliveriesTableBody">
-            <tr>
-              <td colspan="5" style="text-align: center; padding: 20px">
-                Loading deliveries...
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <!-- CARRIERS SECTION -->
+      <div
+        id="carriers-section"
+        class="maintenance-section"
+        style="display: none"
+      >
+        <div class="section-header">
+          <h2>Carriers Management</h2>
+          <button class="btn-primary" onclick="openCarrierModal()">
+            ➕ Add Carrier
+          </button>
+        </div>
+        <div class="search-bar">
+          <input
+            type="text"
+            id="carriersSearch"
+            placeholder="Search carriers..."
+            onkeyup="searchItems('carriers')"
+          />
+        </div>
+        <div class="data-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Carrier Name</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="carriersTableBody">
+              <tr>
+                <td colspan="2" style="text-align: center; padding: 2rem">
+                  Loading carriers...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Deliveries Section -->
+      <div
+        id="deliveries-section"
+        class="maintenance-section"
+        style="display: none"
+      >
+        <div class="section-header">
+          <h2>📍 Deliveries Management</h2>
+          <button class="btn btn-primary" onclick="openDeliveryModal()">
+            ➕ Add Delivery
+          </button>
+        </div>
+
+        <div class="data-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Delivery Name</th>
+                <th>Description</th>
+                <th>Charge per Tonne</th>
+                <th>Status</th>
+                <th style="width: 120px">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="deliveriesTableBody">
+              <tr>
+                <td colspan="5" style="text-align: center; padding: 20px">
+                  Loading deliveries...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
