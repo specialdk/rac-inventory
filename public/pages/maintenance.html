@@ -53,6 +53,9 @@
       <button class="sub-nav-item" data-section="vehicles">🚛 Vehicles</button>
       <button class="sub-nav-item" data-section="drivers">👷 Drivers</button>
       <button class="sub-nav-item" data-section="carriers">🚚 Carriers</button>
+      <button class="sub-nav-item" onclick="showSection('deliveries')">
+        📍 Deliveries
+      </button>
     </div>
 
     <div class="container">
@@ -315,6 +318,41 @@
             <tr>
               <td colspan="2" style="text-align: center; padding: 2rem">
                 Loading carriers...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Deliveries Section -->
+    <div
+      id="deliveries-section"
+      class="maintenance-section"
+      style="display: none"
+    >
+      <div class="section-header">
+        <h2>📍 Deliveries Management</h2>
+        <button class="btn btn-primary" onclick="openDeliveryModal()">
+          ➕ Add Delivery
+        </button>
+      </div>
+
+      <div class="data-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Delivery Name</th>
+              <th>Description</th>
+              <th>Charge per Tonne</th>
+              <th>Status</th>
+              <th style="width: 120px">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="deliveriesTableBody">
+            <tr>
+              <td colspan="5" style="text-align: center; padding: 20px">
+                Loading deliveries...
               </td>
             </tr>
           </tbody>
@@ -819,6 +857,77 @@
             <button type="submit" class="btn-primary">💾 Save Carrier</button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <!-- Delivery Modal -->
+    <div id="deliveryModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="deliveryModalTitle">Add Delivery</h2>
+          <button class="modal-close" onclick="closeDeliveryModal()">×</button>
+        </div>
+        <div class="modal-body">
+          <form
+            id="deliveryForm"
+            onsubmit="event.preventDefault(); saveDelivery();"
+          >
+            <input type="hidden" id="deliveryId" />
+
+            <div class="form-group">
+              <label class="form-label required">Delivery Name</label>
+              <input
+                type="text"
+                class="form-control"
+                id="deliveryName"
+                required
+                placeholder="e.g., Nhulunbuy Township"
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Description</label>
+              <textarea
+                class="form-control"
+                id="deliveryDescription"
+                rows="2"
+                placeholder="Additional delivery details"
+              ></textarea>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label required">Charge per Tonne ($)</label>
+              <input
+                type="number"
+                class="form-control"
+                id="deliveryCharge"
+                step="0.01"
+                min="0"
+                required
+                placeholder="e.g., 6.00"
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">
+                <input type="checkbox" id="deliveryActive" checked /> Active
+              </label>
+            </div>
+
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn-secondary"
+                onclick="closeDeliveryModal()"
+              >
+                Cancel
+              </button>
+              <button type="submit" class="btn-primary">
+                💾 Save Delivery
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
 

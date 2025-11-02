@@ -62,6 +62,9 @@ async function loadSectionData(section) {
     case "carriers":
       loadCarriers();
       break;
+    case "deliveries":
+      loadDeliveries();
+      break;
   }
 }
 
@@ -973,4 +976,150 @@ function setupModalHandlers() {
       event.target.style.display = "none";
     }
   };
+}
+
+// ============================================
+// DELIVERIES MANAGEMENT
+// ============================================
+
+async function loadDeliveries() {
+  try {
+    const response = await fetch("/api/deliveries");
+    const deliveries = await response.json();
+
+    const tbody = document.getElementById("deliveriesTableBody");
+
+    if (deliveries.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="5" style="text-align: center; padding: 20px; color: #999">
+            No deliveries found. Click "Add Delivery" to create one.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = deliveries
+      .map(
+        (delivery) => `
+      <tr>
+        <td><strong>${delivery.delivery_name}</strong></td>
+        <td>${delivery.description || "-"}</td>
+        <td style="text-align: right">$${parseFloat(
+          delivery.delivery_charge_per_tonne || 0
+        ).toFixed(2)}</td>
+        <td>
+          <span class="badge ${
+            delivery.is_active ? "badge-success" : "badge-danger"
+          }">
+            ${delivery.is_active ? "Active" : "Inactive"}
+          </span>
+        </td>
+        <td>
+          <button class="btn-icon" onclick="editDelivery(${
+            delivery.delivery_id
+          })" title="Edit">
+            ✏️
+          </button>
+          <button class="btn-icon" onclick="deleteDelivery(${
+            delivery.delivery_id
+          })" title="Delete">
+            🗑️
+          </button>
+        </td>
+      </tr>
+    `
+      )
+      .join("");
+  } catch (error) {
+    console.error("Error loading deliveries:", error);
+  }
+}
+
+function openDeliveryModal() {
+  document.getElementById("deliveryModalTitle").textContent = "Add Delivery";
+  document.getElementById("deliveryForm").reset();
+  document.getElementById("deliveryId").value = "";
+  document.getElementById("deliveryActive").checked = true;
+  document.getElementById("deliveryModal").style.display = "flex";
+}
+
+function closeDeliveryModal() {
+  document.getElementById("deliveryModal").style.display = "none";
+}
+
+async function saveDelivery() {
+  const deliveryId = document.getElementById("deliveryId").value;
+  const formData = {
+    delivery_name: document.getElementById("deliveryName").value,
+    description: document.getElementById("deliveryDescription").value,
+    delivery_charge_per_tonne: parseFloat(
+      document.getElementById("deliveryCharge").value
+    ),
+    is_active: document.getElementById("deliveryActive").checked,
+  };
+
+  try {
+    const url = deliveryId
+      ? `/api/deliveries/${deliveryId}`
+      : "/api/deliveries";
+    const method = deliveryId ? "PUT" : "POST";
+
+    const response = await fetch(url, {
+      method: method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
+    });
+
+    if (response.ok) {
+      alert(deliveryId ? "✅ Delivery updated!" : "✅ Delivery added!");
+      closeDeliveryModal();
+      loadDeliveries();
+    } else {
+      alert("❌ Error saving delivery");
+    }
+  } catch (error) {
+    console.error("Error saving delivery:", error);
+    alert("Error saving delivery");
+  }
+}
+
+async function editDelivery(deliveryId) {
+  try {
+    const response = await fetch(`/api/deliveries/${deliveryId}`);
+    const delivery = await response.json();
+
+    document.getElementById("deliveryModalTitle").textContent = "Edit Delivery";
+    document.getElementById("deliveryId").value = delivery.delivery_id;
+    document.getElementById("deliveryName").value = delivery.delivery_name;
+    document.getElementById("deliveryDescription").value =
+      delivery.description || "";
+    document.getElementById("deliveryCharge").value =
+      delivery.delivery_charge_per_tonne || 0;
+    document.getElementById("deliveryActive").checked = delivery.is_active;
+
+    document.getElementById("deliveryModal").style.display = "flex";
+  } catch (error) {
+    console.error("Error loading delivery:", error);
+  }
+}
+
+async function deleteDelivery(deliveryId) {
+  if (!confirm("Are you sure you want to delete this delivery option?")) return;
+
+  try {
+    const response = await fetch(`/api/deliveries/${deliveryId}`, {
+      method: "DELETE",
+    });
+
+    if (response.ok) {
+      alert("✅ Delivery deleted!");
+      loadDeliveries();
+    } else {
+      alert("❌ Error deleting delivery");
+    }
+  } catch (error) {
+    console.error("Error deleting delivery:", error);
+  }
 }

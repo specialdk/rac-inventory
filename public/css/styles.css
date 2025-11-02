@@ -693,6 +693,8 @@ textarea.form-control {
 /* Sub Navigation - for maintenance page tabs */
 .sub-nav {
   display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
   gap: 0;
   background: white;
   border-bottom: 2px solid var(--gray-200);
@@ -716,6 +718,8 @@ textarea.form-control {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .sub-nav-item:hover {
