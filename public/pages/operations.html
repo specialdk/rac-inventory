@@ -405,7 +405,7 @@
           <button class="modal-close" onclick="closeSalesModal()">×</button>
         </div>
         <form id="salesForm" onsubmit="event.preventDefault(); saveSales();">
-          <!-- Sales form fields -->
+          <!-- Row 1: Date and Product -->
           <div class="form-row">
             <div class="form-group">
               <label class="form-label required">Sale Date</label>
@@ -424,6 +424,7 @@
             </div>
           </div>
 
+          <!-- Row 2: Stockpile and Vehicle -->
           <div class="form-row">
             <div class="form-group">
               <label class="form-label required">From Stockpile</label>
@@ -432,22 +433,15 @@
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label required">Gross Weight (tonnes)</label>
-              <input
-                type="number"
-                class="form-control"
-                id="saleGrossWeight"
-                step="0.01"
-                required
-                oninput="calculateNetWeight()"
-                placeholder="e.g., 100.0"
-              />
-              <small style="color: #666"
-                >Total weight on weighbridge (loaded truck)</small
-              >
+              <label class="form-label">Delivery Vehicle</label>
+              <select class="form-control" id="saleVehicle">
+                <option value="">Select Vehicle</option>
+              </select>
+              <small style="color: #666">Selecting vehicle will auto-load tare weight</small>
             </div>
           </div>
 
+          <!-- Row 3: Tare Weight and Carrier (auto-populated) -->
           <div class="form-row">
             <div class="form-group">
               <label class="form-label required">Tare Weight (tonnes)</label>
@@ -462,7 +456,29 @@
               />
               <small style="color: #666">Empty truck weight</small>
             </div>
+            <div class="form-group">
+              <label class="form-label">Carrier</label>
+              <select class="form-control" id="saleCarrier">
+                <option value="">Select Carrier</option>
+              </select>
+            </div>
+          </div>
 
+          <!-- Row 4: Gross and Net Weight -->
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label required">Gross Weight (tonnes)</label>
+              <input
+                type="number"
+                class="form-control"
+                id="saleGrossWeight"
+                step="0.01"
+                required
+                oninput="calculateNetWeight()"
+                placeholder="e.g., 100.0"
+              />
+              <small style="color: #666">Total weight on weighbridge (loaded truck)</small>
+            </div>
             <div class="form-group">
               <label class="form-label">Net Weight (tonnes)</label>
               <input
@@ -478,16 +494,14 @@
                 "
                 placeholder="Auto-calculated"
               />
-              <small style="color: #666"
-                >Gross - Tare = Net (actual product sold)</small
-              >
+              <small style="color: #666">Gross - Tare = Net (actual product sold)</small>
             </div>
           </div>
+
+          <!-- Row 5: Price and Customer -->
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label required"
-                >Sale Price per Tonne ($)</label
-              >
+              <label class="form-label required">Sale Price per Tonne ($)</label>
               <input
                 type="number"
                 class="form-control"
@@ -505,29 +519,14 @@
             </div>
           </div>
 
+          <!-- Row 6: Driver and Delivery Type -->
           <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">Delivery Vehicle</label>
-              <select class="form-control" id="saleVehicle">
-                <option value="">Select Vehicle</option>
-              </select>
-            </div>
             <div class="form-group">
               <label class="form-label">Driver</label>
               <select class="form-control" id="saleDriver">
                 <option value="">Select Driver</option>
               </select>
             </div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Carrier</label>
-            <select class="form-control" id="saleCarrier">
-              <option value="">Select Carrier</option>
-            </select>
-          </div>
-
-          <div class="form-row">
             <div class="form-group">
               <label class="form-label">Delivery Type</label>
               <select class="form-control" id="saleDelivery">
@@ -536,6 +535,7 @@
             </div>
           </div>
 
+          <!-- Row 7: Reference and Docket Number -->
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">Sale Reference</label>
@@ -543,7 +543,7 @@
                 type="text"
                 class="form-control"
                 id="saleReference"
-                placeholder="e.g., SALE-001"
+                placeholder="e.g., PO444555888"
               />
             </div>
             <div class="form-group">
@@ -561,6 +561,7 @@
             </div>
           </div>
 
+          <!-- Notes -->
           <div class="form-group">
             <label class="form-label">Notes</label>
             <textarea
