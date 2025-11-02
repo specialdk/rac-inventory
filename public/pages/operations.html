@@ -755,6 +755,99 @@
       </div>
     </div>
 
+    <!-- Tare Weight Modal -->
+    <div id="tareWeightModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Record Tare Weight</h2>
+          <button class="modal-close" onclick="closeTareWeightModal()">
+            ×
+          </button>
+        </div>
+        <form
+          id="tareWeightForm"
+          onsubmit="event.preventDefault(); saveTareWeight();"
+        >
+          <div class="form-group">
+            <label class="form-label required">Vehicle</label>
+            <select class="form-control" id="tareVehicle" required>
+              <option value="">Select Vehicle</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label required">Tare Weight (tonnes)</label>
+              <input
+                type="number"
+                class="form-control"
+                id="tareWeight"
+                step="0.01"
+                min="0.01"
+                required
+                placeholder="e.g., 18.50"
+              />
+              <small style="color: #666">Empty truck weight</small>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Carrier</label>
+              <select class="form-control" id="tareCarrier">
+                <option value="">Select Carrier</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Operator</label>
+            <input
+              type="text"
+              class="form-control"
+              id="tareOperator"
+              placeholder="Your name (optional)"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Notes</label>
+            <textarea
+              class="form-control"
+              id="tareNotes"
+              rows="2"
+              placeholder="e.g., New tires fitted, driver mentioned issue, etc."
+            ></textarea>
+          </div>
+
+          <div
+            style="
+              background: #e3f2fd;
+              padding: 12px;
+              border-radius: 6px;
+              margin-bottom: 20px;
+              font-size: 13px;
+              color: #1565c0;
+            "
+          >
+            <strong>ℹ️ Note:</strong> This tare weight will be automatically
+            suggested when recording a sale for this vehicle within the next 3
+            hours.
+          </div>
+
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn-secondary"
+              onclick="closeTareWeightModal()"
+            >
+              Cancel
+            </button>
+            <button type="submit" class="btn-info">
+              🚛 Record Tare Weight
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <script src="/js/operations.js"></script>
     <script>
       // Update header inventory value

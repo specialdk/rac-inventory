@@ -14,6 +14,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   await loadStats();
   await loadRecentMovementsWithFilter();
   setupSaleProductListener(); // Setup sale product listener
+  setupSalesVehicleListener(); // ADD THIS LINE
 
   // ============================================
   // BUSINESS RULE 1: Auto-suggest stockpile when product selected
@@ -657,6 +658,12 @@ async function saveSales() {
       return;
     }
 
+    // NEW: Mark tare as used if it was auto-populated
+    const tareWeightInput = document.getElementById("saleTareWeight");
+    if (tareWeightInput.dataset.tareId) {
+      await markTareAsUsed(tareWeightInput.dataset.tareId, docketNumber);
+    }
+
     const result = await response.json();
     const docketNumber = result.movement.docket_number;
 
@@ -1211,5 +1218,165 @@ async function saveStockTransfer() {
   } catch (error) {
     console.error("Error saving transfer:", error);
     alert("Error saving transfer");
+  }
+}
+
+// ============================================
+// TARE WEIGHT FUNCTIONS
+// ============================================
+
+function openTareWeightModal() {
+  document.getElementById("tareWeightModal").style.display = "flex";
+  document.getElementById("tareWeightForm").reset();
+  loadTareWeightDropdowns();
+}
+
+function closeTareWeightModal() {
+  document.getElementById("tareWeightModal").style.display = "none";
+}
+
+async function loadTareWeightDropdowns() {
+  try {
+    const vehiclesRes = await fetch("/api/vehicles");
+    const vehicles = await vehiclesRes.json();
+    const tareVehicleSelect = document.getElementById("tareVehicle");
+
+    tareVehicleSelect.innerHTML = '<option value="">Select Vehicle</option>';
+    vehicles.forEach((vehicle) => {
+      const option = new Option(
+        `${vehicle.registration} - ${vehicle.vehicle_type}`,
+        vehicle.vehicle_id
+      );
+      tareVehicleSelect.add(option);
+    });
+
+    const carriersRes = await fetch("/api/carriers");
+    const carriers = await carriersRes.json();
+    const tareCarrierSelect = document.getElementById("tareCarrier");
+
+    tareCarrierSelect.innerHTML = '<option value="">Select Carrier</option>';
+    carriers.forEach((carrier) => {
+      const option = new Option(carrier.carrier_name, carrier.carrier_id);
+      tareCarrierSelect.add(option);
+    });
+  } catch (error) {
+    console.error("Error loading tare weight dropdowns:", error);
+  }
+}
+
+async function saveTareWeight() {
+  const formData = {
+    vehicle_id: parseInt(document.getElementById("tareVehicle").value),
+    tare_weight: parseFloat(document.getElementById("tareWeight").value),
+    carrier_id: document.getElementById("tareCarrier").value
+      ? parseInt(document.getElementById("tareCarrier").value)
+      : null,
+    recorded_by: document.getElementById("tareOperator").value || "OPERATOR",
+    notes: document.getElementById("tareNotes").value,
+  };
+
+  if (!formData.vehicle_id || !formData.tare_weight) {
+    alert("Please fill in all required fields");
+    return;
+  }
+
+  if (formData.tare_weight <= 0) {
+    alert("Tare weight must be positive");
+    return;
+  }
+
+  try {
+    const response = await fetch("/api/tare-weights", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
+    });
+
+    const result = await response.json();
+
+    if (response.ok && result.success) {
+      alert(
+        `✅ Tare weight recorded successfully!\n\nVehicle: ${
+          document.getElementById("tareVehicle").selectedOptions[0].textContent
+        }\nTare Weight: ${formData.tare_weight.toFixed(
+          2
+        )} tonnes\n\nThis will be auto-suggested for sales within the next 3 hours.`
+      );
+      closeTareWeightModal();
+    } else {
+      alert("❌ Error: " + (result.error || "Failed to record tare weight"));
+    }
+  } catch (error) {
+    console.error("Error saving tare weight:", error);
+    alert("Error recording tare weight");
+  }
+}
+
+function setupSalesVehicleListener() {
+  const saleVehicleSelect = document.getElementById("saleVehicle");
+
+  if (saleVehicleSelect) {
+    saleVehicleSelect.addEventListener("change", async (e) => {
+      const vehicleId = e.target.value;
+      if (vehicleId) {
+        await loadRecentTareWeight(vehicleId);
+      }
+    });
+  }
+}
+
+async function loadRecentTareWeight(vehicleId) {
+  try {
+    const response = await fetch(
+      `/api/tare-weights/recent/${vehicleId}?hours=3`
+    );
+    const data = await response.json();
+
+    const tareWeightInput = document.getElementById("saleTareWeight");
+
+    if (data.success && data.tare) {
+      tareWeightInput.value = parseFloat(data.tare.tare_weight).toFixed(2);
+
+      const existingIndicator = document.getElementById("tareIndicator");
+      if (existingIndicator) {
+        existingIndicator.remove();
+      }
+
+      const indicator = document.createElement("small");
+      indicator.id = "tareIndicator";
+      indicator.style.color = "#28a745";
+      indicator.style.display = "block";
+      indicator.style.marginTop = "4px";
+      indicator.textContent = `✓ Auto-loaded from registry (${data.tare.hours_ago.toFixed(
+        1
+      )} hours ago)`;
+
+      tareWeightInput.parentElement.appendChild(indicator);
+      tareWeightInput.dataset.tareId = data.tare.tare_id;
+      calculateNetWeight();
+    } else {
+      const existingIndicator = document.getElementById("tareIndicator");
+      if (existingIndicator) {
+        existingIndicator.remove();
+      }
+      delete tareWeightInput.dataset.tareId;
+    }
+  } catch (error) {
+    console.error("Error loading recent tare weight:", error);
+  }
+}
+
+async function markTareAsUsed(tareId, docketNumber) {
+  if (!tareId) return;
+
+  try {
+    await fetch(`/api/tare-weights/${tareId}/mark-used`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ docket_number: docketNumber }),
+    });
+    console.log("✓ Tare weight marked as used");
+  } catch (error) {
+    console.error("Error marking tare as used:", error);
   }
 }

@@ -943,3 +943,19 @@ textarea.form-control {
     grid-template-columns: 1fr;
   }
 }
+
+.btn-info {
+  background: var(--info-color);
+  color: white;
+}
+
+.btn-info:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+.badge-info-dark {
+  background: #1e40af;
+  color: #dbeafe;
+}

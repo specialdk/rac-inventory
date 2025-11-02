@@ -87,6 +87,8 @@ app.use("/api/vehicles", require("./routes/vehicles"));
 app.use("/api/drivers", require("./routes/drivers"));
 app.use("/api/deliveries", require("./routes/deliveries"));
 app.use("/api", require("./routes/carriers"));
+app.use("/api", require("./routes/tare-weights"));  // ADD THIS LINE
+
 
 // Report Routes
 app.use("/api", require("./routes/account-detail-report-api"));
