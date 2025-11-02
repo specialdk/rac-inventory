@@ -1333,9 +1333,16 @@ async function loadRecentTareWeight(vehicleId) {
     const data = await response.json();
 
     const tareWeightInput = document.getElementById("saleTareWeight");
+    const carrierSelect = document.getElementById("saleCarrier");
 
     if (data.success && data.tare) {
+      // Auto-populate tare weight
       tareWeightInput.value = parseFloat(data.tare.tare_weight).toFixed(2);
+
+      // Auto-populate carrier if available
+      if (data.tare.carrier_id && carrierSelect) {
+        carrierSelect.value = data.tare.carrier_id;
+      }
 
       const existingIndicator = document.getElementById("tareIndicator");
       if (existingIndicator) {
