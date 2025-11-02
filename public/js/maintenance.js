@@ -380,7 +380,7 @@ function closeCustomerModal() {
 
 async function loadLocations() {
   try {
-    const response = await fetch("/api/locations");
+    const response = await fetch("/api/locations?is_active=true");
     const locations = await response.json();
 
     const tbody = document.getElementById("locationsTableBody");
@@ -396,7 +396,9 @@ async function loadLocations() {
       }</span></td>
                     <td>${
                       location.capacity_tonnes
-                        ? location.capacity_tonnes + "t"
+                        ? new Intl.NumberFormat("en-US", {
+                            maximumFractionDigits: 0,
+                          }).format(location.capacity_tonnes) + "t"
                         : "-"
                     }</td>
                     <td>${location.product_name || "-"}</td>
