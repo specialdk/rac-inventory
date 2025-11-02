@@ -378,11 +378,14 @@ async function loadRecentMovements() {
       });
 
       // Movement type badge
+      // Movement type badge
       let badgeClass = "badge-primary";
       if (movement.movement_type === "PRODUCTION") badgeClass = "badge-success";
       if (movement.movement_type === "SALES") badgeClass = "badge-info";
       if (movement.movement_type === "ADJUSTMENT") badgeClass = "badge-warning";
       if (movement.movement_type === "DEMAND") badgeClass = "badge-secondary";
+      if (movement.movement_type === "EDIT") badgeClass = "badge-danger";
+      if (movement.movement_type === "TRANSFER") badgeClass = "badge-info-dark";
 
       row.innerHTML = `
   <td>${dateStr} <small class="text-muted">${timeStr}</small></td>
@@ -932,11 +935,14 @@ function displayMovements(movements) {
     });
 
     // Movement type badge
+    // Movement type badge
     let badgeClass = "badge-primary";
     if (movement.movement_type === "PRODUCTION") badgeClass = "badge-success";
     if (movement.movement_type === "SALES") badgeClass = "badge-info";
     if (movement.movement_type === "ADJUSTMENT") badgeClass = "badge-warning";
     if (movement.movement_type === "DEMAND") badgeClass = "badge-secondary";
+    if (movement.movement_type === "EDIT") badgeClass = "badge-danger";
+    if (movement.movement_type === "TRANSFER") badgeClass = "badge-info-dark";
 
     row.innerHTML = `
       <td>${dateStr} <small class="text-muted">${timeStr}</small></td>
