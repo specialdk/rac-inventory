@@ -1347,9 +1347,9 @@ async function loadRecentTareWeight(vehicleId) {
       indicator.style.color = "#28a745";
       indicator.style.display = "block";
       indicator.style.marginTop = "4px";
-      indicator.textContent = `✓ Auto-loaded from registry (${data.tare.hours_ago.toFixed(
-        1
-      )} hours ago)`;
+      indicator.textContent = `✓ Auto-loaded from registry (${parseFloat(
+        data.tare.hours_ago
+      ).toFixed(1)} hours ago)`;
 
       tareWeightInput.parentElement.appendChild(indicator);
       tareWeightInput.dataset.tareId = data.tare.tare_id;
