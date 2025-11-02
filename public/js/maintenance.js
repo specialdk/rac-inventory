@@ -232,7 +232,7 @@ function closeProductModal() {
 
 async function loadCustomers() {
   try {
-    const response = await fetch("/api/customers");
+    const response = await fetch("/api/customers?is_active=true");
     const customers = await response.json();
 
     const tbody = document.getElementById("customersTableBody");
