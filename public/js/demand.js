@@ -199,13 +199,29 @@ function closeDemandOrderForm() {
 }
 
 function populateDemandFormDropdowns() {
-  // Products
-  const productSelect = document.getElementById("demandProductId");
-  productSelect.innerHTML = '<option value="">Select Product</option>';
-  demandProductsData.forEach((product) => {
-    const option = new Option(product.product_name, product.product_id);
-    productSelect.add(option);
+  console.log("🔍 Checking elements...");
+  console.log("Product element:", document.getElementById("demandFormProduct"));
+  console.log(
+    "Customer element:",
+    document.getElementById("demandFormCustomer")
+  );
+  console.log(
+    "Location element:",
+    document.getElementById("demandFormLocation")
+  );
+  console.log("Data loaded:", {
+    products: demandProductsData.length,
+    customers: demandCustomersData.length,
+    locations: demandLocationsData.length,
   });
+
+  // Products
+  const productSelect = document.getElementById("demandFormProduct");
+  if (!productSelect) {
+    console.error("❌ Product select not found!");
+    return;
+  }
+  // ... rest of function
 
   // Customers
   const customerSelect = document.getElementById("demandCustomerId");
