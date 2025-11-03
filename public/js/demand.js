@@ -224,7 +224,12 @@ function populateDemandFormDropdowns() {
   // ... rest of function
 
   // Customers
-  const customerSelect = document.getElementById("demandCustomerId");
+  // Customers
+  const customerSelect = document.getElementById("demandFormCustomer");
+  if (!customerSelect) {
+    console.error("❌ Customer select not found!");
+    return;
+  }
   customerSelect.innerHTML = '<option value="">Select Customer</option>';
   demandCustomersData.forEach((customer) => {
     const option = new Option(customer.customer_name, customer.customer_id);
@@ -232,8 +237,13 @@ function populateDemandFormDropdowns() {
   });
 
   // Locations (optional)
-  const locationSelect = document.getElementById("demandPreferredLocation");
-  locationSelect.innerHTML = '<option value="">No preference</option>';
+  // Locations (optional)
+  const locationSelect = document.getElementById("demandFormLocation");
+  if (!locationSelect) {
+    console.error("❌ Location select not found!");
+    return;
+  }
+  locationSelect.innerHTML = '<option value="">Any Location</option>';
   demandLocationsData.forEach((location) => {
     const option = new Option(location.location_name, location.location_id);
     locationSelect.add(option);
