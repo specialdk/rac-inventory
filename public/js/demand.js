@@ -258,22 +258,20 @@ function populateDemandFormDropdowns() {
 
 async function saveDemandOrder() {
   const formData = {
-    order_date: document.getElementById("demandOrderDate").value,
+    // No order_date - backend will set to today automatically
     required_date: document.getElementById("demandRequiredDate").value,
-    product_id: parseInt(document.getElementById("demandProductId").value),
-    customer_id: parseInt(document.getElementById("demandCustomerId").value),
-    quantity: parseFloat(document.getElementById("demandQuantity").value),
-    preferred_location_id: document.getElementById("demandPreferredLocation")
-      .value
-      ? parseInt(document.getElementById("demandPreferredLocation").value)
+    product_id: parseInt(document.getElementById("demandFormProduct").value),
+    customer_id: parseInt(document.getElementById("demandFormCustomer").value),
+    quantity: parseFloat(document.getElementById("demandFormQuantity").value),
+    preferred_location_id: document.getElementById("demandFormLocation").value
+      ? parseInt(document.getElementById("demandFormLocation").value)
       : null,
-    notes: document.getElementById("demandNotes").value,
+    notes: document.getElementById("demandFormNotes").value,
     status: document.getElementById("demandStatus")?.value || "PENDING",
   };
 
   // Validate
   if (
-    !formData.order_date ||
     !formData.required_date ||
     !formData.product_id ||
     !formData.customer_id ||
