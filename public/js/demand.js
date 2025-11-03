@@ -169,20 +169,24 @@ function filterDemandOrders() {
 // NEW DEMAND ORDER FORM
 // ============================================
 
-function openDemandOrderForm() {
+async function openDemandOrderForm() {
   currentEditingOrder = null;
+
+  // Ensure data is loaded first
+  if (demandProductsData.length === 0) {
+    await loadDemandData();
+  }
+
   document.getElementById("demandOrderFormModal").style.display = "flex";
   document.getElementById("demandOrderForm").reset();
   document.getElementById("demandOrderFormTitle").textContent =
     "➕ New Demand Order";
 
   // Set default dates
-  const today = new Date().toISOString().split("T")[0];
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   const tomorrowStr = tomorrow.toISOString().split("T")[0];
 
-  document.getElementById("demandOrderDate").value = today;
   document.getElementById("demandRequiredDate").value = tomorrowStr;
 
   // Load dropdowns
