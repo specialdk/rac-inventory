@@ -402,6 +402,9 @@ async function loadLocations() {
                         : "-"
                     }</td>
                     <td>${location.product_name || "-"}</td>
+                    <td><span class="badge ${
+                      location.is_active ? "badge-success" : "badge-danger"
+                    }">${location.is_active ? "Active" : "Inactive"}</span></td>
                     <td>
                         <button class="btn-icon" onclick="editLocation(${
                           location.location_id
