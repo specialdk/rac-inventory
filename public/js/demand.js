@@ -3,9 +3,9 @@
 
 // Global variables
 let demandOrders = [];
-let productsData = [];
-let customersData = [];
-let locationsData = [];
+let demandProductsData = [];
+let demandCustomersData = [];
+let demandLocationsData = [];
 let currentEditingOrder = null;
 
 // ============================================
@@ -27,15 +27,15 @@ async function loadDemandData() {
   try {
     // Load products
     const productsRes = await fetch("/api/products");
-    productsData = await productsRes.json();
+    demandProductsData = await productsRes.json();
 
     // Load customers
     const customersRes = await fetch("/api/customers");
-    customersData = await customersRes.json();
+    demandCustomersData = await customersRes.json();
 
     // Load locations
     const locationsRes = await fetch("/api/locations?is_active=true");
-    locationsData = await locationsRes.json();
+    demandLocationsData = await locationsRes.json();
   } catch (error) {
     console.error("Error loading demand data:", error);
   }
@@ -198,7 +198,7 @@ function populateDemandFormDropdowns() {
   // Products
   const productSelect = document.getElementById("demandProductId");
   productSelect.innerHTML = '<option value="">Select Product</option>';
-  productsData.forEach((product) => {
+  demandProductsData.forEach((product) => {
     const option = new Option(product.product_name, product.product_id);
     productSelect.add(option);
   });
@@ -206,7 +206,7 @@ function populateDemandFormDropdowns() {
   // Customers
   const customerSelect = document.getElementById("demandCustomerId");
   customerSelect.innerHTML = '<option value="">Select Customer</option>';
-  customersData.forEach((customer) => {
+  demandCustomersData.forEach((customer) => {
     const option = new Option(customer.customer_name, customer.customer_id);
     customerSelect.add(option);
   });
@@ -214,7 +214,7 @@ function populateDemandFormDropdowns() {
   // Locations (optional)
   const locationSelect = document.getElementById("demandPreferredLocation");
   locationSelect.innerHTML = '<option value="">No preference</option>';
-  locationsData.forEach((location) => {
+  demandLocationsData.forEach((location) => {
     const option = new Option(location.location_name, location.location_id);
     locationSelect.add(option);
   });
