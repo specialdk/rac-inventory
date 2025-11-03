@@ -85,7 +85,7 @@ app.use("/api/locations", require("./routes/locations"));
 app.use("/api/customers", require("./routes/customers"));
 app.use("/api/vehicles", require("./routes/vehicles"));
 app.use("/api/drivers", require("./routes/drivers"));
-app.use("/api/deliveries", require("./routes/deliveries"));
+app.use("/api/demand-orders", require("./routes/demand-orders"));
 app.use("/api", require("./routes/carriers"));
 app.use("/api", require("./routes/tare-weights"));  // ADD THIS LINE
 

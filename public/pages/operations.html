@@ -59,11 +59,11 @@
           </div>
         </div>
 
-        <div class="action-card demand" onclick="openDemandModal()">
+        <div class="action-card demand" onclick="openDemandManagement()">
           <div class="action-card-icon">📋</div>
-          <div class="action-card-title">Demand Entry</div>
+          <div class="action-card-title">Manage Demands</div>
           <div class="action-card-description">
-            Record future orders and demand forecasts
+            Create, edit, and cancel forward orders
           </div>
         </div>
 
@@ -305,71 +305,142 @@
     </div>
 
     <!-- Demand Modal -->
-    <div id="demandModal" class="modal">
+    <!-- Demand Management Modal -->
+    <div id="demandManagementModal" class="modal">
+      <div class="modal-content" style="max-width: 1200px">
+        <div class="modal-header">
+          <h2>📋 Demand Orders Management</h2>
+          <button class="modal-close" onclick="closeDemandManagement()">
+            ×
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <!-- Action Buttons -->
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 20px;
+            "
+          >
+            <div style="display: flex; gap: 10px">
+              <button class="btn-demand" onclick="openDemandOrderForm()">
+                ➕ New Demand Order
+              </button>
+              <select
+                class="form-control"
+                id="demandStatusFilter"
+                onchange="loadDemandOrders()"
+                style="width: 150px"
+              >
+                <option value="">All Status</option>
+                <option value="PENDING">Pending</option>
+                <option value="CONFIRMED" selected>Confirmed</option>
+                <option value="FULFILLED">Fulfilled</option>
+                <option value="CANCELLED">Cancelled</option>
+              </select>
+            </div>
+            <button class="btn-secondary btn-sm" onclick="loadDemandOrders()">
+              🔄 Refresh
+            </button>
+          </div>
+
+          <!-- Demand Orders Table -->
+          <div class="data-table">
+            <table class="movements-table">
+              <thead>
+                <tr>
+                  <th>Order #</th>
+                  <th>Date</th>
+                  <th>Required</th>
+                  <th>Customer</th>
+                  <th>Product</th>
+                  <th style="text-align: right">Quantity</th>
+                  <th>Location</th>
+                  <th>Status</th>
+                  <th style="width: 120px">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="demandOrdersTableBody">
+                <tr>
+                  <td colspan="9" style="text-align: center; padding: 20px">
+                    Loading demand orders...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Demand Order Form Modal -->
+    <div id="demandOrderFormModal" class="modal">
       <div class="modal-content">
         <div class="modal-header">
-          <h2>Demand Entry</h2>
-          <button class="modal-close" onclick="closeDemandModal()">×</button>
+          <h2 id="demandFormTitle">New Demand Order</h2>
+          <button class="modal-close" onclick="closeDemandOrderForm()">
+            ×
+          </button>
         </div>
-        <form id="demandForm" onsubmit="event.preventDefault(); saveDemand();">
+        <form
+          id="demandOrderForm"
+          onsubmit="event.preventDefault(); saveDemandOrder();"
+        >
+          <input type="hidden" id="demandOrderId" />
+
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label required">Future Sale Date</label>
+              <label class="form-label required">Required Date</label>
               <input
                 type="date"
                 class="form-control"
-                id="demandDate"
+                id="demandRequiredDate"
                 required
               />
             </div>
             <div class="form-group">
-              <label class="form-label required">Product</label>
-              <select class="form-control" id="demandProduct" required>
-                <option value="">Select Product</option>
+              <label class="form-label required">Status</label>
+              <select class="form-control" id="demandStatus" required>
+                <option value="PENDING">Pending</option>
+                <option value="CONFIRMED" selected>Confirmed</option>
               </select>
             </div>
           </div>
 
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label required"
-                >Demand Quantity (tonnes)</label
-              >
+              <label class="form-label required">Product</label>
+              <select class="form-control" id="demandFormProduct" required>
+                <option value="">Select Product</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label required">Quantity (tonnes)</label>
               <input
                 type="number"
                 class="form-control"
-                id="demandQuantity"
+                id="demandFormQuantity"
                 step="0.01"
                 required
               />
             </div>
-            <div class="form-group">
-              <label class="form-label required">Customer</label>
-              <select class="form-control" id="demandCustomer" required>
-                <option value="">Select Customer</option>
-              </select>
-            </div>
           </div>
 
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label required">PO Number</label>
-              <input
-                type="text"
-                class="form-control"
-                id="demandPO"
-                required
-                placeholder="e.g., PO-2025-001"
-              />
+              <label class="form-label required">Customer</label>
+              <select class="form-control" id="demandFormCustomer" required>
+                <option value="">Select Customer</option>
+              </select>
             </div>
             <div class="form-group">
-              <label class="form-label">Demand Reference</label>
-              <input
-                type="text"
-                class="form-control"
-                id="demandReference"
-                placeholder="e.g., DEMAND-001"
-              />
+              <label class="form-label">Preferred Location</label>
+              <select class="form-control" id="demandFormLocation">
+                <option value="">Any Location</option>
+              </select>
             </div>
           </div>
 
@@ -377,7 +448,7 @@
             <label class="form-label">Notes</label>
             <textarea
               class="form-control"
-              id="demandNotes"
+              id="demandFormNotes"
               rows="3"
               placeholder="Delivery instructions, special requirements, etc."
             ></textarea>
@@ -387,11 +458,13 @@
             <button
               type="button"
               class="btn-secondary"
-              onclick="closeDemandModal()"
+              onclick="closeDemandOrderForm()"
             >
               Cancel
             </button>
-            <button type="submit" class="btn-demand">📋 Save Demand</button>
+            <button type="submit" class="btn-demand">
+              💾 Save Demand Order
+            </button>
           </div>
         </form>
       </div>
@@ -437,7 +510,9 @@
               <select class="form-control" id="saleVehicle">
                 <option value="">Select Vehicle</option>
               </select>
-              <small style="color: #666">Selecting vehicle will auto-load tare weight</small>
+              <small style="color: #666"
+                >Selecting vehicle will auto-load tare weight</small
+              >
             </div>
           </div>
 
@@ -477,7 +552,9 @@
                 oninput="calculateNetWeight()"
                 placeholder="e.g., 100.0"
               />
-              <small style="color: #666">Total weight on weighbridge (loaded truck)</small>
+              <small style="color: #666"
+                >Total weight on weighbridge (loaded truck)</small
+              >
             </div>
             <div class="form-group">
               <label class="form-label">Net Weight (tonnes)</label>
@@ -494,14 +571,18 @@
                 "
                 placeholder="Auto-calculated"
               />
-              <small style="color: #666">Gross - Tare = Net (actual product sold)</small>
+              <small style="color: #666"
+                >Gross - Tare = Net (actual product sold)</small
+              >
             </div>
           </div>
 
           <!-- Row 5: Price and Customer -->
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label required">Sale Price per Tonne ($)</label>
+              <label class="form-label required"
+                >Sale Price per Tonne ($)</label
+              >
               <input
                 type="number"
                 class="form-control"
