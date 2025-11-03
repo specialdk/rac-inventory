@@ -63,7 +63,7 @@ async function loadDemandOrders(statusFilter = "") {
 }
 
 function displayDemandOrders(orders) {
-  const tbody = document.querySelector("#demandOrdersTable tbody");
+  const tbody = document.getElementById("demandOrdersTableBody");
 
   if (!tbody) {
     console.error("Demand orders table body not found");
@@ -179,7 +179,7 @@ async function openDemandOrderForm() {
 
   document.getElementById("demandOrderFormModal").style.display = "flex";
   document.getElementById("demandOrderForm").reset();
-  document.getElementById("demandOrderFormTitle").textContent =
+  document.getElementById("demandFormTitle").textContent =
     "➕ New Demand Order";
 
   // Set default dates

@@ -8,26 +8,25 @@ router.get("/", async (req, res) => {
     const status = req.query.status; // optional: PENDING, CONFIRMED, FULFILLED, CANCELLED
 
     let query = `
-      SELECT 
-        do.*,
-        p.product_code,
-        p.product_name,
-        p.family_group,
-        c.customer_name,
-        l.location_name as preferred_location
-      FROM demand_orders do
-      JOIN products p ON do.product_id = p.product_id
-      LEFT JOIN customers c ON do.customer_id = c.customer_id
-      LEFT JOIN locations l ON do.preferred_location_id = l.location_id
-    `;
-
+  SELECT 
+    dord.*,
+    p.product_code,
+    p.product_name,
+    p.family_group,
+    c.customer_name,
+    l.location_name as preferred_location
+  FROM demand_orders dord
+  JOIN products p ON dord.product_id = p.product_id
+  LEFT JOIN customers c ON dord.customer_id = c.customer_id
+  LEFT JOIN locations l ON dord.preferred_location_id = l.location_id
+`;
     const params = [];
     if (status) {
-      query += ` WHERE do.status = $1`;
+      query += ` WHERE dord.status = $1`;
       params.push(status);
     }
 
-    query += ` ORDER BY do.required_date ASC, do.order_number DESC`;
+    query += ` ORDER BY dord.required_date ASC, dord.order_number DESC`;
 
     const result = await pool.query(query, params);
     res.json(result.rows);
@@ -43,17 +42,17 @@ router.get("/:id", async (req, res) => {
     const { id } = req.params;
     const result = await pool.query(
       `SELECT 
-        do.*,
-        p.product_code,
-        p.product_name,
-        p.family_group,
-        c.customer_name,
-        l.location_name as preferred_location
-      FROM demand_orders do
-      JOIN products p ON do.product_id = p.product_id
-      LEFT JOIN customers c ON do.customer_id = c.customer_id
-      LEFT JOIN locations l ON do.preferred_location_id = l.location_id
-      WHERE do.demand_order_id = $1`,
+  dord.*,
+  p.product_code,
+  p.product_name,
+  p.family_group,
+  c.customer_name,
+  l.location_name as preferred_location
+FROM demand_orders dord
+JOIN products p ON dord.product_id = p.product_id
+LEFT JOIN customers c ON dord.customer_id = c.customer_id
+LEFT JOIN locations l ON dord.preferred_location_id = l.location_id
+WHERE dord.demand_order_id = $1`,
       [id]
     );
 
