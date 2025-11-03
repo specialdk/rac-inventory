@@ -221,9 +221,12 @@ function populateDemandFormDropdowns() {
     console.error("❌ Product select not found!");
     return;
   }
-  // ... rest of function
+  productSelect.innerHTML = '<option value="">Select Product</option>';
+  demandProductsData.forEach((product) => {
+    const option = new Option(product.product_name, product.product_id);
+    productSelect.add(option);
+  });
 
-  // Customers
   // Customers
   const customerSelect = document.getElementById("demandFormCustomer");
   if (!customerSelect) {
@@ -236,7 +239,6 @@ function populateDemandFormDropdowns() {
     customerSelect.add(option);
   });
 
-  // Locations (optional)
   // Locations (optional)
   const locationSelect = document.getElementById("demandFormLocation");
   if (!locationSelect) {
