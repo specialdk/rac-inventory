@@ -90,9 +90,15 @@ function renderStocktakeTable() {
     // Find current stock for this product
     const stock = currentStock.find((s) => s.product_id === product.product_id);
     const currentQty = stock ? parseFloat(stock.quantity) : 0;
-    const locationName = stock ? stock.location_name : "-";
     const locationId = stock ? stock.location_id : null;
     const defaultCost = product.standard_cost || 40;
+
+    // Build location dropdown options
+    let locationOptions = '<option value="">-- Select Location --</option>';
+    locations.forEach((l) => {
+      const selected = locationId === l.location_id ? "selected" : "";
+      locationOptions += `<option value="${l.location_id}" ${selected}>${l.location_name}</option>`;
+    });
 
     const row = document.createElement("tr");
     row.style.height = "40px";
@@ -101,10 +107,20 @@ function renderStocktakeTable() {
         product.family_group
       )}</strong></small></td>
       <td style="padding: 0.3rem 0.5rem;">${product.product_name}</td>
-      <td style="padding: 0.3rem 0.5rem;">${locationName}</td>
-      <td style="text-align: right; padding: 0.3rem 0.5rem;">${formatNumber(
-        currentQty
-      )}</td>
+      <td style="padding: 0.3rem 0.5rem;">
+        <select 
+          class="form-control" 
+          id="location_${product.product_id}" 
+          data-product-id="${product.product_id}"
+          onchange="updateProductSOH(${product.product_id})"
+          style="padding: 0.25rem; font-size: 0.9rem;"
+        >
+          ${locationOptions}
+        </select>
+      </td>
+      <td style="text-align: right; padding: 0.3rem 0.5rem;">
+        <span id="soh_${product.product_id}">${formatNumber(currentQty)}</span>
+      </td>
       <td style="text-align: center; padding: 0.3rem 0.5rem;">
         <input 
           type="number" 
@@ -112,8 +128,6 @@ function renderStocktakeTable() {
           id="count_${product.product_id}" 
           data-product-id="${product.product_id}"
           data-product-name="${product.product_name}"
-          data-current-qty="${currentQty}"
-          data-location-id="${locationId || ""}"
           step="0.1" 
           placeholder="0.0"
           style="width: 90px; text-align: center; padding: 0.25rem; font-size: 0.9rem;"
@@ -149,6 +163,28 @@ function renderStocktakeTable() {
   calculateTotals();
 }
 
+// Update SOH when location is changed for a product
+function updateProductSOH(productId) {
+  const locationSelect = document.getElementById(`location_${productId}`);
+  const sohElement = document.getElementById(`soh_${productId}`);
+
+  if (locationSelect.value) {
+    const locationId = parseInt(locationSelect.value);
+
+    // Find existing stock at this product/location combo
+    const stock = currentStock.find(
+      (s) => s.product_id === productId && s.location_id === locationId
+    );
+
+    const soh = stock ? parseFloat(stock.quantity) : 0;
+    sohElement.textContent = formatNumber(soh);
+  } else {
+    sohElement.textContent = "0.0";
+  }
+
+  calculateTotals();
+}
+
 // Calculate all totals
 function calculateTotals() {
   let totalAdjustment = 0;
@@ -158,9 +194,18 @@ function calculateTotals() {
   products.forEach((product) => {
     const countInput = document.getElementById(`count_${product.product_id}`);
     const costInput = document.getElementById(`cost_${product.product_id}`);
+    const sohElement = document.getElementById(`soh_${product.product_id}`);
+    const locationSelect = document.getElementById(
+      `location_${product.product_id}`
+    );
 
-    if (countInput && countInput.value) {
-      const currentQty = parseFloat(countInput.dataset.currentQty);
+    if (
+      countInput &&
+      countInput.value &&
+      locationSelect &&
+      locationSelect.value
+    ) {
+      const currentQty = parseFloat(sohElement.textContent);
       const newQty = parseFloat(countInput.value) || 0;
       const adjustment = newQty - currentQty;
       const cost = parseFloat(costInput.value) || 0;
@@ -176,8 +221,15 @@ function calculateTotals() {
     const countInput = document.getElementById(`count_${rowId}`);
     const costInput = document.getElementById(`cost_${rowId}`);
     const sohElement = document.getElementById(`soh_${rowId}`);
+    const locationSelect = document.getElementById(`location_${rowId}`);
 
-    if (countInput && countInput.value && sohElement) {
+    if (
+      countInput &&
+      countInput.value &&
+      locationSelect &&
+      locationSelect.value &&
+      sohElement
+    ) {
       const currentQty = parseFloat(sohElement.textContent) || 0;
       const newQty = parseFloat(countInput.value) || 0;
       const adjustment = newQty - currentQty;
@@ -213,16 +265,25 @@ function collectAdjustments() {
     const countInput = document.getElementById(`count_${product.product_id}`);
     const costInput = document.getElementById(`cost_${product.product_id}`);
     const notesInput = document.getElementById(`notes_${product.product_id}`);
+    const locationSelect = document.getElementById(
+      `location_${product.product_id}`
+    );
+    const sohElement = document.getElementById(`soh_${product.product_id}`);
 
-    if (countInput && countInput.value) {
-      const currentQty = parseFloat(countInput.dataset.currentQty);
+    if (
+      countInput &&
+      countInput.value &&
+      locationSelect &&
+      locationSelect.value
+    ) {
+      const currentQty = parseFloat(sohElement.textContent);
       const newQty = parseFloat(countInput.value);
       const adjustment = newQty - currentQty;
-      const locationId = countInput.dataset.locationId;
+      const locationId = locationSelect.value;
       const cost = parseFloat(costInput.value) || 0;
       const notes = notesInput.value || "";
 
-      if (adjustment !== 0 && locationId) {
+      if (adjustment !== 0) {
         adjustments.push({
           product_id: product.product_id,
           product_name: product.product_name,
@@ -294,7 +355,9 @@ async function applyStocktake() {
   const adjustments = collectAdjustments();
 
   if (adjustments.length === 0) {
-    alert("No adjustments to apply. Please enter count quantities.");
+    alert(
+      "No adjustments to apply. Please enter count quantities and select locations."
+    );
     return;
   }
 
@@ -513,6 +576,8 @@ function updateManualRowSOH(rowId) {
     const soh = stock ? parseFloat(stock.quantity) : 0;
     document.getElementById(`soh_${rowId}`).textContent = formatNumber(soh);
   }
+
+  calculateTotals();
 }
 
 // Remove manual row
