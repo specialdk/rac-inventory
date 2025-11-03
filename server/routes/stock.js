@@ -45,10 +45,9 @@ router.get("/current", async (req, res) => {
     p.unit,
     COALESCE(
       (SELECT SUM(quantity) 
-       FROM stock_movements 
+       FROM demand_orders 
        WHERE product_id = p.product_id 
-         AND movement_type = 'DEMAND'
-         AND movement_date >= CURRENT_DATE
+         AND status IN ('PENDING', 'CONFIRMED')
       ), 0
     ) as demand,
     CASE 
@@ -61,10 +60,9 @@ router.get("/current", async (req, res) => {
   LEFT JOIN locations l ON cs.location_id = l.location_id
   WHERE p.is_active = true 
     AND (cs.quantity > 0 OR 
-         EXISTS (SELECT 1 FROM stock_movements 
+         EXISTS (SELECT 1 FROM demand_orders 
                  WHERE product_id = p.product_id 
-                   AND movement_type = 'DEMAND' 
-                   AND movement_date >= CURRENT_DATE))
+                   AND status IN ('PENDING', 'CONFIRMED')))
   ORDER BY p.family_group, p.product_name, l.location_name
 `);
 
