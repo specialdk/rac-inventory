@@ -26,41 +26,47 @@ WHERE p.is_active = true AND cs.quantity > 0
 router.get("/current", async (req, res) => {
   try {
     const result = await query(`
-      SELECT 
-        cs.stock_id,
-        cs.product_id,
-        p.product_code,
-        p.product_name,
-        p.family_group,
-        p.standard_sales_price,
-        cs.location_id,
-        l.location_code,
-        l.location_name,
-        cs.quantity,
-        cs.average_cost,
-        cs.total_value,
-        cs.last_movement_date,
-        p.min_stock_level,
-        p.max_stock_level,
-        COALESCE(
-          (SELECT SUM(quantity) 
-           FROM stock_movements 
-           WHERE product_id = cs.product_id 
-             AND movement_type = 'DEMAND'
-             AND movement_date >= CURRENT_DATE
-          ), 0
-        ) as demand,
-        CASE 
-          WHEN cs.quantity < p.min_stock_level THEN 'LOW'
-          WHEN cs.quantity > p.max_stock_level THEN 'HIGH'
-          ELSE 'NORMAL'
-        END as status
-      FROM current_stock cs
-      JOIN products p ON cs.product_id = p.product_id
-      JOIN locations l ON cs.location_id = l.location_id
-      WHERE p.is_active = true AND cs.quantity > 0
-      ORDER BY p.family_group, p.product_name, l.location_name
-    `);
+  SELECT 
+    cs.stock_id,
+    cs.product_id,
+    p.product_code,
+    p.product_name,
+    p.family_group,
+    p.standard_sales_price,
+    COALESCE(cs.location_id, (SELECT location_id FROM locations WHERE is_active = true LIMIT 1)) as location_id,
+    COALESCE(l.location_code, '-') as location_code,
+    COALESCE(l.location_name, 'No Location') as location_name,
+    COALESCE(cs.quantity, 0) as quantity,
+    COALESCE(cs.average_cost, p.standard_cost) as average_cost,
+    COALESCE(cs.total_value, 0) as total_value,
+    cs.last_movement_date,
+    p.min_stock_level,
+    p.max_stock_level,
+    p.unit,
+    COALESCE(
+      (SELECT SUM(quantity) 
+       FROM stock_movements 
+       WHERE product_id = p.product_id 
+         AND movement_type = 'DEMAND'
+         AND movement_date >= CURRENT_DATE
+      ), 0
+    ) as demand,
+    CASE 
+      WHEN COALESCE(cs.quantity, 0) < p.min_stock_level THEN 'LOW'
+      WHEN COALESCE(cs.quantity, 0) > p.max_stock_level THEN 'HIGH'
+      ELSE 'NORMAL'
+    END as status
+  FROM products p
+  LEFT JOIN current_stock cs ON p.product_id = cs.product_id
+  LEFT JOIN locations l ON cs.location_id = l.location_id
+  WHERE p.is_active = true 
+    AND (cs.quantity > 0 OR 
+         EXISTS (SELECT 1 FROM stock_movements 
+                 WHERE product_id = p.product_id 
+                   AND movement_type = 'DEMAND' 
+                   AND movement_date >= CURRENT_DATE))
+  ORDER BY p.family_group, p.product_name, l.location_name
+`);
 
     res.json(result.rows);
   } catch (error) {
