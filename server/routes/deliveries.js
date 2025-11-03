@@ -2,13 +2,18 @@ const express = require("express");
 const router = express.Router();
 const { pool } = require("../config/database");
 
-// GET all deliveries
+// GET all deliveries with optional is_active filter
 router.get("/", async (req, res) => {
   try {
-    const result = await pool.query(`
+    const isActive = req.query.is_active === "true";
+    const result = await pool.query(
+      `
       SELECT * FROM deliveries 
+      WHERE is_active = $1
       ORDER BY delivery_name ASC
-    `);
+    `,
+      [isActive]
+    );
     res.json(result.rows);
   } catch (error) {
     console.error("Error fetching deliveries:", error);
