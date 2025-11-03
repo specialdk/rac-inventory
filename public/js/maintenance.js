@@ -74,7 +74,12 @@ async function loadSectionData(section) {
 
 async function loadProducts() {
   try {
-    const response = await fetch("/api/products?is_active=true");
+    // Check toggle state
+    const showActive = document.getElementById("toggleActiveProducts").checked;
+    const label = document.getElementById("productsToggleLabel");
+    label.textContent = showActive ? "Active" : "Inactive";
+    
+    const response = await fetch(`/api/products?is_active=${showActive}`);
     const products = await response.json();
 
     const tbody = document.getElementById("productsTableBody");
@@ -235,7 +240,11 @@ function closeProductModal() {
 
 async function loadCustomers() {
   try {
-    const response = await fetch("/api/customers?is_active=true");
+    const showActive = document.getElementById("toggleActiveCustomers").checked;
+    const label = document.getElementById("customersToggleLabel");
+    label.textContent = showActive ? "Active" : "Inactive";
+    
+    const response = await fetch(`/api/customers?is_active=${showActive}`);
     const customers = await response.json();
 
     const tbody = document.getElementById("customersTableBody");
@@ -386,7 +395,11 @@ function closeCustomerModal() {
 
 async function loadLocations() {
   try {
-    const response = await fetch("/api/locations?is_active=true");
+    const showActive = document.getElementById("toggleActiveLocations").checked;
+    const label = document.getElementById("locationsToggleLabel");
+    label.textContent = showActive ? "Active" : "Inactive";
+    
+    const response = await fetch(`/api/locations?is_active=${showActive}`);
     const locations = await response.json();
 
     const tbody = document.getElementById("locationsTableBody");
@@ -559,7 +572,11 @@ function closeLocationModal() {
 
 async function loadVehicles() {
   try {
-    const response = await fetch("/api/vehicles?is_active=true");
+    const showActive = document.getElementById("toggleActiveVehicles").checked;
+    const label = document.getElementById("vehiclesToggleLabel");
+    label.textContent = showActive ? "Active" : "Inactive";
+    
+    const response = await fetch(`/api/vehicles?is_active=${showActive}`);
     const vehicles = await response.json();
 
     const tbody = document.getElementById("vehiclesTableBody");
@@ -707,7 +724,11 @@ function closeVehicleModal() {
 
 async function loadDrivers() {
   try {
-    const response = await fetch("/api/drivers?is_active=true");
+    const showActive = document.getElementById("toggleActiveDrivers").checked;
+    const label = document.getElementById("driversToggleLabel");
+    label.textContent = showActive ? "Active" : "Inactive";
+    
+    const response = await fetch(`/api/drivers?is_active=${showActive}`);
     const drivers = await response.json();
 
     const tbody = document.getElementById("driversTableBody");
@@ -849,8 +870,13 @@ function closeDriverModal() {
 
 async function loadCarriers() {
   try {
-    const response = await fetch("/api/carriers?is_activetrue");
+    const showActive = document.getElementById("toggleActiveCarriers").checked;
+    const label = document.getElementById("carriersToggleLabel");
+    label.textContent = showActive ? "Active" : "Inactive";
+    
+    const response = await fetch(`/api/carriers?is_active=${showActive}`);
     const carriers = await response.json();
+    
     const tbody = document.getElementById("carriersTableBody");
     tbody.innerHTML = "";
 
@@ -995,7 +1021,11 @@ function setupModalHandlers() {
 
 async function loadDeliveries() {
   try {
-    const response = await fetch("/api/deliveries?is_active=true");
+    const showActive = document.getElementById("toggleActiveDeliveries").checked;
+    const label = document.getElementById("deliveriesToggleLabel");
+    label.textContent = showActive ? "Active" : "Inactive";
+    
+    const response = await fetch(`/api/deliveries?is_active=${showActive}`);
     const deliveries = await response.json();
 
     const tbody = document.getElementById("deliveriesTableBody");

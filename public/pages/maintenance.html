@@ -63,9 +63,23 @@
       <div id="products-section" class="maintenance-section">
         <div class="section-header">
           <h2>Products Management</h2>
-          <button class="btn-primary" onclick="openProductModal()">
-            ➕ Add Product
-          </button>
+          <div style="display: flex; gap: 1rem; align-items: center">
+            <div class="filter-toggle">
+              <span class="toggle-label" id="productsToggleLabel">Active</span>
+              <label class="toggle-switch">
+                <input
+                  type="checkbox"
+                  id="toggleActiveProducts"
+                  checked
+                  onchange="loadProducts()"
+                />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <button class="btn-primary" onclick="openProductModal()">
+              ➕ Add Product
+            </button>
+          </div>
         </div>
 
         <div class="search-bar">
@@ -112,9 +126,23 @@
       >
         <div class="section-header">
           <h2>Customers Management</h2>
-          <button class="btn-primary" onclick="openCustomerModal()">
-            ➕ Add Customer
-          </button>
+          <div style="display: flex; gap: 1rem; align-items: center">
+            <div class="filter-toggle">
+              <span class="toggle-label" id="customersToggleLabel">Active</span>
+              <label class="toggle-switch">
+                <input
+                  type="checkbox"
+                  id="toggleActiveCustomers"
+                  checked
+                  onchange="loadCustomers()"
+                />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <button class="btn-primary" onclick="openCustomerModal()">
+              ➕ Add Customer
+            </button>
+          </div>
         </div>
 
         <div class="search-bar">
@@ -159,9 +187,23 @@
       >
         <div class="section-header">
           <h2>Locations Management</h2>
-          <button class="btn-primary" onclick="openLocationModal()">
-            ➕ Add Location
-          </button>
+          <div style="display: flex; gap: 1rem; align-items: center">
+            <div class="filter-toggle">
+              <span class="toggle-label" id="locationsToggleLabel">Active</span>
+              <label class="toggle-switch">
+                <input
+                  type="checkbox"
+                  id="toggleActiveLocations"
+                  checked
+                  onchange="loadLocations()"
+                />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <button class="btn-primary" onclick="openLocationModal()">
+              ➕ Add Location
+            </button>
+          </div>
         </div>
 
         <div class="search-bar">
@@ -205,9 +247,23 @@
       >
         <div class="section-header">
           <h2>Vehicles Management</h2>
-          <button class="btn-primary" onclick="openVehicleModal()">
-            ➕ Add Vehicle
-          </button>
+          <div style="display: flex; gap: 1rem; align-items: center">
+            <div class="filter-toggle">
+              <span class="toggle-label" id="vehiclesToggleLabel">Active</span>
+              <label class="toggle-switch">
+                <input
+                  type="checkbox"
+                  id="toggleActiveVehicles"
+                  checked
+                  onchange="loadVehicles()"
+                />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <button class="btn-primary" onclick="openVehicleModal()">
+              ➕ Add Vehicle
+            </button>
+          </div>
         </div>
 
         <div class="search-bar">
@@ -249,10 +305,24 @@
         style="display: none"
       >
         <div class="section-header">
-          <h2>Drivers Management</h2>
-          <button class="btn-primary" onclick="openDriverModal()">
-            ➕ Add Driver
-          </button>
+          <h2>Driver Management</h2>
+          <div style="display: flex; gap: 1rem; align-items: center">
+            <div class="filter-toggle">
+              <span class="toggle-label" id="driversToggleLabel">Active</span>
+              <label class="toggle-switch">
+                <input
+                  type="checkbox"
+                  id="toggleActiveDrivers"
+                  checked
+                  onchange="loadDrivers()"
+                />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <button class="btn-primary" onclick="openDriverModal()">
+              ➕ Add Driver
+            </button>
+          </div>
         </div>
 
         <div class="search-bar">
@@ -296,10 +366,25 @@
       >
         <div class="section-header">
           <h2>Carriers Management</h2>
-          <button class="btn-primary" onclick="openCarrierModal()">
-            ➕ Add Carrier
-          </button>
+          <div style="display: flex; gap: 1rem; align-items: center">
+            <div class="filter-toggle">
+              <span class="toggle-label" id="carriersToggleLabel">Active</span>
+              <label class="toggle-switch">
+                <input
+                  type="checkbox"
+                  id="toggleActiveCarriers"
+                  checked
+                  onchange="loadCarriers()"
+                />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <button class="btn-primary" onclick="openCarrierModal()">
+              ➕ Add Carrier
+            </button>
+          </div>
         </div>
+
         <div class="search-bar">
           <input
             type="text"
@@ -335,9 +420,25 @@
       >
         <div class="section-header">
           <h2>📍 Deliveries Management</h2>
-          <button class="btn btn-primary" onclick="openDeliveryModal()">
-            ➕ Add Delivery
-          </button>
+          <div style="display: flex; gap: 1rem; align-items: center">
+            <div class="filter-toggle">
+              <span class="toggle-label" id="deliveriesToggleLabel"
+                >Active</span
+              >
+              <label class="toggle-switch">
+                <input
+                  type="checkbox"
+                  id="toggleActiveDeliveries"
+                  checked
+                  onchange="loadDeliveries()"
+                />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <button class="btn-primary" onclick="openDeliveryModal()">
+              ➕ Add Delivery
+            </button>
+          </div>
         </div>
 
         <div class="data-table">
