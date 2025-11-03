@@ -93,6 +93,9 @@ async function loadProducts() {
                     <td>${product.min_stock_level}t</td>
                     <td>${product.max_stock_level}t</td>
                     <td>tonnes</td>
+                    <td><span class="badge ${
+                      product.is_active ? "badge-success" : "badge-danger"
+                    }">${product.is_active ? "Active" : "Inactive"}</span></td>
                     <td>
                         <button class="btn-icon" onclick="editProduct(${
                           product.product_id
@@ -251,6 +254,9 @@ async function loadCustomers() {
                     ).toLowerCase()}">${
         customer.customer_type || "-"
       }</span></td>
+                    <td><span class="badge ${
+                      customer.is_active ? "badge-success" : "badge-danger"
+                    }">${customer.is_active ? "Active" : "Inactive"}</span></td>
                     <td>
                         <button class="btn-icon" onclick="editCustomer(${
                           customer.customer_id
