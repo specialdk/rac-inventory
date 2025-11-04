@@ -405,23 +405,26 @@ router.post("/adjustment", async (req, res) => {
     const oldQty = stockCheck.rows[0]?.quantity || 0;
     const newQty = oldQty + parseFloat(quantity);
 
+    // Calculate total_value in JavaScript to avoid type ambiguity
+    const totalValue = parseFloat(newQty) * parseFloat(finalCost);
+
     if (stockCheck.rows.length > 0) {
       // Update existing - SET cost directly, don't blend
       await client.query(
         `UPDATE current_stock 
      SET quantity = $1,
          average_cost = $2,
-         total_value = $1 * $2,
+         total_value = $3,
          updated_at = CURRENT_TIMESTAMP
-     WHERE product_id = $3 AND location_id = $4`,
-        [newQty, finalCost, product_id, location_id]
+     WHERE product_id = $4 AND location_id = $5`,
+        [newQty, finalCost, totalValue, product_id, location_id]
       );
     } else {
       // Insert new
       await client.query(
         `INSERT INTO current_stock (product_id, location_id, quantity, average_cost, total_value)
-     VALUES ($1, $2, $3, $4, $3 * $4)`,
-        [product_id, location_id, newQty, finalCost]
+     VALUES ($1, $2, $3, $4, $5)`,
+        [product_id, location_id, newQty, finalCost, totalValue]
       );
     }
 
