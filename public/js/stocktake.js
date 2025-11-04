@@ -288,8 +288,8 @@ function collectAdjustments() {
           product_id: product.product_id,
           product_name: product.product_name,
           location_id: parseInt(locationId),
-          quantity: adj.quantity_adjustment, // ← CHANGED field name
-          unit_cost: adj.unit_cost, // ← ADD THIS NEW LINE
+          quantity_adjustment: adjustment,
+          unit_cost: cost,
           notes: notes,
         });
       }
