@@ -346,7 +346,7 @@ router.post("/adjustment", async (req, res) => {
       movement_date,
       product_id,
       location_id,
-      quantity_adjustment, // positive or negative
+      quantity, // ← CHANGE THIS
       reason,
       notes,
       created_by = "system",
@@ -356,7 +356,7 @@ router.post("/adjustment", async (req, res) => {
       !movement_date ||
       !product_id ||
       !location_id ||
-      quantity_adjustment === undefined
+      quantity === undefined // ← AND THIS
     ) {
       throw new Error("Missing required fields");
     }
@@ -371,7 +371,7 @@ router.post("/adjustment", async (req, res) => {
       stockResult.rows.length > 0
         ? parseFloat(stockResult.rows[0].average_cost)
         : 0;
-    const total_cost = quantity_adjustment * unit_cost;
+    const total_cost = quantity * unit_cost;
 
     // Insert movement record
     const movementResult = await client.query(
@@ -384,7 +384,7 @@ router.post("/adjustment", async (req, res) => {
         movement_date,
         product_id,
         location_id,
-        quantity_adjustment,
+        quantity,
         unit_cost,
         total_cost,
         reason,
@@ -398,7 +398,7 @@ router.post("/adjustment", async (req, res) => {
       client,
       product_id,
       location_id,
-      quantity_adjustment,
+      quantity,
       unit_cost,
       "ADJUSTMENT"
     );
