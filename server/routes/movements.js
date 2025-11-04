@@ -205,6 +205,7 @@ router.post("/sales", async (req, res) => {
       vehicle_id,
       driver_id,
       delivery_id,
+      carrier_id,
       reference_number,
       notes,
       created_by = "system",
@@ -301,6 +302,7 @@ router.post("/sales", async (req, res) => {
         vehicle_id,
         driver_id,
         delivery_id,
+        carrier_id,
         gross_weight, // NEW - position 13
         tare_weight, // position 14
         docket_number,
