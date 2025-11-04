@@ -171,7 +171,7 @@ async function loadDropdowns() {
     });
 
     // Load deliveries (NEW)
-    const deliveriesRes = await fetch("/api/deliveries");
+    const deliveriesRes = await fetch("/api/deliveries/active");
     const deliveriesData = await deliveriesRes.json();
     const saleDeliverySelect = document.getElementById("saleDelivery");
 
