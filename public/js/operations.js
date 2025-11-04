@@ -1080,6 +1080,7 @@ async function loadTransferLocations() {
     const locationsWithStock = stockData.stock_locations || [];
 
     // FROM: Only locations with stock
+    // FROM: All locations with stock (including PRODUCTION)
     locationsWithStock.forEach((stock) => {
       const qty = parseFloat(stock.quantity) || 0;
       if (qty > 0) {
