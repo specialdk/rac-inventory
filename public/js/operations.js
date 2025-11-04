@@ -658,14 +658,14 @@ async function saveSales() {
       return;
     }
 
+    const result = await response.json();
+    const docketNumber = result.movement.docket_number;
+
     // NEW: Mark tare as used if it was auto-populated
     const tareWeightInput = document.getElementById("saleTareWeight");
     if (tareWeightInput.dataset.tareId) {
       await markTareAsUsed(tareWeightInput.dataset.tareId, docketNumber);
     }
-
-    const result = await response.json();
-    const docketNumber = result.movement.docket_number;
 
     // Close the sales modal first
     closeSalesModal();
