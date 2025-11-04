@@ -396,15 +396,34 @@ router.post("/adjustment", async (req, res) => {
       ]
     );
 
-    // Update current stock
-    await updateCurrentStock(
-      client,
-      product_id,
-      location_id,
-      quantity,
-      finalCost,
-      "ADJUSTMENT"
+    // Update current stock - DIRECT update, no weighted average for stocktake
+    const stockCheck = await client.query(
+      `SELECT quantity FROM current_stock WHERE product_id = $1 AND location_id = $2`,
+      [product_id, location_id]
     );
+
+    const oldQty = stockCheck.rows[0]?.quantity || 0;
+    const newQty = oldQty + parseFloat(quantity);
+
+    if (stockCheck.rows.length > 0) {
+      // Update existing - SET cost directly, don't blend
+      await client.query(
+        `UPDATE current_stock 
+     SET quantity = $1,
+         average_cost = $2,
+         total_value = $1 * $2,
+         updated_at = CURRENT_TIMESTAMP
+     WHERE product_id = $3 AND location_id = $4`,
+        [newQty, finalCost, product_id, location_id]
+      );
+    } else {
+      // Insert new
+      await client.query(
+        `INSERT INTO current_stock (product_id, location_id, quantity, average_cost, total_value)
+     VALUES ($1, $2, $3, $4, $3 * $4)`,
+        [product_id, location_id, newQty, finalCost]
+      );
+    }
 
     await client.query("COMMIT");
 
