@@ -77,7 +77,7 @@ router.get("/tare-weights", async (req, res) => {
 router.get("/tare-weights/recent/:vehicle_id", async (req, res) => {
   try {
     const { vehicle_id } = req.params;
-    const { hours = 3 } = req.query;
+    const { hours = 10 } = req.query;
 
     const query = `
       SELECT 
