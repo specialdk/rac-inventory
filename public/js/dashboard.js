@@ -1,7 +1,8 @@
 // RAC Inventory - Dashboard Page JavaScript
-// Handles real-time stock overview with compact layout
+// Handles real-time stock overview with compact layout and group filtering
 
 let stockData = [];
+let currentFilter = null; // Track current group filter
 
 // Initialize page
 document.addEventListener("DOMContentLoaded", function () {
@@ -50,23 +51,49 @@ function formatFamilyGroup(group) {
   return names[group] || group;
 }
 
+// Calculate stats from filtered data
+function calculateStats(data) {
+  const totalTonnes = data.reduce(
+    (sum, item) => sum + parseFloat(item.quantity || 0),
+    0
+  );
+  const totalValue = data.reduce(
+    (sum, item) => sum + parseFloat(item.total_value || 0),
+    0
+  );
+  const productsCount = data.length;
+
+  return {
+    productsWithStock: productsCount,
+    totalTonnes: totalTonnes,
+    totalInventoryValue: totalValue,
+  };
+}
+
+// Update dashboard cards
+function updateDashboardCards(data) {
+  const stats = calculateStats(data);
+
+  // Update cards
+  document.getElementById("productsWithStock").textContent =
+    stats.productsWithStock;
+  document.getElementById("totalTonnes").textContent =
+    formatNumber(stats.totalTonnes) + "t";
+  document.getElementById("totalInventoryValue").textContent = formatCurrency(
+    stats.totalInventoryValue
+  );
+  document.getElementById("headerTotalValue").textContent = formatCurrency(
+    stats.totalInventoryValue
+  );
+}
+
 // Load dashboard statistics
 async function loadDashboardStats() {
   try {
     const response = await fetch("/api/dashboard/stats");
     const stats = await response.json();
 
-    // Update header stats
-    document.getElementById("headerTotalValue").textContent = formatCurrency(
-      stats.totalInventoryValue || 0
-    );
-
-    // Update dashboard cards
-    document.getElementById("productsWithStock").textContent =
-      stats.productsWithStock || 0;
-    document.getElementById("totalInventoryValue").textContent = formatCurrency(
-      stats.totalInventoryValue || 0
-    );
+    // Only update MTD stats (not inventory stats - those come from stock data)
     document.getElementById("mtdProduction").textContent =
       formatNumber(stats.mtdProduction || 0) + "t";
     document.getElementById("mtdSales").textContent =
@@ -81,10 +108,31 @@ async function loadStockData() {
   try {
     const response = await fetch("/api/stock/current");
     stockData = await response.json();
+
+    // Update cards with full data
+    updateDashboardCards(stockData);
+
+    // Render table
     renderStockTable(stockData);
   } catch (error) {
     console.error("Error loading stock data:", error);
     alert("Error loading stock data");
+  }
+}
+
+// Filter by group
+function filterByGroup(group) {
+  if (currentFilter === group) {
+    // Toggle off - show all
+    currentFilter = null;
+    updateDashboardCards(stockData);
+    renderStockTable(stockData);
+  } else {
+    // Filter by group
+    currentFilter = group;
+    const filtered = stockData.filter((item) => item.family_group === group);
+    updateDashboardCards(filtered);
+    renderStockTable(filtered);
   }
 }
 
@@ -98,7 +146,7 @@ function renderStockTable(data) {
   if (data.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="8" style="text-align: center; padding: 2rem; color: #999;">
+        <td colspan="9" style="text-align: center; padding: 2rem; color: #999;">
           No stock data available
         </td>
       </tr>
@@ -136,11 +184,24 @@ function renderStockTable(data) {
     const demandColor =
       item.demand > item.quantity ? "color: red; font-weight: bold;" : "";
 
+    // Make group badge clickable
+    const groupClass = `badge-${item.family_group.toLowerCase()}`;
+    const activeClass =
+      currentFilter === item.family_group
+        ? "font-weight: bold; box-shadow: 0 0 0 2px #333;"
+        : "";
+
     const row = `
       <tr style="height: 40px;">
-        <td style="padding: 0.4rem 0.5rem;"><small><strong>${formatFamilyGroup(
-          item.family_group
-        )}</strong></small></td>
+        <td style="padding: 0.4rem 0.5rem;">
+          <span class="badge ${groupClass}" 
+                style="cursor: pointer; ${activeClass}" 
+                onclick="filterByGroup('${item.family_group}')">
+            <small><strong>${formatFamilyGroup(
+              item.family_group
+            )}</strong></small>
+          </span>
+        </td>
         <td style="padding: 0.4rem 0.5rem;"><strong>${
           item.product_name
         }</strong></td>
@@ -174,11 +235,19 @@ function filterStock() {
   const searchTerm = document.getElementById("searchStock").value.toLowerCase();
 
   if (searchTerm === "") {
-    renderStockTable(stockData);
+    const baseData = currentFilter
+      ? stockData.filter((item) => item.family_group === currentFilter)
+      : stockData;
+    updateDashboardCards(baseData);
+    renderStockTable(baseData);
     return;
   }
 
-  const filtered = stockData.filter((item) => {
+  const baseData = currentFilter
+    ? stockData.filter((item) => item.family_group === currentFilter)
+    : stockData;
+
+  const filtered = baseData.filter((item) => {
     return (
       item.product_name.toLowerCase().includes(searchTerm) ||
       item.family_group.toLowerCase().includes(searchTerm) ||
@@ -187,5 +256,6 @@ function filterStock() {
     );
   });
 
+  updateDashboardCards(filtered); // ← ADD THIS LINE
   renderStockTable(filtered);
 }
