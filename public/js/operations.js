@@ -1079,16 +1079,27 @@ async function loadTransferLocations() {
 
     const locationsWithStock = stockData.stock_locations || [];
 
-    // FROM: Only locations with stock
-    // FROM: All locations with stock (including PRODUCTION)
-    locationsWithStock.forEach((stock) => {
-      const qty = parseFloat(stock.quantity) || 0;
+    // FROM: ALL active locations (not just those with stock)
+    // This allows transferring from Production even if stock was added temporarily
+    allLocations.forEach((location) => {
+      // Find stock quantity for this location if it exists
+      const stock = locationsWithStock.find(
+        (s) => s.location_id === location.location_id
+      );
+      const qty = stock ? parseFloat(stock.quantity) || 0 : 0;
+
       if (qty > 0) {
+        // Show with quantity
         fromSelect.add(
           new Option(
-            `${stock.location_name} (${qty.toFixed(1)}t available)`,
-            stock.location_id
+            `${location.location_name} (${qty.toFixed(1)}t available)`,
+            location.location_id
           )
+        );
+      } else {
+        // Show without quantity (for locations like Production with no stock)
+        fromSelect.add(
+          new Option(location.location_name, location.location_id)
         );
       }
     });
