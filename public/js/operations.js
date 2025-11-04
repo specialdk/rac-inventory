@@ -433,9 +433,9 @@ async function saveProduction() {
     to_location_id: document.getElementById("productionLocation").value,
     quantity: parseFloat(document.getElementById("productionQuantity").value),
     unit_cost: parseFloat(document.getElementById("productionCost").value),
-    driver_id: document.getElementById("productionOperator").value || null,
     reference_number: document.getElementById("productionReference").value,
     notes: document.getElementById("productionNotes").value,
+    created_by: document.getElementById("productionOperator").value || "system",
   };
 
   // Validate
