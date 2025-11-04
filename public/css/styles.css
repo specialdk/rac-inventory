@@ -792,6 +792,10 @@ textarea.form-control {
   letter-spacing: 0.3px;
 }
 
+.badge-dirt {
+  background: #f3e5f5;
+  color: #a9e5ec;
+}
 .badge-aggregates {
   background: #fff3e0;
   color: #e65100;

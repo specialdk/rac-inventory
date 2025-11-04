@@ -45,6 +45,7 @@ function formatFamilyGroup(group) {
     ROAD_BASE: "ROAD BASE",
     ROCK_ARMOR: "ROCK ARMOR",
     SAND: "SAND",
+    DIRT: "DIRT",
   };
   return names[group] || group;
 }
@@ -108,10 +109,11 @@ function renderStockTable(data) {
   // Sort by family group, then by product name
   const familyOrder = {
     AGGREGATES: 1,
-    DUST: 2,
-    ROAD_BASE: 3,
-    ROCK_ARMOR: 4,
-    SAND: 5,
+    DIRT: 2,
+    DUST: 3,
+    ROAD_BASE: 4,
+    ROCK_ARMOR: 5,
+    SAND: 6,
   };
 
   const sortedData = [...data].sort((a, b) => {
