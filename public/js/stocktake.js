@@ -288,8 +288,8 @@ function collectAdjustments() {
           product_id: product.product_id,
           product_name: product.product_name,
           location_id: parseInt(locationId),
-          quantity_adjustment: adjustment,
-          unit_cost: cost,
+          quantity: adj.quantity_adjustment, // ← CHANGED field name
+          unit_cost: adj.unit_cost, // ← ADD THIS NEW LINE
           notes: notes,
         });
       }
@@ -400,7 +400,8 @@ async function applyStocktake() {
             movement_date: stocktakeDate,
             product_id: adj.product_id,
             location_id: adj.location_id,
-            quantity_adjustment: adj.quantity_adjustment,
+            quantity: adj.quantity_adjustment, // ← CHANGED field name
+            unit_cost: adj.unit_cost, // ← ADD THIS LINE
             reason: reference,
             notes: fullNotes,
             created_by: "Admin User",
