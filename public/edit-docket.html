@@ -123,34 +123,40 @@
               />
             </div>
             <div class="form-group">
-              <label class="form-label">Date</label>
+              <label class="form-label required">Date</label>
               <input
-                type="text"
-                class="form-control read-only"
+                type="date"
+                class="form-control"
                 id="movementDate"
-                readonly
+                required
               />
             </div>
           </div>
 
-          <!-- Weight Fields (Read-Only) -->
+          <!-- Weight Fields - Now Editable -->
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">Gross Weight (tonnes)</label>
+              <label class="form-label required">Gross Weight (tonnes)</label>
               <input
-                type="text"
-                class="form-control read-only"
+                type="number"
+                class="form-control"
                 id="grossWeight"
-                readonly
+                step="0.01"
+                min="0"
+                required
+                oninput="calculateNetWeight()"
               />
             </div>
             <div class="form-group">
-              <label class="form-label">Tare Weight (tonnes)</label>
+              <label class="form-label required">Tare Weight (tonnes)</label>
               <input
-                type="text"
-                class="form-control read-only"
+                type="number"
+                class="form-control"
                 id="tareWeight"
-                readonly
+                step="0.01"
+                min="0"
+                required
+                oninput="calculateNetWeight()"
               />
             </div>
           </div>
@@ -163,7 +169,11 @@
                 class="form-control read-only"
                 id="netWeight"
                 readonly
+                style="font-weight: bold; background: #e9ecef"
               />
+              <small style="color: #6c757d"
+                >Auto-calculated: Gross - Tare</small
+              >
             </div>
             <div class="form-group"></div>
           </div>
@@ -275,10 +285,16 @@
             >
               Cancel
             </button>
+            <button
+              type="button"
+              class="btn-danger"
+              onclick="showCancelConfirmation()"
+              style="margin-left: auto;"
+            >
+              🗑️ Cancel Docket
+            </button>
             <button type="submit" class="btn-warning">💾 Update Docket</button>
           </div>
-        </form>
-      </div>
 
       <!-- Confirmation Modal -->
       <div id="confirmModal" class="modal" style="display: none">
@@ -339,6 +355,58 @@
       </div>
     </div>
 
+   <!-- Cancel Docket Modal -->
+      <div id="cancelModal" class="modal" style="display: none">
+        <div class="modal-content" style="max-width: 600px">
+          <div class="modal-header" style="background: #dc3545; color: white;">
+            <h2>🗑️ Cancel Docket</h2>
+          </div>
+
+          <div style="background: #f8d7da; border: 2px solid #dc3545; padding: 15px; border-radius: 4px; margin: 20px 0;">
+            <strong>⚠️ WARNING: This action cannot be undone!</strong>
+          </div>
+
+          <p style="margin-bottom: 20px;">
+            You are about to <strong>CANCEL</strong> docket <strong id="cancelDocketNumber"></strong>.
+          </p>
+
+          <div style="background: #fff3cd; padding: 15px; border-radius: 4px; margin: 20px 0;">
+            <strong>This will:</strong>
+            <ol style="margin: 10px 0 0 20px;">
+              <li>Create a <strong>REVERSAL</strong> movement returning stock to the original location</li>
+              <li>Mark this docket as <strong>CANCELLED</strong></li>
+              <li>Make this docket number <strong>unavailable for future use</strong></li>
+            </ol>
+          </div>
+
+          <div class="form-group-full" style="margin: 20px 0;">
+            <label class="form-label required">Cancellation Reason</label>
+            <textarea
+              class="form-control"
+              id="cancelReason"
+              rows="3"
+              placeholder="Explain why this docket is being cancelled..."
+              required
+            ></textarea>
+          </div>
+
+          <p style="margin-top: 20px; color: #dc3545; font-weight: bold;">
+            Are you absolutely sure you want to cancel this docket?
+          </p>
+
+          <div class="modal-footer">
+            <button class="btn-secondary" onclick="closeCancelConfirmation()">
+              No, Go Back
+            </button>
+            <button class="btn-danger" onclick="submitCancel()">
+              ✓ Yes, Cancel Docket
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script src="/js/edit-docket.js"></script>
   </body>
 </html>
+ 

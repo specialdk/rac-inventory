@@ -11,7 +11,26 @@ let driversData = [];
 let carriersData = [];
 let deliveriesData = [];
 
+// Calculate Net Weight automatically
+function calculateNetWeight() {
+  const gross = parseFloat(document.getElementById("grossWeight").value) || 0;
+  const tare = parseFloat(document.getElementById("tareWeight").value) || 0;
+  const net = gross - tare;
+
+  document.getElementById("netWeight").value = net.toFixed(2);
+
+  // Validation: Tare should not exceed Gross
+  if (tare > gross && gross > 0) {
+    document
+      .getElementById("tareWeight")
+      .setCustomValidity("Tare weight cannot exceed Gross weight");
+  } else {
+    document.getElementById("tareWeight").setCustomValidity("");
+  }
+}
+
 // Initialize on page load
+
 document.addEventListener("DOMContentLoaded", async function () {
   const urlParams = new URLSearchParams(window.location.search);
   const docketNumber = urlParams.get("docket");
@@ -169,21 +188,26 @@ async function loadDeliveries() {
 
 // Populate form with original docket data
 function populateForm() {
-  // Read-only fields
+  // Read-only field
   document.getElementById("docketNumber").value =
     originalDocket.docket_number || "";
-  document.getElementById("movementDate").value = formatDate(
-    originalDocket.movement_date
-  );
+
+  // Editable date field - format as YYYY-MM-DD for date input
+  const dateObj = new Date(originalDocket.movement_date);
+  document.getElementById("movementDate").value = dateObj
+    .toISOString()
+    .split("T")[0];
+
+  // Editable weight fields
   document.getElementById("grossWeight").value = (
     parseFloat(originalDocket.gross_weight) || 0
   ).toFixed(2);
   document.getElementById("tareWeight").value = (
     parseFloat(originalDocket.tare_weight) || 0
   ).toFixed(2);
-  document.getElementById("netWeight").value = (
-    parseFloat(originalDocket.net_weight) || 0
-  ).toFixed(2);
+
+  // Auto-calculate net weight
+  calculateNetWeight();
 
   // Editable fields - Find the correct ID from the original data
   // Product - match by name
@@ -386,6 +410,32 @@ function showConfirmation() {
 
   const comparisons = [
     {
+      field: "Date",
+      original: formatDate(originalDocket.movement_date),
+      corrected: formatDate(document.getElementById("movementDate").value),
+    },
+    {
+      field: "Gross Weight",
+      original: `${parseFloat(originalDocket.gross_weight).toFixed(2)}t`,
+      corrected: `${parseFloat(
+        document.getElementById("grossWeight").value
+      ).toFixed(2)}t`,
+    },
+    {
+      field: "Tare Weight",
+      original: `${parseFloat(originalDocket.tare_weight).toFixed(2)}t`,
+      corrected: `${parseFloat(
+        document.getElementById("tareWeight").value
+      ).toFixed(2)}t`,
+    },
+    {
+      field: "Net Weight",
+      original: `${parseFloat(originalDocket.net_weight).toFixed(2)}t`,
+      corrected: `${parseFloat(
+        document.getElementById("netWeight").value
+      ).toFixed(2)}t`,
+    },
+    {
       field: "Product",
       original: originalDocket.product_name,
       corrected: correctedData.productName,
@@ -462,6 +512,9 @@ async function submitEdit() {
   try {
     const correctedData = {
       original_docket_number: originalDocket.docket_number,
+      movement_date: document.getElementById("movementDate").value,
+      gross_weight: parseFloat(document.getElementById("grossWeight").value),
+      tare_weight: parseFloat(document.getElementById("tareWeight").value),
       product_id: parseInt(document.getElementById("productId").value),
       from_location_id: parseInt(document.getElementById("locationId").value),
       customer_id: parseInt(document.getElementById("customerId").value),
@@ -538,4 +591,61 @@ function showForm() {
   document.getElementById("loadingState").style.display = "none";
   document.getElementById("errorState").style.display = "none";
   document.getElementById("editForm").style.display = "block";
+}
+
+// Cancel Docket Functions
+function showCancelConfirmation() {
+  document.getElementById("cancelDocketNumber").textContent =
+    originalDocket.docket_number;
+  document.getElementById("cancelReason").value = "";
+  document.getElementById("cancelModal").style.display = "flex";
+}
+
+function closeCancelConfirmation() {
+  document.getElementById("cancelModal").style.display = "none";
+}
+
+async function submitCancel() {
+  const cancelReason = document.getElementById("cancelReason").value.trim();
+
+  if (!cancelReason) {
+    alert("❌ Please provide a cancellation reason");
+    return;
+  }
+
+  const submitButton = event.target;
+  submitButton.disabled = true;
+  submitButton.textContent = "⏳ Processing...";
+
+  try {
+    const cancelData = {
+      docket_number: originalDocket.docket_number,
+      cancel_reason: cancelReason,
+    };
+
+    const response = await fetch(`${API_BASE_URL}/dockets/cancel`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(cancelData),
+    });
+
+    const result = await response.json();
+
+    if (response.ok && result.success) {
+      alert(
+        "✅ Docket cancelled successfully!\\n\\nA REVERSAL movement has been created and stock returned to the original location."
+      );
+      // Redirect back to the docket view
+      window.location.href = `/weighbridge-delivery-docket.html?docket=${originalDocket.docket_number}`;
+    } else {
+      alert("❌ Error: " + (result.error || "Failed to cancel docket"));
+      submitButton.disabled = false;
+      submitButton.textContent = "✓ Yes, Cancel Docket";
+    }
+  } catch (error) {
+    console.error("Error cancelling docket:", error);
+    alert("❌ Error cancelling docket: " + error.message);
+    submitButton.disabled = false;
+    submitButton.textContent = "✓ Yes, Cancel Docket";
+  }
 }
