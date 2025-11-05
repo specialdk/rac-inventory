@@ -621,8 +621,14 @@
           }
 
           cancelledInfo.textContent = infoText;
+
+          // Hide Edit button for cancelled dockets
+          document.getElementById("editDocketBtn").style.display = "none";
         } else {
           document.getElementById("cancelledBanner").style.display = "none";
+          // Show Edit button for active dockets
+          document.getElementById("editDocketBtn").style.display =
+            "inline-block";
         }
 
         showDocket();
