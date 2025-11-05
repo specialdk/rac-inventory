@@ -153,7 +153,7 @@ async function loadCarriers() {
 
 // Load Deliveries
 async function loadDeliveries() {
-  const response = await fetch(`${API_BASE_URL}/deliveries`);
+  const response = await fetch(`${API_BASE_URL}/deliveries/active`);
   deliveriesData = await response.json();
 
   const select = document.getElementById("deliveryId");
