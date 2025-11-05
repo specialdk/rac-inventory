@@ -605,6 +605,26 @@
             docket.driver_name;
         }
 
+        // Show cancelled status if applicable
+        if (docket.is_cancelled) {
+          const cancelledBanner = document.getElementById("cancelledBanner");
+          const cancelledInfo = document.getElementById("cancelledInfo");
+
+          cancelledBanner.style.display = "block";
+
+          let infoText = "";
+          if (docket.cancelled_at) {
+            infoText += `Cancelled: ${formatDateTime(docket.cancelled_at)}`;
+          }
+          if (docket.cancel_reason) {
+            infoText += ` - Reason: ${docket.cancel_reason}`;
+          }
+
+          cancelledInfo.textContent = infoText;
+        } else {
+          document.getElementById("cancelledBanner").style.display = "none";
+        }
+
         showDocket();
       }
 
