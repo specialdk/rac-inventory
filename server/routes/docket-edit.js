@@ -429,7 +429,7 @@ router.post("/cancel", async (req, res) => {
         quantity, unit_cost, total_cost, customer_id, vehicle_id, driver_id,
         carrier_id, delivery_id, gross_weight, tare_weight, reference_number, notes, 
         original_docket_number, edit_reason, edited_by, created_by)
-       VALUES ($1, 'CANCEL', $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+       VALUES ($1, 'CANCEL', $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
        RETURNING movement_id`,
       [
         originalDocket.movement_date, // Keep original date
