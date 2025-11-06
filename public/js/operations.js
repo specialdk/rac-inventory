@@ -385,7 +385,8 @@ async function loadRecentMovements() {
       if (movement.movement_type === "SALES") badgeClass = "badge-info";
       if (movement.movement_type === "ADJUSTMENT") badgeClass = "badge-warning";
       if (movement.movement_type === "DEMAND") badgeClass = "badge-secondary";
-      if (movement.movement_type === "EDIT") badgeClass = "badge-danger";
+      if (movement.movement_type === "EDIT") badgeClass = "badge-purple"; // Changed to purple
+      if (movement.movement_type === "CANCEL") badgeClass = "badge-danger"; // Red for cancel
       if (movement.movement_type === "TRANSFER") badgeClass = "badge-info-dark";
 
       row.innerHTML = `
@@ -941,16 +942,16 @@ function displayMovements(movements) {
       minute: "2-digit",
     });
 
-    // Movement type badge
+
     // Movement type badge
     let badgeClass = "badge-primary";
     if (movement.movement_type === "PRODUCTION") badgeClass = "badge-success";
     if (movement.movement_type === "SALES") badgeClass = "badge-info";
     if (movement.movement_type === "ADJUSTMENT") badgeClass = "badge-warning";
     if (movement.movement_type === "DEMAND") badgeClass = "badge-secondary";
-    if (movement.movement_type === "EDIT") badgeClass = "badge-danger";
+    if (movement.movement_type === "EDIT") badgeClass = "badge-purple"; // Changed to purple
+    if (movement.movement_type === "CANCEL") badgeClass = "badge-danger"; // Red for cancel
     if (movement.movement_type === "TRANSFER") badgeClass = "badge-info-dark";
-
     row.innerHTML = `
       <td>${dateStr} <small class="text-muted">${timeStr}</small></td>
       <td><span class="badge ${badgeClass}">${

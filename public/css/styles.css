@@ -465,6 +465,11 @@ tbody tr:last-child td {
   color: #4b5563;
 }
 
+.badge-purple {
+  background: #6f42c1;
+  color: white;
+}
+
 .badge-primary {
   background: #fef3c7;
   color: #92400e;
