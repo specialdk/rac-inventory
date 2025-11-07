@@ -5,7 +5,7 @@ const pool = require("../config/database");
 // ============================================
 // VALIDATION: Single Product Per Location
 // ============================================
-async function validateSingleProductPerLocation(locationId, productId) {
+async function validateSingleProductPerLocation(client, locationId, productId) {
   try {
     // Check if location has a DIFFERENT product already
     const query = `
@@ -21,7 +21,7 @@ async function validateSingleProductPerLocation(locationId, productId) {
       LIMIT 1
     `;
 
-    const result = await pool.query(query, [locationId, productId]);
+    const result = await client.query(query, [locationId, productId]);
 
     if (result.rows.length > 0) {
       const existingProduct = result.rows[0];
