@@ -137,6 +137,7 @@ function filterByGroup(group) {
 }
 
 // Render stock table with compact layout (GROUP column first)
+// Render stock table with consolidated products and expandable locations
 function renderStockTable(data) {
   const tbody = document.querySelector("#stockTableContainer tbody");
   if (!tbody) return;
@@ -154,7 +155,51 @@ function renderStockTable(data) {
     return;
   }
 
-  // Sort by family group, then by product name
+  // GROUP BY PRODUCT - Consolidate multiple locations
+  const productMap = new Map();
+
+  data.forEach((item) => {
+    const key = item.product_id;
+
+    if (!productMap.has(key)) {
+      productMap.set(key, {
+        product_id: item.product_id,
+        product_name: item.product_name,
+        family_group: item.family_group,
+        unit: item.unit || "t",
+        standard_sales_price: item.standard_sales_price,
+        min_stock_level: item.min_stock_level,
+        total_quantity: 0,
+        total_value: 0,
+        total_demand: 0,
+        weighted_avg_cost: 0,
+        locations: [],
+      });
+    }
+
+    const product = productMap.get(key);
+    product.total_quantity += parseFloat(item.quantity || 0);
+    product.total_value += parseFloat(item.total_value || 0);
+    product.total_demand += parseFloat(item.demand || 0);
+
+    // Store location details
+    product.locations.push({
+      location_name: item.location_name,
+      quantity: item.quantity,
+      average_cost: item.average_cost,
+    });
+  });
+
+  // Calculate weighted average cost
+  productMap.forEach((product) => {
+    if (product.total_quantity > 0) {
+      product.weighted_avg_cost = product.total_value / product.total_quantity;
+    }
+  });
+
+  // Convert to array and sort
+  const consolidatedData = Array.from(productMap.values());
+
   const familyOrder = {
     AGGREGATES: 1,
     DIRT: 2,
@@ -164,7 +209,7 @@ function renderStockTable(data) {
     SAND: 6,
   };
 
-  const sortedData = [...data].sort((a, b) => {
+  const sortedData = consolidatedData.sort((a, b) => {
     const familyA = familyOrder[a.family_group] || 99;
     const familyB = familyOrder[b.family_group] || 99;
     if (familyA !== familyB) return familyA - familyB;
@@ -172,17 +217,22 @@ function renderStockTable(data) {
   });
 
   sortedData.forEach((item) => {
-    // Determine status badge class
+    // Determine status
     let statusClass = "badge-success";
-    if (item.status === "LOW") {
+    let status = "NORMAL";
+    if (item.total_quantity < item.min_stock_level) {
       statusClass = "badge-danger";
-    } else if (item.status === "HIGH") {
+      status = "LOW";
+    } else if (item.total_quantity > item.max_stock_level) {
       statusClass = "badge-warning";
+      status = "HIGH";
     }
 
     // Color code demand if high
     const demandColor =
-      item.demand > item.quantity ? "color: red; font-weight: bold;" : "";
+      item.total_demand > item.total_quantity
+        ? "color: red; font-weight: bold;"
+        : "";
 
     // Make group badge clickable
     const groupClass = `badge-${item.family_group.toLowerCase()}`;
@@ -191,8 +241,15 @@ function renderStockTable(data) {
         ? "font-weight: bold; box-shadow: 0 0 0 2px #333;"
         : "";
 
+    // Product row ID for expand/collapse
+    const rowId = `product-${item.product_id}`;
+    const hasMultipleLocations = item.locations.length > 1;
+
+    // Main product row (consolidated totals)
     const row = `
-      <tr style="height: 40px;">
+      <tr style="height: 40px;" class="product-row" data-product-id="${
+        item.product_id
+      }">
         <td style="padding: 0.4rem 0.5rem;">
           <span class="badge ${groupClass}" 
                 style="cursor: pointer; ${activeClass}" 
@@ -202,19 +259,30 @@ function renderStockTable(data) {
             )}</strong></small>
           </span>
         </td>
-        <td style="padding: 0.4rem 0.5rem;"><strong>${
-          item.product_name
-        }</strong></td>
-        <td style="padding: 0.4rem 0.5rem;">${item.location_name}</td>
+        <td style="padding: 0.4rem 0.5rem;">
+          ${
+            hasMultipleLocations
+              ? `<span style="cursor: pointer; color: #007bff; margin-right: 5px;" onclick="toggleLocations('${item.product_id}')">
+              <strong id="toggle-${item.product_id}">+</strong>
+            </span>`
+              : ""
+          }
+          <strong>${item.product_name}</strong>
+        </td>
+        <td style="padding: 0.4rem 0.5rem; color: #666;">
+          ${
+            hasMultipleLocations
+              ? `${item.locations.length} locations`
+              : item.locations[0].location_name
+          }
+        </td>
         <td style="text-align: right; padding: 0.4rem 0.5rem; ${
-          item.quantity < item.min_stock_level ? "color: red;" : ""
-        }">${formatNumber(item.quantity)} ${item.unit || "t"}</td>
+          item.total_quantity < item.min_stock_level ? "color: red;" : ""
+        }">${formatNumber(item.total_quantity)} ${item.unit}</td>
         <td style="text-align: right; padding: 0.4rem 0.5rem; ${demandColor}">${formatNumber(
-      item.demand || 0
+      item.total_demand
     )}</td>
-        <td style="text-align: right">$${parseFloat(
-          item.average_cost || 0
-        ).toFixed(2)}</td>
+        <td style="text-align: right">$${item.weighted_avg_cost.toFixed(2)}</td>
         <td style="text-align: right">$${parseFloat(
           item.standard_sales_price || 0
         ).toFixed(2)}</td>
@@ -222,11 +290,49 @@ function renderStockTable(data) {
           item.total_value
         )}</td>
         <td style="text-align: center; padding: 0.4rem 0.5rem;">
-          <span class="badge ${statusClass}">${item.status}</span>
+          <span class="badge ${statusClass}">${status}</span>
         </td>
       </tr>
     `;
     tbody.insertAdjacentHTML("beforeend", row);
+
+    // Add location breakdown rows (hidden by default)
+    if (hasMultipleLocations) {
+      item.locations.forEach((loc) => {
+        const locRow = `
+          <tr class="location-row" id="loc-${
+            item.product_id
+          }" style="display: none; background-color: #f8f9fa;">
+            <td></td>
+            <td style="padding: 0.4rem 0.5rem 0.4rem 2rem; color: #666;">
+              <em>└─ ${loc.location_name}</em>
+            </td>
+            <td></td>
+            <td style="text-align: right; padding: 0.4rem 0.5rem; color: #666;">
+              ${formatNumber(loc.quantity)} ${item.unit}
+            </td>
+            <td colspan="5"></td>
+          </tr>
+        `;
+        tbody.insertAdjacentHTML("beforeend", locRow);
+      });
+    }
+  });
+}
+
+// Toggle location breakdown visibility
+function toggleLocations(productId) {
+  const locationRows = document.querySelectorAll(`#loc-${productId}`);
+  const toggle = document.getElementById(`toggle-${productId}`);
+
+  locationRows.forEach((row) => {
+    if (row.style.display === "none") {
+      row.style.display = "table-row";
+      toggle.textContent = "−";
+    } else {
+      row.style.display = "none";
+      toggle.textContent = "+";
+    }
   });
 }
 
