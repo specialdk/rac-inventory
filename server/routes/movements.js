@@ -1,6 +1,46 @@
 const express = require("express");
 const router = express.Router();
-const { pool } = require("../config/database");
+const pool = require("../config/database");
+
+// ============================================
+// VALIDATION: Single Product Per Location
+// ============================================
+async function validateSingleProductPerLocation(locationId, productId) {
+  try {
+    // Check if location has a DIFFERENT product already
+    const query = `
+      SELECT 
+        p.product_code,
+        p.product_name,
+        cs.quantity
+      FROM current_stock cs
+      JOIN products p ON cs.product_id = p.product_id
+      WHERE cs.location_id = $1
+        AND cs.product_id != $2
+        AND cs.quantity > 0
+      LIMIT 1
+    `;
+
+    const result = await pool.query(query, [locationId, productId]);
+
+    if (result.rows.length > 0) {
+      const existingProduct = result.rows[0];
+      return {
+        valid: false,
+        error: `LOCATION CONFLICT: This location already contains ${existingProduct.product_name} (${existingProduct.product_code}) - ${existingProduct.quantity} tonnes. You cannot mix products in the same location. Please clear the existing product first or choose a different location.`,
+      };
+    }
+
+    return { valid: true };
+  } catch (error) {
+    console.error("Error validating single product per location:", error);
+    throw error;
+  }
+}
+
+// ============================================
+// Rest of your code continues here...
+// ============================================
 
 // Helper function to update current stock with weighted average cost
 async function updateCurrentStock(
@@ -97,41 +137,15 @@ router.post("/production", async (req, res) => {
     }
 
     // BUSINESS RULE: Check if destination stockpile already has a different product
-    const locationCheck = await client.query(
-      "SELECT location_type FROM locations WHERE location_id = $1",
-      [to_location_id]
+    // CRITICAL: Validate single product per location
+    const validation = await validateSingleProductPerLocation(
+      client,
+      to_location_id,
+      product_id
     );
 
-    if (locationCheck.rows.length === 0) {
-      throw new Error("Invalid location");
-    }
-
-    const locationType = locationCheck.rows[0].location_type;
-
-    // Only enforce this rule for STOCKPILE locations (not PRODUCTION areas)
-    if (locationType === "STOCKPILE") {
-      // Check if this stockpile already has a different product
-      const stockCheck = await client.query(
-        `SELECT cs.product_id, p.product_name 
-         FROM current_stock cs
-         JOIN products p ON cs.product_id = p.product_id
-         WHERE cs.location_id = $1 AND cs.quantity > 0 AND cs.product_id != $2
-         LIMIT 1`,
-        [to_location_id, product_id]
-      );
-
-      if (stockCheck.rows.length > 0) {
-        const existingProduct = stockCheck.rows[0].product_name;
-        const newProductResult = await client.query(
-          "SELECT product_name FROM products WHERE product_id = $1",
-          [product_id]
-        );
-        const newProduct = newProductResult.rows[0].product_name;
-
-        throw new Error(
-          `This stockpile already contains ${existingProduct}. Cannot add ${newProduct} to the same location.`
-        );
-      }
+    if (!validation.valid) {
+      throw new Error(validation.error);
     }
 
     const total_cost = quantity * unit_cost;
@@ -704,6 +718,22 @@ router.post("/adjustment", async (req, res) => {
     const avgCost = unit_cost || stockCheck.rows[0]?.average_cost || 0;
     const newQty = parseFloat(currentQty) + parseFloat(quantity);
 
+    // CRITICAL: Validate single product per location (only if ADDING stock)
+    if (quantity > 0) {
+      const validation = await validateSingleProductPerLocation(
+        client,
+        location_id,
+        product_id
+      );
+
+      if (!validation.valid) {
+        await client.query("ROLLBACK");
+        return res.status(400).json({
+          error: validation.error,
+        });
+      }
+    }
+
     // Allow negative stock (as per requirement)
     if (newQty < 0) {
       console.log(
@@ -843,21 +873,17 @@ router.post("/transfer", async (req, res) => {
       );
     }
 
-    // Check TO location for product mixing prevention
-    const toStockCheck = await client.query(
-      `SELECT product_id, quantity 
-       FROM current_stock 
-       WHERE location_id = $1 AND quantity > 0`,
-      [to_location_id]
+    // CRITICAL: Validate single product per location
+    const validation = await validateSingleProductPerLocation(
+      client,
+      to_location_id,
+      product_id
     );
 
-    if (
-      toStockCheck.rows.length > 0 &&
-      toStockCheck.rows[0].product_id !== parseInt(product_id)
-    ) {
+    if (!validation.valid) {
       await client.query("ROLLBACK");
       return res.status(400).json({
-        error: "Cannot mix different products in the same location",
+        error: validation.error,
       });
     }
 
