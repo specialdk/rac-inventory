@@ -296,9 +296,14 @@ function renderStockTable(data) {
     `;
     tbody.insertAdjacentHTML("beforeend", row);
 
-    // Add location breakdown rows (hidden by default)
+    // Add location breakdown rows (hidden by default, sorted by quantity desc)
     if (hasMultipleLocations) {
-      item.locations.forEach((loc) => {
+      // Sort locations by quantity descending
+      const sortedLocations = [...item.locations].sort(
+        (a, b) => parseFloat(b.quantity) - parseFloat(a.quantity)
+      );
+
+      sortedLocations.forEach((loc) => {
         const locRow = `
           <tr class="location-row" id="loc-${
             item.product_id
