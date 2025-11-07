@@ -232,20 +232,28 @@ router.post("/dockets/:docketNumber/email", async (req, res) => {
       year: "numeric",
     });
 
-    // Email configuration
+    // Get operator credentials from request
+    const { operatorEmail, operatorPassword } = req.body;
+
+    // Decode password (it's base64 encoded from frontend)
+    const decodedPassword = operatorPassword
+      ? Buffer.from(operatorPassword, "base64").toString("utf-8")
+      : null;
+
+    // Email configuration - using OPERATOR'S Outlook credentials
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST || "smtp.office365.com",
       port: parseInt(process.env.SMTP_PORT) || 587,
       secure: false,
       auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
+        user: operatorEmail,
+        pass: decodedPassword,
       },
     });
 
     // Email content
     const mailOptions = {
-      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      from: operatorEmail, // Email comes FROM the logged-in operator
       to: recipientEmail,
       subject: `Weighbridge Delivery Docket #${docketNumber} - ${dateStr}`,
       text: `Dear Customer,
@@ -301,9 +309,12 @@ Ph. 08 8987 3433</p>`,
 
     console.log(`✅ Email sent successfully to ${recipientEmail}`);
 
+    // Get sender email from operator session (passed from frontend)
+    const senderEmail = req.body.operatorEmail || process.env.SMTP_USER;
+
     // Log email sent
     await logAuditEvent({
-      user_email: senderEmail,
+      user_email: operatorEmail, // Track which operator sent it
       action_type: "EMAIL_SENT",
       entity_type: "DOCKET",
       entity_id: parseInt(docketNumber.replace(/[^\d]/g, "")),

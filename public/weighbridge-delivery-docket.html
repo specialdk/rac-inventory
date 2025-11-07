@@ -807,6 +807,14 @@
               },
               body: JSON.stringify({
                 recipientEmail: customerEmail,
+                operatorEmail: sessionStorage.getItem("racInventorySession")
+                  ? JSON.parse(sessionStorage.getItem("racInventorySession"))
+                      .email
+                  : null,
+                operatorPassword: sessionStorage.getItem("racInventorySession")
+                  ? JSON.parse(sessionStorage.getItem("racInventorySession"))
+                      .password
+                  : null,
               }),
             }
           );
