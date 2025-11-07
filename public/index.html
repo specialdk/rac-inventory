@@ -3,173 +3,300 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>RAC Inventory System</title>
+    <title>RAC Inventory System - Login</title>
+    <link rel="stylesheet" href="/css/styles.css" />
     <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
       body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-          Oxygen, Ubuntu, Cantarell, sans-serif;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        justify-content: center;
+        align-items: center;
         min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       }
 
-      .container {
+      .login-container {
         background: white;
-        padding: 60px 40px;
-        border-radius: 20px;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        text-align: center;
-        max-width: 500px;
-        width: 100%;
-      }
-
-      .logo {
-        font-size: 48px;
-        margin-bottom: 10px;
-      }
-
-      h1 {
-        color: #2d3748;
-        margin-bottom: 10px;
-        font-size: 32px;
-      }
-
-      .subtitle {
-        color: #718096;
-        margin-bottom: 40px;
-        font-size: 16px;
-      }
-
-      .status {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        padding: 15px 20px;
-        background: #f7fafc;
+        padding: 40px;
         border-radius: 10px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        width: 100%;
+        max-width: 400px;
+      }
+
+      .login-header {
+        text-align: center;
         margin-bottom: 30px;
       }
 
-      .status-dot {
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        background: #48bb78;
-        animation: pulse 2s infinite;
+      .login-header h1 {
+        color: #333;
+        font-size: 24px;
+        margin-bottom: 10px;
       }
 
-      @keyframes pulse {
-        0%,
-        100% {
-          opacity: 1;
-        }
-        50% {
-          opacity: 0.5;
-        }
+      .login-header p {
+        color: #666;
+        font-size: 14px;
       }
 
-      .status-text {
-        color: #2d3748;
-        font-weight: 600;
-      }
-
-      .info {
-        background: #edf2f7;
-        padding: 20px;
-        border-radius: 10px;
+      .form-group {
         margin-bottom: 20px;
-        text-align: left;
       }
 
-      .info-item {
-        display: flex;
-        justify-content: space-between;
-        padding: 8px 0;
-        color: #4a5568;
-        font-size: 14px;
-      }
-
-      .info-label {
+      .form-group label {
+        display: block;
         font-weight: 600;
+        margin-bottom: 8px;
+        color: #333;
       }
 
-      .message {
-        color: #718096;
+      .form-group input {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
         font-size: 14px;
-        line-height: 1.6;
       }
 
-      .footer {
-        margin-top: 30px;
-        padding-top: 20px;
-        border-top: 1px solid #e2e8f0;
-        color: #a0aec0;
-        font-size: 12px;
+      .form-group input:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      .btn-login {
+        width: 100%;
+        padding: 12px;
+        background: #667eea;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.3s;
+      }
+
+      .btn-login:hover {
+        background: #5568d3;
+      }
+
+      .btn-login:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+
+      .error-message {
+        background: #fee;
+        color: #c33;
+        padding: 12px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+        display: none;
+      }
+
+      .error-message.show {
+        display: block;
+      }
+
+      .loading {
+        text-align: center;
+        color: #667eea;
+        font-size: 14px;
+        display: none;
+      }
+
+      .loading.show {
+        display: block;
       }
     </style>
   </head>
   <body>
-    <div class="container">
-      <div class="logo">📦</div>
-      <h1>RAC Inventory System</h1>
-      <p class="subtitle">Quarry Production & Inventory Management</p>
-
-      <div class="status">
-        <div class="status-dot"></div>
-        <div class="status-text">System Online</div>
+    <div class="login-container">
+      <div class="login-header">
+        <h1>📦 RAC Inventory System</h1>
+        <p>Rirratjingu Mining Pty Ltd</p>
+        <p style="font-size: 12px; color: #999; margin-top: 10px">
+          Quarry Inventory Management
+        </p>
       </div>
 
-      <div class="info">
-        <div class="info-item">
-          <span class="info-label">Environment:</span>
-          <span id="environment">Loading...</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">Database:</span>
-          <span id="database">Loading...</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">Status:</span>
-          <span id="status">Checking...</span>
-        </div>
-      </div>
+      <div id="errorMessage" class="error-message"></div>
+      <div id="loadingMessage" class="loading">Authenticating...</div>
 
-      <div class="message">
-        <strong>Setup Complete!</strong><br />
-        System is running and ready for development.<br />
-        Dashboard and application pages coming next.
-      </div>
+      <form id="loginForm" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input
+            type="email"
+            id="email"
+            placeholder="matthew.henger@rirratjingu.com"
+            required
+            autocomplete="username"
+          />
+        </div>
 
-      <a href="pages/dashboard.html" class="btn-enter">Enter Dashboard →</a>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            placeholder="Enter your Outlook password"
+            required
+            autocomplete="current-password"
+          />
+        </div>
 
-      <div class="footer">Rirratjingu Mining Pty Ltd &copy; 2025</div>
+        <button type="submit" class="btn-login" id="loginBtn">Login</button>
+      </form>
     </div>
 
     <script>
-      // Check server health
-      fetch("/api/health")
-        .then((res) => res.json())
-        .then((data) => {
-          document.getElementById("environment").textContent = "Production";
-          document.getElementById("database").textContent =
-            data.database === "connected" ? "Connected ✅" : "Disconnected ❌";
-          document.getElementById("status").textContent = data.status;
-        })
-        .catch((err) => {
-          document.getElementById("environment").textContent = "Unknown";
-          document.getElementById("database").textContent = "Error ❌";
-          document.getElementById("status").textContent = "Offline";
-        });
+      // Check if already logged in
+      window.addEventListener("DOMContentLoaded", function () {
+        const session = sessionStorage.getItem("racInventorySession");
+        if (session) {
+          const sessionData = JSON.parse(session);
+          const now = new Date().getTime();
+          const idleTimeout = 4 * 60 * 60 * 1000; // 4 hours
+
+          // Check if session is still valid
+          if (now - sessionData.lastActivity < idleTimeout) {
+            // Still valid, redirect to dashboard
+            window.location.href = "/pages/dashboard.html";
+            return;
+          } else {
+            // Session expired, clear it and log
+            sessionStorage.removeItem("racInventorySession");
+            logAuditEvent({
+              user_email: sessionData.email,
+              action_type: "SESSION_TIMEOUT",
+              description: "Session expired due to 4-hour idle timeout",
+              success: true,
+            });
+          }
+        }
+
+        // Pre-fill email if saved
+        const savedEmail = localStorage.getItem("racInventoryEmail");
+        if (savedEmail) {
+          document.getElementById("email").value = savedEmail;
+        }
+      });
+
+      async function handleLogin(event) {
+        event.preventDefault();
+
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value;
+        const errorMsg = document.getElementById("errorMessage");
+        const loadingMsg = document.getElementById("loadingMessage");
+        const loginBtn = document.getElementById("loginBtn");
+
+        // Hide error, show loading
+        errorMsg.classList.remove("show");
+        loadingMsg.classList.add("show");
+        loginBtn.disabled = true;
+
+        try {
+          // Validate email domain
+          if (!email.endsWith("@rirratjingu.com")) {
+            throw new Error(
+              "Access denied. Only @rirratjingu.com email addresses are allowed."
+            );
+          }
+
+          // Test authentication
+          const response = await fetch("/api/auth/verify", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ email, password }),
+          });
+
+          const result = await response.json();
+
+          if (!result.success) {
+            // Log failed login
+            await logAuditEvent({
+              user_email: email,
+              action_type: "FAILED_LOGIN",
+              description: result.message || "Invalid credentials",
+              success: false,
+            });
+
+            throw new Error(result.message || "Authentication failed");
+          }
+
+          // Store session data
+          const sessionData = {
+            email: email,
+            name: email.split("@")[0].replace(".", " "),
+            password: btoa(password), // Base64 encode
+            loginTime: new Date().getTime(),
+            lastActivity: new Date().getTime(),
+          };
+
+          sessionStorage.setItem(
+            "racInventorySession",
+            JSON.stringify(sessionData)
+          );
+
+          // Save email for convenience
+          localStorage.setItem("racInventoryEmail", email);
+
+          // Log successful login
+          await logAuditEvent({
+            user_email: email,
+            action_type: "LOGIN",
+            description: "User logged in successfully",
+            success: true,
+          });
+
+          // Redirect to dashboard
+          window.location.href = "/pages/dashboard.html";
+        } catch (error) {
+          console.error("Login error:", error);
+          errorMsg.textContent = error.message;
+          errorMsg.classList.add("show");
+          loadingMsg.classList.remove("show");
+          loginBtn.disabled = false;
+        }
+      }
+
+      // Helper function to log audit events
+      async function logAuditEvent({
+        user_email,
+        action_type,
+        entity_type = null,
+        entity_id = null,
+        description,
+        old_values = null,
+        new_values = null,
+        success = true,
+      }) {
+        try {
+          await fetch("/api/audit/log", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              user_email,
+              action_type,
+              entity_type,
+              entity_id,
+              description,
+              old_values,
+              new_values,
+              success,
+            }),
+          });
+        } catch (error) {
+          console.error("Error logging audit event:", error);
+          // Don't throw - audit logging shouldn't break main flow
+        }
+      }
     </script>
   </body>
 </html>

@@ -94,6 +94,8 @@ app.use("/api", require("./routes/tare-weights")); // ADD THIS LINE
 app.use("/api", require("./routes/account-detail-report-api"));
 app.use("/api", require("./routes/weighbridge-docket-api"));
 app.use("/api/dockets", require("./routes/docket-edit"));
+// Audit Log Route
+app.use("/api", require("./routes/audit-log").router);
 
 // Serve index.html for root
 app.get("/", (req, res) => {

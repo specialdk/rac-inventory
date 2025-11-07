@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Weighbridge Delivery Docket - RAC Inventory</title>
+
     <style>
       * {
         margin: 0;
@@ -291,6 +292,27 @@
         }
       }
     </style>
+
+    <div class="user-info">
+      <span>👤</span>
+      <span>Admin User</span>
+      <button
+        onclick="logout()"
+        style="
+          margin-left: 10px;
+          padding: 5px 10px;
+          background: #dc3545;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 12px;
+        "
+      >
+        Logout
+      </button>
+    </div>
+    <script src="/js/auth.js"></script>
   </head>
   <body>
     <div class="page-container">
@@ -306,6 +328,14 @@
         </button>
         <button class="btn btn-success" onclick="printDocket()">
           🖨️ Print
+        </button>
+        <button
+          class="btn btn-primary"
+          onclick="emailDocket()"
+          id="emailDocketBtn"
+          style="display: none"
+        >
+          📧 Email Docket
         </button>
         <button
           class="btn btn-warning"
@@ -531,6 +561,8 @@
 
       // Display docket data
       function displayDocket(docket) {
+        // Store docket data globally for email function
+        currentDocketData = docket;
         // Date/Time
         document.getElementById("dateTime").textContent = formatDateTime(
           docket.movement_date
@@ -632,6 +664,12 @@
         }
 
         showDocket();
+
+        // Show email button for active dockets
+        if (!docket.is_cancelled) {
+          document.getElementById("emailDocketBtn").style.display =
+            "inline-block";
+        }
       }
 
       // Format date and time
@@ -714,6 +752,86 @@
         }
         window.location.href = `/edit-docket.html?docket=${docketNumber}`;
       }
+
+      // Email docket function
+      async function emailDocket() {
+        const docketNumber = document.getElementById("docketNumber").value;
+
+        if (!docketNumber) {
+          alert("Please load a docket first");
+          return;
+        }
+
+        // Get customer email from loaded docket data
+        let customerEmail = currentDocketData?.customer_email || "";
+
+        // If no customer email, prompt operator
+        if (!customerEmail) {
+          customerEmail = prompt(
+            "Customer email address not found in system.\n\nPlease enter customer email address to send docket:",
+            ""
+          );
+
+          // If user cancelled or left empty
+          if (!customerEmail) {
+            return;
+          }
+
+          // Basic email validation
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(customerEmail)) {
+            alert("Invalid email address. Please try again.");
+            return;
+          }
+        }
+
+        // Confirm before sending
+        const confirmMsg = `Send Weighbridge Delivery Docket #${docketNumber} to:\n\n${customerEmail}\n\nProceed?`;
+        if (!confirm(confirmMsg)) {
+          return;
+        }
+
+        // Show loading
+        const emailBtn = document.getElementById("emailDocketBtn");
+        const originalText = emailBtn.innerHTML;
+        emailBtn.disabled = true;
+        emailBtn.innerHTML = "📧 Sending...";
+
+        try {
+          const response = await fetch(
+            `${API_BASE_URL}/dockets/${docketNumber}/email`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                recipientEmail: customerEmail,
+              }),
+            }
+          );
+
+          const data = await response.json();
+
+          if (data.success) {
+            alert(
+              `✅ Docket #${docketNumber} emailed successfully to ${customerEmail}`
+            );
+          } else {
+            alert(`❌ Error sending email: ${data.message}`);
+          }
+        } catch (error) {
+          console.error("Error emailing docket:", error);
+          alert("❌ Error sending email. Please try again.");
+        } finally {
+          // Reset button
+          emailBtn.disabled = false;
+          emailBtn.innerHTML = originalText;
+        }
+      }
+
+      // Store current docket data globally for email function
+      let currentDocketData = null;
     </script>
   </body>
 </html>
