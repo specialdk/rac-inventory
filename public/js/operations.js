@@ -458,13 +458,13 @@ async function saveProduction() {
       body: JSON.stringify(formData),
     });
 
-    const data = await response.json();
-
     if (!response.ok) {
-      // NEW: Handle mixed product error from backend
+      const data = await response.json();
       alert(data.error || "Failed to save production");
       return;
     }
+
+    const data = await response.json();
 
     alert("Production saved successfully!");
     closeProductionModal();
@@ -941,7 +941,6 @@ function displayMovements(movements) {
       hour: "2-digit",
       minute: "2-digit",
     });
-
 
     // Movement type badge
     let badgeClass = "badge-primary";
