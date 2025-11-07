@@ -260,14 +260,14 @@ function renderStockTable(data) {
           </span>
         </td>
         <td style="padding: 0.4rem 0.5rem;">
+          <strong>${item.product_name}</strong>
           ${
             hasMultipleLocations
-              ? `<span style="cursor: pointer; color: #007bff; margin-right: 5px;" onclick="toggleLocations('${item.product_id}')">
+              ? `<span style="cursor: pointer; color: #007bff; margin-left: 8px;" onclick="toggleLocations('${item.product_id}')">
               <strong id="toggle-${item.product_id}">+</strong>
             </span>`
               : ""
           }
-          <strong>${item.product_name}</strong>
         </td>
         <td style="padding: 0.4rem 0.5rem; color: #666;">
           ${
