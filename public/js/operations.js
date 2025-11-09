@@ -1312,7 +1312,7 @@ async function saveTareWeight() {
           document.getElementById("tareVehicle").selectedOptions[0].textContent
         }\nTare Weight: ${formData.tare_weight.toFixed(
           2
-        )} tonnes\n\nThis will be auto-suggested for sales within the next 10 hours.`
+        )} tonnes\n\nThis will be auto-suggested for sales within the next 12 hours.`
       );
       closeTareWeightModal();
     } else {
@@ -1340,7 +1340,7 @@ function setupSalesVehicleListener() {
 async function loadRecentTareWeight(vehicleId) {
   try {
     const response = await fetch(
-      `/api/tare-weights/recent/${vehicleId}?hours=10`
+      `/api/tare-weights/recent/${vehicleId}?hours=12`
     );
     const data = await response.json();
 

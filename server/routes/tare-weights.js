@@ -77,7 +77,7 @@ router.get("/tare-weights", async (req, res) => {
 router.get("/tare-weights/recent/:vehicle_id", async (req, res) => {
   try {
     const { vehicle_id } = req.params;
-    const { hours = 10 } = req.query;
+    const { hours = 12 } = req.query;
 
     const query = `
       SELECT 
@@ -96,7 +96,6 @@ router.get("/tare-weights/recent/:vehicle_id", async (req, res) => {
       LEFT JOIN vehicles v ON tw.vehicle_id = v.vehicle_id
       LEFT JOIN carriers c ON tw.carrier_id = c.carrier_id
       WHERE tw.vehicle_id = $1
-        AND tw.is_used = false
         AND tw.recorded_at >= NOW() - INTERVAL '${parseInt(hours)} hours'
       ORDER BY tw.recorded_at DESC
       LIMIT 1
