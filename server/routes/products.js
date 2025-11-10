@@ -7,15 +7,19 @@ router.get("/", async (req, res) => {
   try {
     const { is_active } = req.query;
 
-    let sql = "SELECT * FROM products";
+    let sql = `SELECT 
+      p.*,
+      l.location_name as preferred_location_name
+    FROM products p
+    LEFT JOIN locations l ON p.preferred_location_id = l.location_id`;
     const params = [];
 
     if (is_active !== undefined) {
-      sql += " WHERE is_active = $1";
+      sql += " WHERE p.is_active = $1";
       params.push(is_active === "true");
     }
 
-    sql += " ORDER BY family_group, product_name";
+    sql += " ORDER BY p.family_group, p.product_name";
 
     const result = await query(sql, params);
     res.json(result.rows);
@@ -56,6 +60,7 @@ router.post("/", async (req, res) => {
       current_price,
       min_stock_level,
       max_stock_level,
+      preferred_location_id,
     } = req.body;
 
     // Validation
@@ -69,8 +74,8 @@ router.post("/", async (req, res) => {
     const result = await query(
       `INSERT INTO products 
        (product_code, product_name, family_group, unit, standard_cost, 
-        current_price, min_stock_level, max_stock_level)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        current_price, min_stock_level, max_stock_level, preferred_location_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING *`,
       [
         product_code,
@@ -81,6 +86,7 @@ router.post("/", async (req, res) => {
         current_price,
         min_stock_level,
         max_stock_level,
+        preferred_location_id,
       ]
     );
 
@@ -109,6 +115,7 @@ router.put("/:id", async (req, res) => {
       current_price,
       min_stock_level,
       max_stock_level,
+      preferred_location_id,
       is_active,
     } = req.body;
 
@@ -122,9 +129,10 @@ router.put("/:id", async (req, res) => {
            current_price = COALESCE($6, current_price),
            min_stock_level = COALESCE($7, min_stock_level),
            max_stock_level = COALESCE($8, max_stock_level),
-           is_active = COALESCE($9, is_active),
+           preferred_location_id = COALESCE($9, preferred_location_id),
+           is_active = COALESCE($10, is_active),
            updated_at = NOW()
-       WHERE product_id = $10
+       WHERE product_id = $11
        RETURNING *`,
       [
         product_code,
@@ -135,6 +143,7 @@ router.put("/:id", async (req, res) => {
         current_price,
         min_stock_level,
         max_stock_level,
+        preferred_location_id,
         is_active,
         id,
       ]

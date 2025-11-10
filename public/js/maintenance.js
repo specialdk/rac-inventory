@@ -78,7 +78,7 @@ async function loadProducts() {
     const showActive = document.getElementById("toggleActiveProducts").checked;
     const label = document.getElementById("productsToggleLabel");
     label.textContent = showActive ? "Active" : "Inactive";
-    
+
     const response = await fetch(`/api/products?is_active=${showActive}`);
     const products = await response.json();
 
@@ -124,6 +124,9 @@ function openProductModal(productId = null) {
   const form = document.getElementById("productForm");
   const title = document.getElementById("productModalTitle");
 
+  // Load stockpiles for preferred location dropdown
+  loadProductStockpiles();
+
   if (productId) {
     title.textContent = "Edit Product";
     loadProductData(productId);
@@ -135,6 +138,24 @@ function openProductModal(productId = null) {
   }
 
   modal.style.display = "flex";
+}
+
+async function loadProductStockpiles() {
+  try {
+    const response = await fetch(
+      "/api/locations?location_type=STOCKPILE&is_active=true"
+    );
+    const locations = await response.json();
+
+    const select = document.getElementById("productPreferredLocation");
+    select.innerHTML = '<option value="">No Preference</option>';
+
+    locations.forEach((location) => {
+      select.add(new Option(location.location_name, location.location_id));
+    });
+  } catch (error) {
+    console.error("Error loading stockpiles:", error);
+  }
 }
 
 async function loadProductData(productId) {
@@ -152,6 +173,8 @@ async function loadProductData(productId) {
       product.current_price;
     document.getElementById("minStockLevel").value = product.min_stock_level;
     document.getElementById("maxStockLevel").value = product.max_stock_level;
+    document.getElementById("productPreferredLocation").value =
+      product.preferred_location_id || "";
     document.getElementById("productDescription").value =
       product.description || "";
   } catch (error) {
@@ -175,6 +198,8 @@ async function saveProduct() {
       parseFloat(document.getElementById("minStockLevel").value) || 0,
     max_stock_level:
       parseFloat(document.getElementById("maxStockLevel").value) || 0,
+    preferred_location_id:
+      document.getElementById("productPreferredLocation").value || null,
     description: document.getElementById("productDescription").value,
   };
 
@@ -243,7 +268,7 @@ async function loadCustomers() {
     const showActive = document.getElementById("toggleActiveCustomers").checked;
     const label = document.getElementById("customersToggleLabel");
     label.textContent = showActive ? "Active" : "Inactive";
-    
+
     const response = await fetch(`/api/customers?is_active=${showActive}`);
     const customers = await response.json();
 
@@ -398,7 +423,7 @@ async function loadLocations() {
     const showActive = document.getElementById("toggleActiveLocations").checked;
     const label = document.getElementById("locationsToggleLabel");
     label.textContent = showActive ? "Active" : "Inactive";
-    
+
     const response = await fetch(`/api/locations?is_active=${showActive}`);
     const locations = await response.json();
 
@@ -575,7 +600,7 @@ async function loadVehicles() {
     const showActive = document.getElementById("toggleActiveVehicles").checked;
     const label = document.getElementById("vehiclesToggleLabel");
     label.textContent = showActive ? "Active" : "Inactive";
-    
+
     const response = await fetch(`/api/vehicles?is_active=${showActive}`);
     const vehicles = await response.json();
 
@@ -727,7 +752,7 @@ async function loadDrivers() {
     const showActive = document.getElementById("toggleActiveDrivers").checked;
     const label = document.getElementById("driversToggleLabel");
     label.textContent = showActive ? "Active" : "Inactive";
-    
+
     const response = await fetch(`/api/drivers?is_active=${showActive}`);
     const drivers = await response.json();
 
@@ -873,10 +898,10 @@ async function loadCarriers() {
     const showActive = document.getElementById("toggleActiveCarriers").checked;
     const label = document.getElementById("carriersToggleLabel");
     label.textContent = showActive ? "Active" : "Inactive";
-    
+
     const response = await fetch(`/api/carriers?is_active=${showActive}`);
     const carriers = await response.json();
-    
+
     const tbody = document.getElementById("carriersTableBody");
     tbody.innerHTML = "";
 
@@ -1021,10 +1046,12 @@ function setupModalHandlers() {
 
 async function loadDeliveries() {
   try {
-    const showActive = document.getElementById("toggleActiveDeliveries").checked;
+    const showActive = document.getElementById(
+      "toggleActiveDeliveries"
+    ).checked;
     const label = document.getElementById("deliveriesToggleLabel");
     label.textContent = showActive ? "Active" : "Inactive";
-    
+
     const response = await fetch(`/api/deliveries?is_active=${showActive}`);
     const deliveries = await response.json();
 
