@@ -237,16 +237,28 @@ router.post("/dockets/:docketNumber/email", async (req, res) => {
 
     // ============================================
     // EMAIL CONFIGURATION - BACKEND CREDENTIALS
-    // Uses Railway environment variables
+    // Automatically use SSL for port 465, TLS for 587
     // ============================================
+    const smtpPort = parseInt(process.env.SMTP_PORT) || 587;
+    const useSSL = smtpPort === 465;
+
+    console.log(`🔧 SMTP Configuration:`);
+    console.log(`   Host: ${process.env.SMTP_HOST || "smtp.office365.com"}`);
+    console.log(`   Port: ${smtpPort}`);
+    console.log(`   SSL: ${useSSL}`);
+    console.log(`   User: ${process.env.SMTP_USER}`);
+
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST || "smtp.office365.com",
-      port: parseInt(process.env.SMTP_PORT) || 587,
-      secure: false,
+      port: smtpPort,
+      secure: useSSL, // true for 465, false for other ports
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
+      connectionTimeout: 10000, // 10 seconds
+      greetingTimeout: 10000,
+      socketTimeout: 10000,
     });
 
     console.log(
