@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>RAC Inventory System - Login</title>
+    <title>RAC Inventory System</title>
     <link rel="stylesheet" href="/css/styles.css" />
     <style>
       body {
@@ -12,257 +12,94 @@
         align-items: center;
         min-height: 100vh;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        margin: 0;
+        font-family: Arial, sans-serif;
       }
 
-      .login-container {
+      .loading-container {
         background: white;
-        padding: 40px;
+        padding: 60px 40px;
         border-radius: 10px;
         box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-        width: 100%;
+        text-align: center;
         max-width: 400px;
       }
 
-      .login-header {
-        text-align: center;
-        margin-bottom: 30px;
-      }
-
-      .login-header h1 {
+      .loading-container h1 {
         color: #333;
         font-size: 24px;
         margin-bottom: 10px;
       }
 
-      .login-header p {
+      .loading-container p {
         color: #666;
         font-size: 14px;
+        margin-bottom: 30px;
       }
 
-      .form-group {
-        margin-bottom: 20px;
+      .spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #667eea;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
       }
 
-      .form-group label {
-        display: block;
-        font-weight: 600;
-        margin-bottom: 8px;
-        color: #333;
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
       }
 
-      .form-group input {
-        width: 100%;
-        padding: 12px;
-        border: 1px solid #ddd;
-        border-radius: 5px;
-        font-size: 14px;
-      }
-
-      .form-group input:focus {
-        outline: none;
-        border-color: #667eea;
-      }
-
-      .btn-login {
-        width: 100%;
-        padding: 12px;
-        background: #667eea;
-        color: white;
-        border: none;
-        border-radius: 5px;
+      .loading-text {
+        color: #667eea;
         font-size: 16px;
         font-weight: 600;
-        cursor: pointer;
-        transition: background 0.3s;
-      }
-
-      .btn-login:hover {
-        background: #5568d3;
-      }
-
-      .btn-login:disabled {
-        background: #ccc;
-        cursor: not-allowed;
-      }
-
-      .error-message {
-        background: #fee;
-        color: #c33;
-        padding: 12px;
-        border-radius: 5px;
-        margin-bottom: 20px;
-        display: none;
-      }
-
-      .error-message.show {
-        display: block;
-      }
-
-      .loading {
-        text-align: center;
-        color: #667eea;
-        font-size: 14px;
-        display: none;
-      }
-
-      .loading.show {
-        display: block;
       }
     </style>
   </head>
   <body>
-    <div class="login-container">
-      <div class="login-header">
-        <h1>📦 RAC Inventory System</h1>
-        <p>Rirratjingu Mining Pty Ltd</p>
-        <p style="font-size: 12px; color: #999; margin-top: 10px">
-          Quarry Inventory Management
-        </p>
-      </div>
-
-      <div id="errorMessage" class="error-message"></div>
-      <div id="loadingMessage" class="loading">Authenticating...</div>
-
-      <form id="loginForm" onsubmit="handleLogin(event)">
-        <div class="form-group">
-          <label for="email">Email Address</label>
-          <input
-            type="email"
-            id="email"
-            placeholder="matthew.henger@rirratjingu.com"
-            required
-            autocomplete="username"
-          />
-        </div>
-
-        <div class="form-group">
-          <label for="password">Password</label>
-          <input
-            type="password"
-            id="password"
-            placeholder="Enter your Outlook password"
-            required
-            autocomplete="current-password"
-          />
-        </div>
-
-        <button type="submit" class="btn-login" id="loginBtn">Login</button>
-      </form>
+    <div class="loading-container">
+      <h1>📦 RAC Inventory System</h1>
+      <p>Rirratjingu Mining Pty Ltd</p>
+      <div class="spinner"></div>
+      <div class="loading-text">Loading system...</div>
     </div>
 
     <script>
-      // Check if already logged in
+      // Auto-bypass login - No password required
       window.addEventListener("DOMContentLoaded", function () {
-        const session = sessionStorage.getItem("racInventorySession");
-        if (session) {
-          const sessionData = JSON.parse(session);
-          const now = new Date().getTime();
-          const idleTimeout = 4 * 60 * 60 * 1000; // 4 hours
+        // Set up session without login
+        const sessionData = {
+          email: "quarry@rirratjingu.com",
+          name: "Quarry Team",
+          loginTime: new Date().getTime(),
+          lastActivity: new Date().getTime(),
+        };
 
-          // Check if session is still valid
-          if (now - sessionData.lastActivity < idleTimeout) {
-            // Still valid, redirect to dashboard
+        sessionStorage.setItem(
+          "racInventorySession",
+          JSON.stringify(sessionData)
+        );
+
+        // Log system access
+        logAuditEvent({
+          user_email: "quarry@rirratjingu.com",
+          action_type: "SYSTEM_ACCESS",
+          description: "User accessed inventory system",
+          success: true,
+        }).then(() => {
+          // Redirect to dashboard after brief delay
+          setTimeout(() => {
             window.location.href = "/pages/dashboard.html";
-            return;
-          } else {
-            // Session expired, clear it and log
-            sessionStorage.removeItem("racInventorySession");
-            logAuditEvent({
-              user_email: sessionData.email,
-              action_type: "SESSION_TIMEOUT",
-              description: "Session expired due to 4-hour idle timeout",
-              success: true,
-            });
-          }
-        }
-
-        // Pre-fill email if saved
-        const savedEmail = localStorage.getItem("racInventoryEmail");
-        if (savedEmail) {
-          document.getElementById("email").value = savedEmail;
-        }
+          }, 500);
+        });
       });
-
-      async function handleLogin(event) {
-        event.preventDefault();
-
-        const email = document.getElementById("email").value.trim();
-        const password = document.getElementById("password").value;
-        const errorMsg = document.getElementById("errorMessage");
-        const loadingMsg = document.getElementById("loadingMessage");
-        const loginBtn = document.getElementById("loginBtn");
-
-        // Hide error, show loading
-        errorMsg.classList.remove("show");
-        loadingMsg.classList.add("show");
-        loginBtn.disabled = true;
-
-        try {
-          // Validate email domain
-          if (!email.endsWith("@rirratjingu.com")) {
-            throw new Error(
-              "Access denied. Only @rirratjingu.com email addresses are allowed."
-            );
-          }
-
-          // Test authentication
-          const response = await fetch("/api/auth/verify", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ email, password }),
-          });
-
-          const result = await response.json();
-
-          if (!result.success) {
-            // Log failed login
-            await logAuditEvent({
-              user_email: email,
-              action_type: "FAILED_LOGIN",
-              description: result.message || "Invalid credentials",
-              success: false,
-            });
-
-            throw new Error(result.message || "Authentication failed");
-          }
-
-          // Store session data
-          const sessionData = {
-            email: email,
-            name: email.split("@")[0].replace(".", " "),
-            password: btoa(password), // Base64 encode
-            loginTime: new Date().getTime(),
-            lastActivity: new Date().getTime(),
-          };
-
-          sessionStorage.setItem(
-            "racInventorySession",
-            JSON.stringify(sessionData)
-          );
-
-          // Save email for convenience
-          localStorage.setItem("racInventoryEmail", email);
-
-          // Log successful login
-          await logAuditEvent({
-            user_email: email,
-            action_type: "LOGIN",
-            description: "User logged in successfully",
-            success: true,
-          });
-
-          // Redirect to dashboard
-          window.location.href = "/pages/dashboard.html";
-        } catch (error) {
-          console.error("Login error:", error);
-          errorMsg.textContent = error.message;
-          errorMsg.classList.add("show");
-          loadingMsg.classList.remove("show");
-          loginBtn.disabled = false;
-        }
-      }
 
       // Helper function to log audit events
       async function logAuditEvent({
