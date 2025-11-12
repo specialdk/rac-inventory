@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RAC Inventory System</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <style>
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        margin: 0;
+        font-family: Arial, sans-serif;
+      }
+
+      .loading-container {
+        background: white;
+        padding: 60px 40px;
+        border-radius: 10px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        text-align: center;
+        max-width: 400px;
+      }
+
+      .loading-container h1 {
+        color: #333;
+        font-size: 24px;
+        margin-bottom: 10px;
+      }
+
+      .loading-container p {
+        color: #666;
+        font-size: 14px;
+        margin-bottom: 30px;
+      }
+
+      .spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #667eea;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .loading-text {
+        color: #667eea;
+        font-size: 16px;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="loading-container">
+      <h1>📦 RAC Inventory System</h1>
+      <p>Rirratjingu Mining Pty Ltd</p>
+      <div class="spinner"></div>
+      <div class="loading-text">Loading system...</div>
+    </div>
+
+    <script>
+      // Auto-bypass login - No password required
+      window.addEventListener("DOMContentLoaded", function () {
+        // Set up session without login
+        const sessionData = {
+          email: "quarry@rirratjingu.com",
+          name: "Quarry Team",
+          loginTime: new Date().getTime(),
+          lastActivity: new Date().getTime(),
+        };
+
+        sessionStorage.setItem(
+          "racInventorySession",
+          JSON.stringify(sessionData)
+        );
+
+        // Log system access
+        logAuditEvent({
+          user_email: "quarry@rirratjingu.com",
+          action_type: "SYSTEM_ACCESS",
+          description: "User accessed inventory system",
+          success: true,
+        }).then(() => {
+          // Redirect to dashboard after brief delay
+          setTimeout(() => {
+            window.location.href = "/pages/dashboard.html";
+          }, 500);
+        });
+      });
+
+      // Helper function to log audit events
+      async function logAuditEvent({
+        user_email,
+        action_type,
+        entity_type = null,
+        entity_id = null,
+        description,
+        old_values = null,
+        new_values = null,
+        success = true,
+      }) {
+        try {
+          await fetch("/api/audit/log", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              user_email,
+              action_type,
+              entity_type,
+              entity_id,
+              description,
+              old_values,
+              new_values,
+              success,
+            }),
+          });
+        } catch (error) {
+          console.error("Error logging audit event:", error);
+          // Don't throw - audit logging shouldn't break main flow
+        }
+      }
+    </script>
+  </body>
+</html>

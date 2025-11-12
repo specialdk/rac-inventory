@@ -1,5 +1,7 @@
 // ============================================
 // WEIGHBRIDGE DELIVERY DOCKET API
+// NO LOGIN REQUIRED - Uses backend credentials
+// All emails from quarry@rirratjingu.com
 // ============================================
 
 const express = require("express");
@@ -132,6 +134,7 @@ router.get("/dockets/latest/sales", async (req, res) => {
 
 // ============================================
 // EMAIL WEIGHBRIDGE DOCKET
+// NO LOGIN REQUIRED - Uses backend credentials
 // ============================================
 router.post("/dockets/:docketNumber/email", async (req, res) => {
   console.log("📧 Email Weighbridge Docket API Called");
@@ -139,7 +142,7 @@ router.post("/dockets/:docketNumber/email", async (req, res) => {
 
   try {
     const { docketNumber } = req.params;
-    const { recipientEmail } = req.body;
+    const { recipientEmail, sentBy } = req.body; // sentBy is optional operator name
 
     if (!recipientEmail) {
       return res.status(400).json({
@@ -232,29 +235,32 @@ router.post("/dockets/:docketNumber/email", async (req, res) => {
       year: "numeric",
     });
 
-    // Get operator credentials from request
-    const { operatorEmail, operatorPassword } = req.body;
-
-    // Decode password (it's base64 encoded from frontend)
-    const decodedPassword = operatorPassword
-      ? Buffer.from(operatorPassword, "base64").toString("utf-8")
-      : null;
-
-    // Email configuration - using OPERATOR'S Outlook credentials
+    // ============================================
+    // EMAIL CONFIGURATION - BACKEND CREDENTIALS
+    // Uses Railway environment variables
+    // ============================================
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST || "smtp.office365.com",
       port: parseInt(process.env.SMTP_PORT) || 587,
       secure: false,
       auth: {
-        user: operatorEmail,
-        pass: decodedPassword,
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
       },
     });
 
+    console.log(
+      `📧 Sending email from: ${process.env.SMTP_FROM || process.env.SMTP_USER}`
+    );
+    if (sentBy) {
+      console.log(`👤 Sent by operator: ${sentBy}`);
+    }
+
     // Email content
     const mailOptions = {
-      from: operatorEmail, // Email comes FROM the logged-in operator
+      from: process.env.SMTP_FROM || "quarry@rirratjingu.com",
       to: recipientEmail,
+      replyTo: process.env.SMTP_FROM || "quarry@rirratjingu.com",
       subject: `Weighbridge Delivery Docket #${docketNumber} - ${dateStr}`,
       text: `Dear Customer,
 
@@ -309,19 +315,20 @@ Ph. 08 8987 3433</p>`,
 
     console.log(`✅ Email sent successfully to ${recipientEmail}`);
 
-    // Get sender email from operator session (passed from frontend)
-    const senderEmail = req.body.operatorEmail || process.env.SMTP_USER;
-
-    // Log email sent
+    // Log email sent (optional tracking of who sent it)
     await logAuditEvent({
-      user_email: operatorEmail, // Track which operator sent it
+      user_email: sentBy || "quarry@rirratjingu.com",
       action_type: "EMAIL_SENT",
       entity_type: "DOCKET",
       entity_id: parseInt(docketNumber.replace(/[^\d]/g, "")),
-      description: `Weighbridge Docket emailed to ${recipientEmail}`,
+      description: `Weighbridge Docket emailed to ${recipientEmail}${
+        sentBy ? ` by ${sentBy}` : ""
+      }`,
       new_values: {
         docket_number: docketNumber,
         recipient: recipientEmail,
+        sent_from: process.env.SMTP_FROM,
+        sent_by: sentBy || "System",
         net_weight: parseFloat(docket.net_weight).toFixed(2),
         total_amount: parseFloat(docket.docket_total).toFixed(2),
       },
@@ -334,6 +341,7 @@ Ph. 08 8987 3433</p>`,
       success: true,
       message: "Email sent successfully",
       recipientEmail,
+      sentFrom: process.env.SMTP_FROM || "quarry@rirratjingu.com",
     });
   } catch (error) {
     console.error("❌ ERROR sending email:", error);
