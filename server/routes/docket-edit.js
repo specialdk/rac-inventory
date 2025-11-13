@@ -228,11 +228,13 @@ router.post("/edit", async (req, res) => {
     // ============================================
     // STEP 4: Update original docket record
     // ============================================
-    // Calculate net weight for update
-    const net_weight = (
+    // Calculate net weight and total revenue for update
+    const net_weight = parseFloat(
       parseFloat(gross_weight || originalDocket.gross_weight) -
       parseFloat(tare_weight || originalDocket.tare_weight)
     ).toFixed(2);
+    
+    const total_revenue = (parseFloat(net_weight) * parseFloat(unit_price)).toFixed(2);
 
     await client.query(
       `UPDATE stock_movements 
@@ -241,37 +243,39 @@ router.post("/edit", async (req, res) => {
            from_location_id = $3,
            customer_id = $4,
            unit_price = $5,
-           total_revenue = $14 * $5,
-           vehicle_id = $6,
-           driver_id = $7,
-           carrier_id = $8,
-           delivery_id = $9,
-           gross_weight = $10,
-           tare_weight = $11,
-           reference_number = $12,
-           notes = $13,
+           total_revenue = $6,
+           quantity = $7,
+           vehicle_id = $8,
+           driver_id = $9,
+           carrier_id = $10,
+           delivery_id = $11,
+           gross_weight = $12,
+           tare_weight = $13,
+           reference_number = $14,
+           notes = $15,
            edited_at = NOW(),
-           edited_by = $15,
-           edit_reason = $16
-       WHERE docket_number = $17`,
+           edited_by = $16,
+           edit_reason = $17
+       WHERE docket_number = $18`,
       [
-        movement_date || originalDocket.movement_date,
-        product_id,
-        from_location_id,
-        customer_id,
-        unit_price,
-        vehicle_id,
-        driver_id,
-        carrier_id,
-        delivery_id,
-        gross_weight || originalDocket.gross_weight,
-        tare_weight || originalDocket.tare_weight,
-        reference_number,
-        notes,
-        net_weight,
-        "system",
-        edit_reason,
-        original_docket_number,
+        movement_date || originalDocket.movement_date,  // $1
+        product_id,                                      // $2
+        from_location_id,                                // $3
+        customer_id,                                     // $4
+        unit_price,                                      // $5
+        total_revenue,                                   // $6 NEW
+        net_weight,                                      // $7 NEW
+        vehicle_id,                                      // $8
+        driver_id,                                       // $9
+        carrier_id,                                      // $10
+        delivery_id,                                     // $11
+        gross_weight || originalDocket.gross_weight,     // $12
+        tare_weight || originalDocket.tare_weight,       // $13
+        reference_number,                                // $14
+        notes,                                           // $15
+        "system",                                        // $16
+        edit_reason,                                     // $17
+        original_docket_number,                          // $18
       ]
     );
 
