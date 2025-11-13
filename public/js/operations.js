@@ -429,7 +429,7 @@ function closeProductionModal() {
 // ============================================
 async function saveProduction() {
   const formData = {
-    movement_date: document.getElementById("productionDate").value,
+    movement_date: new Date().toISOString(),
     product_id: document.getElementById("productionProduct").value,
     to_location_id: document.getElementById("productionLocation").value,
     quantity: parseFloat(document.getElementById("productionQuantity").value),
@@ -499,16 +499,13 @@ async function saveDemand() {
   const futureSaleDate = document.getElementById("demandDate").value;
   const userNotes = document.getElementById("demandNotes").value;
 
-  // Use TODAY for movement_date (when demand was recorded)
-  const today = new Date().toISOString().split("T")[0];
-
   // Add future date to notes
   const combinedNotes = `Requested delivery: ${futureSaleDate}${
     userNotes ? "\n" + userNotes : ""
   }`;
 
   const formData = {
-    movement_date: today, // TODAY (when demand was entered)
+    movement_date: new Date().toISOString(),
     product_id: document.getElementById("demandProduct").value,
     quantity: parseFloat(document.getElementById("demandQuantity").value),
     customer_id: document.getElementById("demandCustomer").value,
@@ -609,7 +606,7 @@ async function saveSales() {
   const netWeight = grossWeight - tareWeight;
 
   const formData = {
-    movement_date: document.getElementById("saleDate").value,
+    movement_date: new Date().toISOString(),
     product_id: document.getElementById("saleProduct").value,
     from_location_id: document.getElementById("saleLocation").value,
     gross_weight: grossWeight,
@@ -1130,7 +1127,7 @@ async function saveAdjustment() {
 
 async function saveStockAdjustment() {
   const formData = {
-    movement_date: document.getElementById("adjustmentDate").value,
+    movement_date: new Date().toISOString(),
     product_id: document.getElementById("adjustmentProduct").value,
     location_id: document.getElementById("adjustmentLocation").value,
     quantity: parseFloat(document.getElementById("adjustmentQuantity").value),
@@ -1180,7 +1177,7 @@ async function saveStockAdjustment() {
 
 async function saveStockTransfer() {
   const formData = {
-    movement_date: document.getElementById("adjustmentDate").value,
+    movement_date: new Date().toISOString(),
     product_id: document.getElementById("transferProduct").value,
     from_location_id: document.getElementById("transferFromLocation").value,
     to_location_id: document.getElementById("transferToLocation").value,
