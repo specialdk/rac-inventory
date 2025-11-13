@@ -354,8 +354,10 @@ Ph. 08 8987 3433</p>`,
 });
 
 // ============================================
-// HELPER FUNCTION: GENERATE WEIGHBRIDGE DOCKET PDF
+// IMPROVED PDF GENERATION - MATCHES DIRECT PRINT VERSION
+// Adds boxes around weights/prices and signature sections
 // ============================================
+
 function generateWeighbridgeDocketPDF(doc, docket) {
   // Company Header
   doc.fontSize(14).text("Rirratjingu Mining Pty Ltd", 50, 50);
@@ -379,6 +381,7 @@ function generateWeighbridgeDocketPDF(doc, docket) {
       width: 500,
     });
 
+  // Thick line under title
   doc.moveTo(50, 160).lineTo(550, 160).lineWidth(2).stroke();
 
   // Date/Time and Docket Number
@@ -408,114 +411,208 @@ function generateWeighbridgeDocketPDF(doc, docket) {
 
   // Customer
   doc.font("Helvetica-Bold").text("Customer:", leftCol, yPos);
-  doc.font("Helvetica").text(docket.customer_name || "-", leftCol + 100, yPos);
+  doc.font("Helvetica").text(docket.customer_name || "-", leftCol + 120, yPos);
+  yPos += lineHeight;
 
-  // Vehicle Rego
-  doc.font("Helvetica-Bold").text("Vehicle Rego:", rightCol, yPos);
-  doc.font("Helvetica").text(docket.vehicle_rego || "-", rightCol + 100, yPos);
+  // Destination/Job
+  doc.font("Helvetica-Bold").text("Destination/Job:", leftCol, yPos);
+  doc.font("Helvetica").text(docket.destination || "-", leftCol + 120, yPos);
+  yPos += lineHeight + 5;
+
+  // Carrier
+  doc.font("Helvetica-Bold").text("Carrier:", leftCol, yPos);
+  doc.font("Helvetica").text(docket.carrier_name || "-", leftCol + 120, yPos);
+  yPos += lineHeight;
+
+  // Vehicle
+  doc.font("Helvetica-Bold").text("Vehicle:", leftCol, yPos);
+  doc.font("Helvetica").text(docket.vehicle_rego || "-", leftCol + 120, yPos);
   yPos += lineHeight;
 
   // Product
   doc.font("Helvetica-Bold").text("Product:", leftCol, yPos);
-  doc.font("Helvetica").text(docket.product_name || "-", leftCol + 100, yPos);
-
-  // Stockpile Lot
-  doc.font("Helvetica-Bold").text("Stockpile Lot:", rightCol, yPos);
-  doc.font("Helvetica").text(docket.stockpile_lot || "-", rightCol + 100, yPos);
+  doc.font("Helvetica").text(docket.product_name || "-", leftCol + 120, yPos);
   yPos += lineHeight;
 
-  // Gross Weight
-  doc.font("Helvetica-Bold").text("Gross Weight:", leftCol, yPos);
-  doc
-    .font("Helvetica")
-    .text(
-      `${parseFloat(docket.gross_weight || 0).toFixed(2)} tonnes`,
-      leftCol + 100,
-      yPos
-    );
-
-  // Driver
-  doc.font("Helvetica-Bold").text("Driver:", rightCol, yPos);
-  doc.font("Helvetica").text(docket.driver_name || "-", rightCol + 100, yPos);
+  // Stockpile Lot No
+  doc.font("Helvetica-Bold").text("Stockpile Lot No:", leftCol, yPos);
+  doc.font("Helvetica").text(docket.stockpile_lot || "-", leftCol + 120, yPos);
   yPos += lineHeight;
 
-  // Tare Weight
-  doc.font("Helvetica-Bold").text("Tare Weight:", leftCol, yPos);
-  doc
-    .font("Helvetica")
-    .text(
-      `${parseFloat(docket.tare_weight || 0).toFixed(2)} tonnes`,
-      leftCol + 100,
-      yPos
-    );
-
-  // Destination
-  doc.font("Helvetica-Bold").text("Destination:", rightCol, yPos);
-  doc.font("Helvetica").text(docket.destination || "-", rightCol + 100, yPos);
-  yPos += lineHeight;
-
-  // Net Weight (highlighted)
-  doc.fontSize(11).font("Helvetica-Bold").text("Net Weight:", leftCol, yPos);
-  doc
-    .font("Helvetica-Bold")
-    .text(
-      `${parseFloat(docket.net_weight || 0).toFixed(2)} tonnes`,
-      leftCol + 100,
-      yPos
-    );
-  yPos += lineHeight + 10;
-
-  // Financial Section
-  doc.fontSize(10).font("Helvetica");
-
-  // PO Number
+  // Purchase Order / Job No
   if (docket.po_number) {
-    doc.font("Helvetica-Bold").text("PO Number:", leftCol, yPos);
-    doc.font("Helvetica").text(docket.po_number, leftCol + 100, yPos);
+    doc.font("Helvetica-Bold").text("Purchase Order / Job No.:", leftCol, yPos);
+    doc.font("Helvetica").text(docket.po_number, leftCol + 180, yPos);
     yPos += lineHeight;
   }
 
-  // Price breakdown
+  // Notes
+  if (docket.notes) {
+    doc.font("Helvetica-Bold").text("Notes:", leftCol, yPos);
+    doc.font("Helvetica").text(docket.notes, leftCol + 120, yPos);
+    yPos += lineHeight;
+  }
+
+  // ============================================
+  // WEIGHTS BOX (Right side)
+  // ============================================
+  const weightsBoxX = 380;
+  const weightsBoxY = 230;
+  const weightsBoxWidth = 170;
+  const weightsBoxHeight = 90;
+
+  // Draw weights box
+  doc
+    .rect(weightsBoxX, weightsBoxY, weightsBoxWidth, weightsBoxHeight)
+    .lineWidth(1)
+    .stroke();
+
+  // Weights content
+  let weightsY = weightsBoxY + 12;
+  doc.fontSize(10).font("Helvetica-Bold");
+
+  // Gross Wt
+  doc.text("Gross Wt :", weightsBoxX + 10, weightsY);
+  doc
+    .font("Helvetica")
+    .text(
+      `${parseFloat(docket.gross_weight || 0).toFixed(2)} t`,
+      weightsBoxX + 85,
+      weightsY
+    );
+  weightsY += 20;
+
+  // Tare Wt
+  doc.font("Helvetica-Bold").text("Tare Wt :", weightsBoxX + 10, weightsY);
+  doc
+    .font("Helvetica")
+    .text(
+      `${parseFloat(docket.tare_weight || 0).toFixed(2)} t`,
+      weightsBoxX + 85,
+      weightsY
+    );
+  weightsY += 20;
+
+  // Horizontal line before Net Wt
+  doc
+    .moveTo(weightsBoxX + 5, weightsY - 5)
+    .lineTo(weightsBoxX + weightsBoxWidth - 5, weightsY - 5)
+    .lineWidth(1)
+    .stroke();
+
+  // Net Wt (bold and larger)
+  doc.fontSize(11).font("Helvetica-Bold");
+  doc.text("Net Wt :", weightsBoxX + 10, weightsY);
+  doc.text(
+    `${parseFloat(docket.net_weight || 0).toFixed(2)} t`,
+    weightsBoxX + 85,
+    weightsY
+  );
+
+  // ============================================
+  // PRICES BOX (Right side, below weights)
+  // ============================================
+  const pricesBoxY = weightsBoxY + weightsBoxHeight + 20;
+  const pricesBoxHeight = 90;
+
+  // Draw prices box
+  doc
+    .rect(weightsBoxX, pricesBoxY, weightsBoxWidth, pricesBoxHeight)
+    .lineWidth(1)
+    .stroke();
+
+  // Prices content
+  let pricesY = pricesBoxY + 12;
+  doc.fontSize(10).font("Helvetica-Bold");
+
   const docketFee = parseFloat(docket.docket_fee || 0);
   const docketGST = parseFloat(docket.docket_gst || 0);
   const docketTotal = parseFloat(docket.docket_total || 0);
 
-  doc.font("Helvetica-Bold").text("Fee (ex GST):", leftCol, yPos);
-  doc.font("Helvetica").text(`$${docketFee.toFixed(2)}`, leftCol + 100, yPos);
-  yPos += lineHeight;
-
-  doc.font("Helvetica-Bold").text("GST:", leftCol, yPos);
-  doc.font("Helvetica").text(`$${docketGST.toFixed(2)}`, leftCol + 100, yPos);
-  yPos += lineHeight;
-
+  // Docket Fee
+  doc.text("Docket Fee $", weightsBoxX + 10, pricesY);
   doc
-    .fontSize(11)
-    .font("Helvetica-Bold")
-    .text("Total (inc GST):", leftCol, yPos);
-  doc
-    .font("Helvetica-Bold")
-    .text(`$${docketTotal.toFixed(2)}`, leftCol + 100, yPos);
-  yPos += lineHeight + 10;
-
-  // Notes section
-  if (docket.notes) {
-    doc.fontSize(9).font("Helvetica-Bold").text("Notes:", leftCol, yPos);
-    yPos += 15;
-    doc.font("Helvetica").text(docket.notes, leftCol, yPos, { width: 500 });
-    yPos += 30;
-  }
-
-  // Footer
-  yPos = 700;
-  doc
-    .fontSize(8)
     .font("Helvetica")
-    .text(
-      "This docket represents the official record of the transaction.",
-      50,
-      yPos,
-      { align: "center", width: 500 }
-    );
+    .text(`$${docketFee.toFixed(2)}`, weightsBoxX + 100, pricesY);
+  pricesY += 20;
+
+  // Docket GST
+  doc.font("Helvetica-Bold").text("Docket GST $", weightsBoxX + 10, pricesY);
+  doc
+    .font("Helvetica")
+    .text(`$${docketGST.toFixed(2)}`, weightsBoxX + 100, pricesY);
+  pricesY += 20;
+
+  // Horizontal line before Total
+  doc
+    .moveTo(weightsBoxX + 5, pricesY - 5)
+    .lineTo(weightsBoxX + weightsBoxWidth - 5, pricesY - 5)
+    .lineWidth(1)
+    .stroke();
+
+  // Docket Total (bold and larger)
+  doc.fontSize(11).font("Helvetica-Bold");
+  doc.text("Docket Total $", weightsBoxX + 10, pricesY);
+  doc.text(`$${docketTotal.toFixed(2)}`, weightsBoxX + 100, pricesY);
+
+  // ============================================
+  // SIGNATURE SECTIONS (Bottom)
+  // ============================================
+  const signaturesY = 620;
+  const signaturesLineLength = 200;
+
+  doc.fontSize(10).font("Helvetica-Bold");
+
+  // Receivers section (left)
+  doc.text("Receivers Name :", leftCol, signaturesY);
+  // Line for receivers name
+  doc
+    .moveTo(leftCol, signaturesY + 35)
+    .lineTo(leftCol + signaturesLineLength, signaturesY + 35)
+    .lineWidth(1)
+    .stroke();
+
+  doc.text("Receivers Signature :", leftCol, signaturesY + 50);
+  // Line for receivers signature
+  doc
+    .moveTo(leftCol, signaturesY + 85)
+    .lineTo(leftCol + signaturesLineLength, signaturesY + 85)
+    .lineWidth(1)
+    .stroke();
+
+  // Drivers section (right)
+  doc.text("Drivers Name :", rightCol + 50, signaturesY);
+  // Driver name filled in
+  doc
+    .font("Helvetica")
+    .text(docket.driver_name || "", rightCol + 50, signaturesY + 20);
+  // Line for drivers name
+  doc
+    .moveTo(rightCol + 50, signaturesY + 35)
+    .lineTo(rightCol + 50 + signaturesLineLength, signaturesY + 35)
+    .lineWidth(1)
+    .stroke();
+
+  doc
+    .font("Helvetica-Bold")
+    .text("Drivers Signature :", rightCol + 50, signaturesY + 50);
+  // Line for drivers signature
+  doc
+    .moveTo(rightCol + 50, signaturesY + 85)
+    .lineTo(rightCol + 50 + signaturesLineLength, signaturesY + 85)
+    .lineWidth(1)
+    .stroke();
+
+  // ============================================
+  // BOTTOM SEPARATOR LINE
+  // ============================================
+  doc
+    .moveTo(50, signaturesY - 20)
+    .lineTo(550, signaturesY - 20)
+    .lineWidth(2)
+    .stroke();
 }
+
+module.exports = { generateWeighbridgeDocketPDF };
 
 module.exports = router;
