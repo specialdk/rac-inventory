@@ -714,9 +714,16 @@ router.post("/adjustment", async (req, res) => {
       [product_id, location_id]
     );
 
-    const currentQty = stockCheck.rows[0]?.quantity || 0;
-    const avgCost = unit_cost || stockCheck.rows[0]?.average_cost || 0;
-    const newQty = parseFloat(currentQty) + parseFloat(quantity);
+    const currentQty = parseFloat(stockCheck.rows[0]?.quantity || 0);
+    const avgCost = parseFloat(
+      unit_cost || stockCheck.rows[0]?.average_cost || 0
+    );
+    const adjustmentQty = parseFloat(quantity);
+    const newQty = currentQty + adjustmentQty;
+
+    console.log(
+      `📊 Adjustment calc: ${currentQty} + ${adjustmentQty} = ${newQty}`
+    );
 
     // CRITICAL: Validate single product per location (only if ADDING stock)
     if (quantity > 0) {

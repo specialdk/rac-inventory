@@ -59,6 +59,7 @@ router.get("/current", async (req, res) => {
   LEFT JOIN current_stock cs ON p.product_id = cs.product_id
   LEFT JOIN locations l ON cs.location_id = l.location_id
   WHERE p.is_active = true 
+    AND (l.is_active = true OR l.location_id IS NULL)
     AND (cs.quantity > 0 OR 
          EXISTS (SELECT 1 FROM demand_orders 
                  WHERE product_id = p.product_id 
