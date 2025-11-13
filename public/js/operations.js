@@ -364,21 +364,17 @@ async function loadRecentMovements() {
     movements.forEach((movement) => {
       const row = document.createElement("tr");
 
-      // Format date (use movement_date for the DATE)
-      const date = new Date(movement.movement_date);
-      const dateStr = date.toLocaleDateString("en-AU", {
+      // Use movement_date for BOTH date and time
+      const movementDateTime = new Date(movement.movement_date);
+      const dateStr = movementDateTime.toLocaleDateString("en-AU", {
         day: "2-digit",
         month: "short",
       });
-
-      // Format time (use created_at for the actual TIME)
-      const createdDate = new Date(movement.created_at);
-      const timeStr = createdDate.toLocaleTimeString("en-AU", {
+      const timeStr = movementDateTime.toLocaleTimeString("en-AU", {
         hour: "2-digit",
         minute: "2-digit",
       });
 
-      // Movement type badge
       // Movement type badge
       let badgeClass = "badge-primary";
       if (movement.movement_type === "PRODUCTION") badgeClass = "badge-success";
@@ -925,16 +921,13 @@ function displayMovements(movements) {
   movements.forEach((movement) => {
     const row = document.createElement("tr");
 
-    // Format date (use movement_date for the DATE)
-    const date = new Date(movement.movement_date);
-    const dateStr = date.toLocaleDateString("en-AU", {
+    // Use movement_date for BOTH date and time
+    const movementDateTime = new Date(movement.movement_date);
+    const dateStr = movementDateTime.toLocaleDateString("en-AU", {
       day: "2-digit",
       month: "short",
     });
-
-    // Format time (use created_at for the actual TIME)
-    const createdDate = new Date(movement.created_at);
-    const timeStr = createdDate.toLocaleTimeString("en-AU", {
+    const timeStr = movementDateTime.toLocaleTimeString("en-AU", {
       hour: "2-digit",
       minute: "2-digit",
     });
