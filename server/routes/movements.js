@@ -517,13 +517,13 @@ router.get("/", async (req, res) => {
     }
 
     if (date_from) {
-      sql += ` AND sm.movement_date >= $${paramCount}`;
+      sql += ` AND sm.movement_date::date >= $${paramCount}::date`;
       params.push(date_from);
       paramCount++;
     }
 
     if (date_to) {
-      sql += ` AND sm.movement_date <= $${paramCount}`;
+      sql += ` AND sm.movement_date::date <= $${paramCount}::date`;
       params.push(date_to);
       paramCount++;
     }
