@@ -512,7 +512,7 @@ async function submitEdit() {
   try {
     const correctedData = {
       original_docket_number: originalDocket.docket_number,
-      movement_date: document.getElementById("movementDate").value,
+      movement_date: new Date().toISOString(),
       gross_weight: parseFloat(document.getElementById("grossWeight").value),
       tare_weight: parseFloat(document.getElementById("tareWeight").value),
       product_id: parseInt(document.getElementById("productId").value),
