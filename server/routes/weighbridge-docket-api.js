@@ -453,7 +453,7 @@ function generateWeighbridgeDocketPDF(doc, docket) {
 
   // Purchase Order / Job No
   if (docket.po_number) {
-    doc.font("Helvetica-Bold").text("Purchase Order / Job No.:", leftCol, yPos);
+    doc.font("Helvetica-Bold").text("Purchase Order | Job :", leftCol, yPos);
     doc.font("Helvetica").text(docket.po_number, leftCol + 180, yPos);
     yPos += lineHeight;
   }
