@@ -338,6 +338,7 @@ async function loadCustomerData(customerId) {
       customer.contact_person || "";
     document.getElementById("customerPhone").value = customer.phone || "";
     document.getElementById("customerEmail").value = customer.email || "";
+    document.getElementById("customerEmailCC").value = customer.email_cc || "";
     document.getElementById("customerAddress").value = customer.address || "";
     document.getElementById("customerType").value =
       customer.customer_type || "";
@@ -355,6 +356,7 @@ async function saveCustomer() {
     contact_person: document.getElementById("contactPerson").value,
     phone: document.getElementById("customerPhone").value,
     email: document.getElementById("customerEmail").value,
+    email_cc: document.getElementById("customerEmailCC").value,
     address: document.getElementById("customerAddress").value,
     customer_type: document.getElementById("customerType").value,
   };

@@ -62,6 +62,7 @@ router.post("/", async (req, res) => {
       contact_person,
       phone,
       email,
+      email_cc,
       address,
       customer_type,
     } = req.body;
@@ -74,8 +75,8 @@ router.post("/", async (req, res) => {
 
     const result = await query(
       `INSERT INTO customers 
-       (customer_code, customer_name, contact_person, phone, email, address, customer_type)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       (customer_code, customer_name, contact_person, phone, email, email_cc, address, customer_type)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
       [
         customer_code,
@@ -83,6 +84,7 @@ router.post("/", async (req, res) => {
         contact_person,
         phone,
         email,
+        email_cc,
         address,
         customer_type,
       ]
@@ -109,6 +111,7 @@ router.put("/:id", async (req, res) => {
       contact_person,
       phone,
       email,
+      email_cc,
       address,
       customer_type,
       is_active,
@@ -121,10 +124,11 @@ router.put("/:id", async (req, res) => {
            contact_person = $3,
            phone = $4,
            email = $5,
-           address = $6,
-           customer_type = $7,
-           is_active = COALESCE($8, is_active)
-       WHERE customer_id = $9
+           email_cc = $6,
+           address = $7,
+           customer_type = $8,
+           is_active = COALESCE($9, is_active)
+       WHERE customer_id = $10
        RETURNING *`,
       [
         customer_code,
@@ -132,6 +136,7 @@ router.put("/:id", async (req, res) => {
         contact_person,
         phone,
         email,
+        email_cc,
         address,
         customer_type,
         is_active,
