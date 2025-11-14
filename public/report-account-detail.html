@@ -772,10 +772,22 @@
 
         customerEmail = customerEmail.trim();
 
+        // Debug: Log the email value
+        console.log("DEBUG - Email to validate:", customerEmail);
+        console.log("DEBUG - Email length:", customerEmail.length);
+        console.log(
+          "DEBUG - Email charCodes:",
+          Array.from(customerEmail).map((c) => c.charCodeAt(0))
+        );
+
         // Basic email validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(customerEmail)) {
-          alert("Invalid email address. Please try again.");
+          alert(
+            "Invalid email address. Please try again.\n\nEmail received: '" +
+              customerEmail +
+              "'"
+          );
           return;
         }
 
