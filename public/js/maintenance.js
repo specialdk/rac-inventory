@@ -321,6 +321,7 @@ function openCustomerModal(customerId = null) {
     title.textContent = "Add Customer";
     form.reset();
     document.getElementById("customerId").value = "";
+    document.getElementById("customerActive").checked = true;
   }
 
   modal.style.display = "flex";
@@ -342,7 +343,8 @@ async function loadCustomerData(customerId) {
     document.getElementById("customerAddress").value = customer.address || "";
     document.getElementById("customerType").value =
       customer.customer_type || "";
-    document.getElementById("customerActive").checked = customer.is_active !== false;
+    document.getElementById("customerActive").checked =
+      customer.is_active !== false;
   } catch (error) {
     console.error("Error loading customer:", error);
     alert("Failed to load customer data");
@@ -360,6 +362,7 @@ async function saveCustomer() {
     email_cc: document.getElementById("customerEmailCC").value,
     address: document.getElementById("customerAddress").value,
     customer_type: document.getElementById("customerType").value,
+    is_active: document.getElementById("customerActive").checked,
   };
 
   try {
