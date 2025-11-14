@@ -369,6 +369,14 @@
           >
             📦 Download Report + All Dockets
           </button>
+          <button
+            class="btn btn-success"
+            id="emailReportBtn"
+            onclick="emailAccountDetailReport()"
+            style="display: none"
+          >
+            📧 Email Report
+          </button>
         </div>
       </div>
       <!-- END Filter Section -->
@@ -453,6 +461,7 @@
     <script>
       const API_BASE_URL = "/api";
       let currentReportData = null; // Store current report data for downloads
+      let customerEmailData = null; // Store customer email/CC for email feature
 
       document.addEventListener("DOMContentLoaded", function () {
         const today = new Date();
@@ -473,7 +482,25 @@
             const option = document.createElement("option");
             option.value = customer.customer_id;
             option.textContent = customer.customer_name;
+            // Store email data as data attributes
+            option.dataset.email = customer.email || "";
+            option.dataset.emailCc = customer.email_cc || "";
             select.appendChild(option);
+          });
+
+          // Listen for customer selection changes
+          select.addEventListener("change", function () {
+            const selectedOption = this.options[this.selectedIndex];
+            if (selectedOption.value) {
+              customerEmailData = {
+                customerId: selectedOption.value,
+                customerName: selectedOption.textContent,
+                email: selectedOption.dataset.email || "",
+                emailCc: selectedOption.dataset.emailCc || "",
+              };
+            } else {
+              customerEmailData = null;
+            }
           });
         } catch (error) {
           console.error("Error loading customers:", error);
@@ -597,6 +624,13 @@
           "grandTotal"
         ).textContent = `$${totalAmount.toFixed(2)}`;
 
+        // Show email button only if customer selected
+        const emailBtn = document.getElementById("emailReportBtn");
+        if (customerEmailData && customerEmailData.customerId) {
+          emailBtn.style.display = "inline-block";
+        } else {
+          emailBtn.style.display = "none";
+        }
         showReport();
       }
 
@@ -708,6 +742,133 @@
         document.getElementById("reportContent").style.display = "none";
         document.getElementById("emptyState").style.display = "none";
         document.getElementById("loadingState").style.display = "block";
+      }
+
+      async function emailAccountDetailReport() {
+        if (!currentReportData) {
+          alert("Please generate a report first");
+          return;
+        }
+
+        if (!customerEmailData || !customerEmailData.customerId) {
+          alert("Please select a customer to email the report");
+          return;
+        }
+
+        // Get defaults from customer record
+        const defaultEmail = customerEmailData.email || "";
+        const defaultCcEmail = customerEmailData.emailCc || "";
+
+        // ALWAYS prompt - with pre-filled value
+        let customerEmail = prompt(
+          "Enter recipient email address for Account Detail Report:\n\n(Pre-filled from customer record - you can edit if needed)",
+          defaultEmail
+        );
+
+        // If user cancelled or left empty
+        if (!customerEmail || customerEmail.trim() === "") {
+          return;
+        }
+
+        customerEmail = customerEmail.trim();
+
+        // Basic email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(customerEmail)) {
+          alert("Invalid email address. Please try again.");
+          return;
+        }
+
+        // Prompt for CC email
+        let ccEmail = prompt(
+          "Enter CC email address (optional):\n\n(Pre-filled from customer record - you can edit or leave blank)",
+          defaultCcEmail
+        );
+
+        // If user cancelled CC prompt, set to empty
+        if (ccEmail === null) {
+          ccEmail = "";
+        } else {
+          ccEmail = ccEmail.trim();
+        }
+
+        // Validate CC email if provided
+        if (ccEmail && !emailRegex.test(ccEmail)) {
+          alert("Invalid CC email address. Sending without CC.");
+          ccEmail = "";
+        }
+
+        // Get date range for confirmation
+        const dateFrom = document.getElementById("dateFrom").value;
+        const dateTo = document.getElementById("dateTo").value;
+
+        // Build confirmation message
+        let confirmMsg = `Send Account Detail Report to:\n\nCustomer: ${
+          customerEmailData.customerName
+        }\nDate Range: ${formatDate(dateFrom)} to ${formatDate(
+          dateTo
+        )}\n\nTo: ${customerEmail}`;
+        if (ccEmail) {
+          confirmMsg += `\nCC: ${ccEmail}`;
+        }
+        confirmMsg +=
+          "\n\nThis will include the report PDF and all individual docket PDFs in a ZIP file.\n\nProceed?";
+
+        if (!confirm(confirmMsg)) {
+          return;
+        }
+
+        // Show loading
+        const emailBtn = document.getElementById("emailReportBtn");
+        const originalText = emailBtn.innerHTML;
+        emailBtn.disabled = true;
+        emailBtn.innerHTML = "⏳ Sending...";
+
+        try {
+          const customerId = document.getElementById("customerFilter").value;
+          const productId = document.getElementById("productFilter").value;
+
+          const response = await fetch(
+            `${API_BASE_URL}/reports/account-detail/email`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                dateFrom,
+                dateTo,
+                customerId,
+                productId,
+                recipientEmail: customerEmail,
+                ccEmail: ccEmail || null,
+                customerName: customerEmailData.customerName,
+              }),
+            }
+          );
+
+          const data = await response.json();
+
+          if (data.success) {
+            let successMsg = `✅ Account Detail Report emailed successfully to ${customerEmail}`;
+            if (ccEmail) {
+              successMsg += `\nCC: ${ccEmail}`;
+            }
+            successMsg += `\n\nZIP file contained:\n- Account Detail Report PDF\n- ${
+              data.docketCount || 0
+            } Weighbridge Docket PDFs`;
+            alert(successMsg);
+          } else {
+            alert(`❌ Error sending email: ${data.message}`);
+          }
+        } catch (error) {
+          console.error("Error emailing report:", error);
+          alert("❌ Error sending email. Please try again.");
+        } finally {
+          // Reset button
+          emailBtn.disabled = false;
+          emailBtn.innerHTML = originalText;
+        }
       }
     </script>
   </body>

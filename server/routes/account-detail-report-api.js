@@ -11,6 +11,8 @@ const PDFDocument = require("pdfkit");
 const archiver = require("archiver");
 const path = require("path");
 const fs = require("fs");
+const nodemailer = require("nodemailer");
+const { logAuditEvent } = require("./audit-log");
 
 // ============================================
 // GET ACCOUNT DETAIL REPORT DATA (JSON)
@@ -426,6 +428,357 @@ router.get("/reports/account-detail/pdf-with-dockets", async (req, res) => {
         error: error.message,
       });
     }
+  }
+});
+
+// ============================================
+// EMAIL ACCOUNT DETAIL REPORT WITH ZIP
+// ============================================
+router.post("/reports/account-detail/email", async (req, res) => {
+  console.log("📧 Account Detail Report Email Requested");
+  console.log("📝 Request Body:", req.body);
+
+  try {
+    const {
+      dateFrom,
+      dateTo,
+      customerId,
+      productId,
+      recipientEmail,
+      ccEmail,
+      customerName,
+    } = req.body;
+
+    if (!recipientEmail) {
+      return res.status(400).json({
+        success: false,
+        message: "Recipient email is required",
+      });
+    }
+
+    if (!customerId) {
+      return res.status(400).json({
+        success: false,
+        message: "Customer must be selected for email reports",
+      });
+    }
+
+    console.log("📅 Date Range:", { dateFrom, dateTo });
+    console.log("👤 Customer ID:", customerId);
+    console.log("📧 Recipient:", recipientEmail);
+    if (ccEmail) console.log("📧 CC:", ccEmail);
+
+    // Build SQL query for report dockets (reuse existing logic)
+    let query = `
+      SELECT 
+        sm.movement_id,
+        sm.movement_date,
+        sm.docket_number as docket_no,
+        v.registration as rego,
+        p.product_name,
+        del.delivery_name as destination,
+        (sm.quantity - COALESCE(sm.tare_weight, 0)) as net_weight,
+        sm.unit_price,
+        sm.total_revenue as fee,
+        (sm.total_revenue * 0.10) as gst,
+        (sm.total_revenue * 1.10) as total,
+        c.customer_name as account
+      FROM stock_movements sm
+      LEFT JOIN customers c ON sm.customer_id = c.customer_id
+      LEFT JOIN products p ON sm.product_id = p.product_id
+      LEFT JOIN vehicles v ON sm.vehicle_id = v.vehicle_id
+      LEFT JOIN deliveries del ON sm.delivery_id = del.delivery_id
+      WHERE sm.movement_type = 'SALES'
+        AND sm.movement_date BETWEEN $1 AND $2
+    `;
+
+    const params = [dateFrom, dateTo];
+    let paramCount = 2;
+
+    if (customerId) {
+      paramCount++;
+      query += ` AND sm.customer_id = $${paramCount}`;
+      params.push(customerId);
+    }
+
+    if (productId) {
+      paramCount++;
+      query += ` AND sm.product_id = $${paramCount}`;
+      params.push(productId);
+    }
+
+    query += " ORDER BY sm.movement_date ASC, sm.docket_number ASC";
+
+    // Execute query
+    const docketsResult = await pool.query(query, params);
+    const reportDockets = docketsResult.rows;
+
+    console.log(`✅ Query returned ${reportDockets.length} dockets for email`);
+
+    if (reportDockets.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No dockets found for the selected criteria",
+      });
+    }
+
+    // Generate ZIP in memory (don't stream to response)
+    console.log("📦 Generating ZIP file in memory...");
+
+    const archiveBuffers = [];
+    const archive = archiver("zip", {
+      zlib: { level: 9 },
+    });
+
+    // Collect archive data
+    archive.on("data", (chunk) => archiveBuffers.push(chunk));
+    archive.on("error", (err) => {
+      throw err;
+    });
+
+    // 1. Generate and add Account Detail Report PDF
+    console.log("📄 Generating Account Detail Report PDF...");
+    const reportPDF = new PDFDocument({
+      size: "A4",
+      layout: "landscape",
+      margin: 50,
+    });
+
+    const reportBuffer = [];
+    reportPDF.on("data", (chunk) => reportBuffer.push(chunk));
+
+    generateAccountDetailPDF(reportPDF, reportDockets, dateFrom, dateTo);
+    reportPDF.end();
+
+    await new Promise((resolve) => reportPDF.on("end", resolve));
+
+    const reportPDFBuffer = Buffer.concat(reportBuffer);
+    archive.append(reportPDFBuffer, {
+      name: `Account_Detail_Report_${dateFrom}_to_${dateTo}.pdf`,
+    });
+
+    console.log("✅ Account Detail Report added to ZIP");
+
+    // 2. Generate and add individual Weighbridge Dockets
+    console.log(`📋 Generating ${reportDockets.length} Weighbridge Dockets...`);
+
+    for (let i = 0; i < reportDockets.length; i++) {
+      const docket = reportDockets[i];
+      console.log(
+        `  📄 Generating docket ${i + 1}/${reportDockets.length}: ${
+          docket.docket_no
+        }`
+      );
+
+      // Get full docket data
+      const fullDocketQuery = `
+        SELECT 
+          sm.movement_id,
+          sm.movement_date,
+          sm.docket_number,
+          sm.quantity as net_weight,
+          sm.tare_weight,
+          (sm.quantity + COALESCE(sm.tare_weight, 0)) as gross_weight,
+          sm.unit_price,
+          sm.total_revenue as docket_fee,
+          (sm.total_revenue * 0.10) as docket_gst,
+          (sm.total_revenue * 1.10) as docket_total,
+          sm.reference_number as po_number,
+          sm.notes,
+          c.customer_name,
+          v.registration as vehicle_rego,
+          p.product_name,
+          p.product_code,
+          l.location_code as stockpile_lot,
+          d.driver_name,
+          del.delivery_name as destination,
+          sm.delivery_id
+        FROM stock_movements sm
+        LEFT JOIN customers c ON sm.customer_id = c.customer_id
+        LEFT JOIN vehicles v ON sm.vehicle_id = v.vehicle_id
+        LEFT JOIN products p ON sm.product_id = p.product_id
+        LEFT JOIN locations l ON sm.from_location_id = l.location_id
+        LEFT JOIN drivers d ON sm.driver_id = d.driver_id
+        LEFT JOIN deliveries del ON sm.delivery_id = del.delivery_id
+        WHERE sm.docket_number = $1
+          AND sm.movement_type = 'SALES'
+      `;
+
+      const fullDocketResult = await pool.query(fullDocketQuery, [
+        docket.docket_no,
+      ]);
+
+      if (fullDocketResult.rows.length > 0) {
+        const fullDocket = fullDocketResult.rows[0];
+
+        const docketPDF = new PDFDocument({
+          size: "A4",
+          margin: 50,
+        });
+
+        const docketBuffer = [];
+        docketPDF.on("data", (chunk) => docketBuffer.push(chunk));
+
+        generateWeighbridgeDocketPDF(docketPDF, fullDocket);
+        docketPDF.end();
+
+        await new Promise((resolve) => docketPDF.on("end", resolve));
+
+        const docketPDFBuffer = Buffer.concat(docketBuffer);
+        archive.append(docketPDFBuffer, {
+          name: `Dockets/Docket_${fullDocket.docket_number}.pdf`,
+        });
+
+        console.log(`  ✅ Docket ${fullDocket.docket_number} added to ZIP`);
+      }
+    }
+
+    console.log("📦 Finalizing ZIP archive...");
+    archive.finalize();
+
+    // Wait for archive to finish
+    await new Promise((resolve, reject) => {
+      archive.on("end", resolve);
+      archive.on("error", reject);
+    });
+
+    const zipBuffer = Buffer.concat(archiveBuffers);
+    console.log(
+      `✅ ZIP generated: ${(zipBuffer.length / 1024 / 1024).toFixed(2)} MB`
+    );
+
+    // Send email with ZIP attachment
+    console.log("📧 Preparing email...");
+
+    const smtpPort = parseInt(process.env.SMTP_PORT) || 587;
+    const useSSL = smtpPort === 465;
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || "smtp.office365.com",
+      port: smtpPort,
+      secure: useSSL,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 10000,
+    });
+
+    // Calculate totals for email
+    let totalAmount = 0;
+    reportDockets.forEach((docket) => {
+      totalAmount += parseFloat(docket.total) || 0;
+    });
+
+    const mailOptions = {
+      from: process.env.SMTP_FROM || "quarry@rirratjingu.com",
+      to: recipientEmail,
+      cc: ccEmail || undefined,
+      replyTo: process.env.SMTP_FROM || "quarry@rirratjingu.com",
+      subject: `Account Detail Report - ${customerName} - ${formatDate(
+        dateFrom
+      )} to ${formatDate(dateTo)}`,
+      text: `Dear ${customerName},
+
+Please find attached your Account Detail Report for the period ${formatDate(
+        dateFrom
+      )} to ${formatDate(dateTo)}.
+
+This ZIP file contains:
+- Complete Account Detail Report (PDF)
+- ${reportDockets.length} Individual Weighbridge Delivery Dockets (PDF)
+
+Summary:
+- Total Transactions: ${reportDockets.length}
+- Total Amount: $${totalAmount.toFixed(2)}
+
+Kind regards,
+Rirratjingu Mining Pty Ltd
+Melville Rd, Nhulunbuy NT 0881
+Ph. 08 8987 3433`,
+      html: `<p>Dear <strong>${customerName}</strong>,</p>
+
+<p>Please find attached your Account Detail Report for the period <strong>${formatDate(
+        dateFrom
+      )} to ${formatDate(dateTo)}</strong>.</p>
+
+<p><strong>This ZIP file contains:</strong></p>
+<ul>
+  <li>Complete Account Detail Report (PDF)</li>
+  <li>${reportDockets.length} Individual Weighbridge Delivery Dockets (PDF)</li>
+</ul>
+
+<table style="margin: 20px 0; border-collapse: collapse;">
+  <tr>
+    <td style="padding: 5px;"><strong>Total Transactions:</strong></td>
+    <td style="padding: 5px;">${reportDockets.length}</td>
+  </tr>
+  <tr>
+    <td style="padding: 5px;"><strong>Total Amount:</strong></td>
+    <td style="padding: 5px;">$${totalAmount.toFixed(2)}</td>
+  </tr>
+</table>
+
+<p>Kind regards,<br>
+<strong>Rirratjingu Mining Pty Ltd</strong><br>
+Melville Rd, Nhulunbuy NT 0881<br>
+Ph. 08 8987 3433</p>`,
+      attachments: [
+        {
+          filename: `Account_Detail_Report_${dateFrom}_to_${dateTo}.zip`,
+          content: zipBuffer,
+          contentType: "application/zip",
+        },
+      ],
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    console.log(
+      `✅ Email sent successfully to ${recipientEmail}${
+        ccEmail ? ` (CC: ${ccEmail})` : ""
+      }`
+    );
+
+    // Log email sent
+    await logAuditEvent({
+      user_email: process.env.SMTP_FROM || "quarry@rirratjingu.com",
+      action_type: "EMAIL_SENT",
+      entity_type: "ACCOUNT_DETAIL_REPORT",
+      entity_id: parseInt(customerId),
+      description: `Account Detail Report emailed to ${recipientEmail}${
+        ccEmail ? ` (CC: ${ccEmail})` : ""
+      }`,
+      new_values: {
+        customer_name: customerName,
+        date_range: `${dateFrom} to ${dateTo}`,
+        recipient: recipientEmail,
+        cc_recipient: ccEmail || null,
+        docket_count: reportDockets.length,
+        total_amount: totalAmount.toFixed(2),
+      },
+      ip_address:
+        req.headers["x-forwarded-for"] || req.connection.remoteAddress,
+      success: true,
+    });
+
+    res.json({
+      success: true,
+      message: "Email sent successfully",
+      recipientEmail,
+      ccEmail: ccEmail || null,
+      docketCount: reportDockets.length,
+      sentFrom: process.env.SMTP_FROM || "quarry@rirratjingu.com",
+    });
+  } catch (error) {
+    console.error("❌ ERROR sending email:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error sending email",
+      error: error.message,
+    });
   }
 });
 
