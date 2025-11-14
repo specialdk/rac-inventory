@@ -342,6 +342,7 @@ async function loadCustomerData(customerId) {
     document.getElementById("customerAddress").value = customer.address || "";
     document.getElementById("customerType").value =
       customer.customer_type || "";
+    document.getElementById("customerActive").checked = customer.is_active !== false;
   } catch (error) {
     console.error("Error loading customer:", error);
     alert("Failed to load customer data");
