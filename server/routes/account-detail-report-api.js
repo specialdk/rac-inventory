@@ -1114,22 +1114,16 @@ function generateAccountDetailPDF(doc, dockets, dateFrom, dateTo) {
 
   const headers = [
     { text: "Account", x: 50, width: 80 },
-    { text: "Date", x: 135, width: 60 },
-    { text: "Docket #", x: 200, width: 50 },
-    { text: "Rego", x: 255, width: 50 },
-    { text: "Product", x: 310, width: 100 },
-    { text: "Destination", x: 415, width: 80 },
-    { text: "Net Wt", x: 500, width: 45 },
-    { text: "Fee", x: 550, width: 50 },
-    { text: "GST", x: 605, width: 45 },
-    { text: "Total", x: 655, width: 50 },
+    { text: "Date", x: 135, width: 90 },
+    { text: "Docket #", x: 230, width: 50 },
+    { text: "Rego", x: 285, width: 50 },
+    { text: "Product", x: 340, width: 100 },
+    { text: "Destination", x: 445, width: 80 },
+    { text: "Net Wt", x: 530, width: 45 },
+    { text: "Fee", x: 580, width: 50 },
+    { text: "GST", x: 635, width: 45 },
+    { text: "Total", x: 685, width: 50 },
   ];
-
-  // Draw header line
-  doc
-    .moveTo(50, yPos + 15)
-    .lineTo(750, yPos + 15)
-    .stroke();
 
   // Print headers
   headers.forEach((header) => {
@@ -1137,8 +1131,8 @@ function generateAccountDetailPDF(doc, dockets, dateFrom, dateTo) {
   });
 
   yPos += 25;
+  // Draw line under headers
   doc.moveTo(50, yPos).lineTo(750, yPos).stroke();
-
   // Print data rows
   let totalNetWt = 0,
     totalFee = 0,
@@ -1168,15 +1162,15 @@ function generateAccountDetailPDF(doc, dockets, dateFrom, dateTo) {
     // Print row data
     doc.fontSize(8);
     doc.text(docket.account || "-", 50, yPos, { width: 80 });
-    doc.text(formatDateShort(docket.movement_date), 135, yPos, { width: 60 });
-    doc.text(docket.docket_no || "-", 200, yPos, { width: 50 });
-    doc.text(docket.rego || "-", 255, yPos, { width: 50 });
-    doc.text(docket.product_name || "-", 310, yPos, { width: 100 });
-    doc.text(docket.destination || "-", 415, yPos, { width: 80 });
-    doc.text(`${netWt.toFixed(2)} t`, 500, yPos, { width: 45 });
-    doc.text(`$${fee.toFixed(2)}`, 550, yPos, { width: 50 });
-    doc.text(`$${gst.toFixed(2)}`, 605, yPos, { width: 45 });
-    doc.text(`$${total.toFixed(2)}`, 655, yPos, { width: 50 });
+    doc.text(formatDateShort(docket.movement_date), 135, yPos, { width: 90 });
+    doc.text(docket.docket_no || "-", 230, yPos, { width: 50 });
+    doc.text(docket.rego || "-", 285, yPos, { width: 50 });
+    doc.text(docket.product_name || "-", 340, yPos, { width: 100 });
+    doc.text(docket.destination || "-", 445, yPos, { width: 80 });
+    doc.text(`${netWt.toFixed(2)} t`, 530, yPos, { width: 45 });
+    doc.text(`$${fee.toFixed(2)}`, 580, yPos, { width: 50 });
+    doc.text(`$${gst.toFixed(2)}`, 635, yPos, { width: 45 });
+    doc.text(`$${total.toFixed(2)}`, 685, yPos, { width: 50 });
 
     yPos += 18;
   });
@@ -1193,10 +1187,10 @@ function generateAccountDetailPDF(doc, dockets, dateFrom, dateTo) {
 
   doc.fontSize(9).font("Helvetica-Bold");
   doc.text("Grand Total", 50, yPos);
-  doc.text(`${totalNetWt.toFixed(1)} t`, 500, yPos, { width: 45 });
-  doc.text(`$${totalFee.toFixed(2)}`, 550, yPos, { width: 50 });
-  doc.text(`$${totalGST.toFixed(2)}`, 605, yPos, { width: 45 });
-  doc.text(`$${totalAmount.toFixed(2)}`, 655, yPos, { width: 50 });
+  doc.text(`${totalNetWt.toFixed(1)} t`, 530, yPos, { width: 45 });
+  doc.text(`$${totalFee.toFixed(2)}`, 580, yPos, { width: 50 });
+  doc.text(`$${totalGST.toFixed(2)}`, 635, yPos, { width: 45 });
+  doc.text(`$${totalAmount.toFixed(2)}`, 685, yPos, { width: 50 });
 
   yPos += 15;
   doc.moveTo(50, yPos).lineTo(750, yPos).stroke();
