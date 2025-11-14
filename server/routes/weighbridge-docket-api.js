@@ -43,6 +43,8 @@ router.get("/dockets/:docketNumber", async (req, res) => {
         sm.cancelled_by,
         sm.cancel_reason,
         c.customer_name,
+        c.email as customer_email,
+        c.email_cc as customer_email_cc,
         v.registration as vehicle_rego,
         p.product_name,
         p.product_code,
@@ -142,7 +144,7 @@ router.post("/dockets/:docketNumber/email", async (req, res) => {
 
   try {
     const { docketNumber } = req.params;
-    const { recipientEmail, sentBy } = req.body; // sentBy is optional operator name
+    const { recipientEmail, ccEmail, sentBy } = req.body;
 
     if (!recipientEmail) {
       return res.status(400).json({
@@ -272,6 +274,7 @@ router.post("/dockets/:docketNumber/email", async (req, res) => {
     const mailOptions = {
       from: process.env.SMTP_FROM || "quarry@rirratjingu.com",
       to: recipientEmail,
+      cc: ccEmail || undefined,
       replyTo: process.env.SMTP_FROM || "quarry@rirratjingu.com",
       subject: `Weighbridge Delivery Docket #${docketNumber} - ${dateStr}`,
       text: `Dear Customer,

@@ -762,31 +762,56 @@
           return;
         }
 
-        // Get customer email from loaded docket data
-        let customerEmail = currentDocketData?.customer_email || "";
+        // Get defaults from customer record
+        const defaultEmail = currentDocketData?.customer_email || "";
+        const defaultCcEmail = currentDocketData?.customer_email_cc || "";
 
-        // If no customer email, prompt operator
-        if (!customerEmail) {
-          customerEmail = prompt(
-            "Customer email address not found in system.\n\nPlease enter customer email address to send docket:",
-            ""
-          );
+        // ALWAYS prompt - with pre-filled value
+        let customerEmail = prompt(
+          "Enter recipient email address for docket:\\n\\n(Pre-filled from customer record - you can edit if needed)",
+          defaultEmail
+        );
 
-          // If user cancelled or left empty
-          if (!customerEmail) {
-            return;
-          }
-
-          // Basic email validation
-          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-          if (!emailRegex.test(customerEmail)) {
-            alert("Invalid email address. Please try again.");
-            return;
-          }
+        // If user cancelled or left empty
+        if (!customerEmail || customerEmail.trim() === "") {
+          return;
         }
 
-        // Confirm before sending
-        const confirmMsg = `Send Weighbridge Delivery Docket #${docketNumber} to:\n\n${customerEmail}\n\nProceed?`;
+        customerEmail = customerEmail.trim();
+
+        // Basic email validation
+        const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
+        if (!emailRegex.test(customerEmail)) {
+          alert("Invalid email address. Please try again.");
+          return;
+        }
+
+        // Prompt for CC email
+        let ccEmail = prompt(
+          "Enter CC email address (optional):\\n\\n(Pre-filled from customer record - you can edit or leave blank)",
+          defaultCcEmail
+        );
+
+        // If user cancelled CC prompt, set to empty
+        if (ccEmail === null) {
+          ccEmail = "";
+        } else {
+          ccEmail = ccEmail.trim();
+        }
+
+        // Validate CC email if provided
+        if (ccEmail && !emailRegex.test(ccEmail)) {
+          alert("Invalid CC email address. Sending without CC.");
+          ccEmail = "";
+        }
+
+        // Build confirmation message
+        let confirmMsg = `Send Weighbridge Delivery Docket #${docketNumber} to:\\n\\nTo: ${customerEmail}`;
+        if (ccEmail) {
+          confirmMsg += `\\nCC: ${ccEmail}`;
+        }
+        confirmMsg += "\\n\\nProceed?";
+
         if (!confirm(confirmMsg)) {
           return;
         }
@@ -807,6 +832,7 @@
               },
               body: JSON.stringify({
                 recipientEmail: customerEmail,
+                ccEmail: ccEmail || null,
                 operatorEmail: sessionStorage.getItem("racInventorySession")
                   ? JSON.parse(sessionStorage.getItem("racInventorySession"))
                       .email
@@ -822,9 +848,11 @@
           const data = await response.json();
 
           if (data.success) {
-            alert(
-              `✅ Docket #${docketNumber} emailed successfully to ${customerEmail}`
-            );
+            let successMsg = `✅ Docket #${docketNumber} emailed successfully to ${customerEmail}`;
+            if (ccEmail) {
+              successMsg += `\\nCC: ${ccEmail}`;
+            }
+            alert(successMsg);
           } else {
             alert(`❌ Error sending email: ${data.message}`);
           }
