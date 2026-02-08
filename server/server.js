@@ -78,7 +78,6 @@ app.get("/api/dashboard/stats", async (req, res) => {
 });
 
 // API Routes
-// API Routes
 app.use("/api", require("./routes/auth"));
 app.use("/api/products", require("./routes/products"));
 app.use("/api/stock", require("./routes/stock"));
