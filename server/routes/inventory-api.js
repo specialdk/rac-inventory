@@ -54,7 +54,7 @@ router.get("/inventory-summary", async (req, res) => {
       SELECT 
         COUNT(*) as order_count,
         COALESCE(SUM(d.quantity), 0) as total_tonnes,
-        COALESCE(SUM(d.quantity * p.standard_sales_price), 0) as estimated_value
+        COALESCE(SUM(d.quantity * p.current_price), 0) as estimated_value
       FROM demand_orders d
       JOIN products p ON d.product_id = p.product_id
       WHERE d.status IN ('PENDING', 'CONFIRMED')
@@ -68,7 +68,7 @@ router.get("/inventory-summary", async (req, res) => {
         p.product_name,
         p.family_group,
         p.unit,
-        p.standard_sales_price as sales_price,
+        p.current_price as sales_price,
         COALESCE(SUM(cs.quantity), 0) as soh_tonnes,
         COALESCE(AVG(cs.average_cost), p.standard_cost) as avg_cost,
         COALESCE(SUM(cs.total_value), 0) as stock_value,
@@ -202,8 +202,8 @@ router.get("/inventory-summary/forward-orders", async (req, res) => {
         p.product_code,
         p.product_name,
         p.family_group,
-        p.standard_sales_price as unit_price,
-         (d.quantity * p.standard_sales_price) as estimated_value,
+        p.current_price as unit_price,
+         (d.quantity * p.current_price) as estimated_value,
         c.customer_name,
         c.customer_code,
         l.location_name as preferred_location

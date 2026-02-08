@@ -82,8 +82,8 @@ async function loadDropdowns() {
       productSelects.forEach((select) => {
         if (select) {
           const option = new Option(product.product_name, product.product_id);
-          option.dataset.cost = product.production_cost_per_unit;
-          option.dataset.price = product.standard_price_per_unit;
+          option.dataset.cost = product.standard_cost;
+option.dataset.price = product.current_price;
           select.add(option);
         }
       });
@@ -268,6 +268,7 @@ function setupSaleProductListener() {
       if (productId) {
         console.log("📞 Calling loadStockpileDropdown...");
         await loadStockpileDropdown(productId, "saleLocation");
+        updateSalePrice();
         console.log("✅ loadStockpileDropdown completed");
       }
     });
