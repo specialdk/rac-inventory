@@ -25,7 +25,8 @@ router.get("/inventory-summary", async (req, res) => {
       SELECT 
         COALESCE(SUM(CASE WHEN movement_type = 'PRODUCTION' THEN quantity ELSE 0 END), 0) as mtd_production,
         COALESCE(SUM(CASE WHEN movement_type = 'SALES' THEN ABS(quantity) ELSE 0 END), 0) as mtd_sales,
-        COALESCE(SUM(CASE WHEN movement_type = 'SALES' THEN ABS(total_cost) ELSE 0 END), 0) as mtd_sales_value
+        COALESCE(SUM(CASE WHEN movement_type = 'SALES' THEN ABS(total_cost) ELSE 0 END), 0) as mtd_sales_cost,
+        COALESCE(SUM(CASE WHEN movement_type = 'SALES' THEN ABS(total_revenue) ELSE 0 END), 0) as mtd_sales_revenue
       FROM stock_movements
       WHERE movement_date >= DATE_TRUNC('month', CURRENT_DATE)
     `);
@@ -35,7 +36,8 @@ router.get("/inventory-summary", async (req, res) => {
       SELECT 
         COALESCE(SUM(CASE WHEN movement_type = 'PRODUCTION' THEN quantity ELSE 0 END), 0) as qtd_production,
         COALESCE(SUM(CASE WHEN movement_type = 'SALES' THEN ABS(quantity) ELSE 0 END), 0) as qtd_sales,
-        COALESCE(SUM(CASE WHEN movement_type = 'SALES' THEN ABS(total_cost) ELSE 0 END), 0) as qtd_sales_value
+        COALESCE(SUM(CASE WHEN movement_type = 'SALES' THEN ABS(total_cost) ELSE 0 END), 0) as qtd_sales_cost,
+        COALESCE(SUM(CASE WHEN movement_type = 'SALES' THEN ABS(total_revenue) ELSE 0 END), 0) as qtd_sales_revenue
       FROM stock_movements
       WHERE movement_date >= DATE_TRUNC('quarter', CURRENT_DATE)
     `);
@@ -133,16 +135,18 @@ router.get("/inventory-summary", async (req, res) => {
           sales: parseFloat(today.today_sales) || 0
         },
 
-        mtd: {
+       mtd: {
           production: parseFloat(mtd.mtd_production) || 0,
           sales: parseFloat(mtd.mtd_sales) || 0,
-          salesValue: parseFloat(mtd.mtd_sales_value) || 0
+          salesCost: parseFloat(mtd.mtd_sales_cost) || 0,
+          salesRevenue: parseFloat(mtd.mtd_sales_revenue) || 0
         },
 
         qtd: {
           production: parseFloat(qtd.qtd_production) || 0,
           sales: parseFloat(qtd.qtd_sales) || 0,
-          salesValue: parseFloat(qtd.qtd_sales_value) || 0
+          salesCost: parseFloat(qtd.qtd_sales_cost) || 0,
+          salesRevenue: parseFloat(qtd.qtd_sales_revenue) || 0
         },
 
         forwardOrders: {
