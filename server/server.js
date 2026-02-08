@@ -90,7 +90,8 @@ app.use("/api/drivers", require("./routes/drivers"));
 app.use("/api/demand-orders", require("./routes/demand-order"));
 app.use("/api/deliveries", require("./routes/deliveries"));
 app.use("/api", require("./routes/carriers"));
-app.use("/api", require("./routes/tare-weights")); // ADD THIS LINE
+app.use("/api", require("./routes/tare-weights"));
+app.use("/api", require("./routes/inventory-api"));
 
 // Report Routes
 app.use("/api", require("./routes/account-detail-report-api"));
