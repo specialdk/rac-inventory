@@ -86,6 +86,10 @@ function renderStocktakeTable() {
   const productsWithStock = new Set();
 
   currentStock.forEach((stock) => {
+    // Skip locations with zero or near-zero stock
+    const qty = parseFloat(stock.quantity) || 0;
+    if (qty < 0.1) return;
+
     productsWithStock.add(stock.product_id);
     stocktakeRows.push({
       product_id: stock.product_id,
