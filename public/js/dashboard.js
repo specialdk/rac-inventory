@@ -279,7 +279,7 @@ function renderStockTable(data) {
         </td>
         <td style="text-align: right; padding: 0.4rem 0.5rem; ${
           item.total_quantity < item.min_stock_level ? "color: red;" : ""
-        }">${formatNumber(item.total_quantity)} ${item.unit}</td>
+        }">${formatNumber(item.total_quantity)}</td>
         <td style="text-align: right; padding: 0.4rem 0.5rem; ${demandColor}">${formatNumber(
       item.total_demand
     )}</td>
