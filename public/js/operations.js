@@ -614,6 +614,7 @@ async function saveSales() {
     vehicle_id: document.getElementById("saleVehicle").value || null,
     driver_id: document.getElementById("saleDriver").value || null,
     delivery_id: document.getElementById("saleDelivery").value || null,
+    trailer_count: parseInt(document.getElementById("saleTrailerCount").value) || 1,
     carrier_id: document.getElementById("saleCarrier").value || null,
     reference_number: document.getElementById("saleReference").value,
     notes: document.getElementById("saleNotes").value,
