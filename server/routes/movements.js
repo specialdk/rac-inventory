@@ -363,17 +363,20 @@ router.post("/adjustment", async (req, res) => {
       product_id,
       location_id,
       quantity,
-      unit_cost, // ← ADD THIS LINE
+      unit_cost,
       reason,
       notes,
       created_by = "system",
     } = req.body;
 
+    // Parse quantity safely
+    const adjustmentQty = parseFloat(quantity);
+
     if (
       !movement_date ||
       !product_id ||
       !location_id ||
-      quantity === undefined // ← AND THIS
+      isNaN(adjustmentQty)
     ) {
       throw new Error("Missing required fields");
     }
@@ -389,21 +392,27 @@ router.post("/adjustment", async (req, res) => {
         ? parseFloat(stockResult.rows[0].average_cost)
         : 0;
 
-    const finalCost = unit_cost || avgCostFromDB;
-    const total_cost = quantity * finalCost;
+    const finalCost = parseFloat(unit_cost) || avgCostFromDB;
+
+    // Store ABSOLUTE quantity in movement, use from/to location for direction
+    const absQty = Math.abs(adjustmentQty);
+    const from_location_id = adjustmentQty < 0 ? location_id : null;
+    const to_location_id = adjustmentQty > 0 ? location_id : null;
+    const total_cost = absQty * finalCost;
 
     // Insert movement record
     const movementResult = await client.query(
       `INSERT INTO stock_movements 
-       (movement_date, movement_type, product_id, to_location_id, quantity, 
+       (movement_date, movement_type, product_id, from_location_id, to_location_id, quantity, 
         unit_cost, total_cost, reference_number, notes, created_by)
-       VALUES ($1, 'ADJUSTMENT', $2, $3, $4, $5, $6, $7, $8, $9)
+       VALUES ($1, 'ADJUSTMENT', $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING *`,
       [
         movement_date,
         product_id,
-        location_id,
-        quantity,
+        from_location_id,
+        to_location_id,
+        absQty,
         finalCost,
         total_cost,
         reason,
@@ -418,28 +427,30 @@ router.post("/adjustment", async (req, res) => {
       [product_id, location_id]
     );
 
-    const oldQty = stockCheck.rows[0]?.quantity || 0;
-    const newQty = oldQty + parseFloat(quantity);
+    const oldQty = parseFloat(stockCheck.rows[0]?.quantity || 0);
+    const newQty = oldQty + adjustmentQty;
 
-    // Calculate total_value in JavaScript to avoid type ambiguity
-    const totalValue = parseFloat(newQty) * parseFloat(finalCost);
+    // Calculate total_value safely
+    const totalValue = Math.abs(newQty) * finalCost * (newQty < 0 ? -1 : 1);
+
+    console.log(`📊 Stocktake adjustment: ${oldQty} + (${adjustmentQty}) = ${newQty} @ $${finalCost}/t`);
 
     if (stockCheck.rows.length > 0) {
       // Update existing - SET cost directly, don't blend
       await client.query(
         `UPDATE current_stock 
-     SET quantity = $1,
-         average_cost = $2,
-         total_value = $3,
-         updated_at = CURRENT_TIMESTAMP
-     WHERE product_id = $4 AND location_id = $5`,
+         SET quantity = $1,
+             average_cost = $2,
+             total_value = $3,
+             updated_at = CURRENT_TIMESTAMP
+         WHERE product_id = $4 AND location_id = $5`,
         [newQty, finalCost, totalValue, product_id, location_id]
       );
     } else {
       // Insert new
       await client.query(
         `INSERT INTO current_stock (product_id, location_id, quantity, average_cost, total_value)
-     VALUES ($1, $2, $3, $4, $5)`,
+         VALUES ($1, $2, $3, $4, $5)`,
         [product_id, location_id, newQty, finalCost, totalValue]
       );
     }
@@ -675,144 +686,6 @@ router.post("/demand", async (req, res) => {
   }
 });
 
-// POST /api/movements/adjustment - Manual stock adjustment
-router.post("/adjustment", async (req, res) => {
-  const client = await pool.connect();
-
-  try {
-    await client.query("BEGIN");
-
-    const {
-      movement_date,
-      product_id,
-      location_id,
-      quantity,
-      unit_cost, //added
-      reason,
-      reference_number,
-      notes,
-    } = req.body;
-
-    // Validate
-    if (!movement_date || !product_id || !location_id || !quantity || !reason) {
-      await client.query("ROLLBACK");
-      return res.status(400).json({ error: "Missing required fields" });
-    }
-
-    if (quantity === 0) {
-      await client.query("ROLLBACK");
-      return res
-        .status(400)
-        .json({ error: "Adjustment quantity cannot be zero" });
-    }
-
-    // Get current stock
-    const stockCheck = await client.query(
-      `SELECT quantity, average_cost 
-       FROM current_stock 
-       WHERE product_id = $1 AND location_id = $2`,
-      [product_id, location_id]
-    );
-
-    const currentQty = parseFloat(stockCheck.rows[0]?.quantity || 0);
-    const avgCost = parseFloat(
-      unit_cost || stockCheck.rows[0]?.average_cost || 0
-    );
-    const adjustmentQty = parseFloat(quantity);
-    const newQty = currentQty + adjustmentQty;
-
-    console.log(
-      `📊 Adjustment calc: ${currentQty} + ${adjustmentQty} = ${newQty}`
-    );
-
-    // CRITICAL: Validate single product per location (only if ADDING stock)
-    if (quantity > 0) {
-      const validation = await validateSingleProductPerLocation(
-        client,
-        location_id,
-        product_id
-      );
-
-      if (!validation.valid) {
-        await client.query("ROLLBACK");
-        return res.status(400).json({
-          error: validation.error,
-        });
-      }
-    }
-
-    // Allow negative stock (as per requirement)
-    if (newQty < 0) {
-      console.log(
-        `⚠️ Warning: Stock will be negative after adjustment: ${newQty}t`
-      );
-    }
-
-    // Determine from/to based on quantity sign
-    const from_location_id = quantity < 0 ? location_id : null;
-    const to_location_id = quantity > 0 ? location_id : null;
-
-    // Create stock movement record
-    const movementResult = await client.query(
-      `INSERT INTO stock_movements (
-        movement_date, 
-        movement_type,
-        product_id,
-        from_location_id,
-        to_location_id,
-        quantity,
-        unit_cost,
-        reference_number,
-        notes
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-      RETURNING movement_id`,
-      [
-        movement_date,
-        "ADJUSTMENT",
-        product_id,
-        from_location_id,
-        to_location_id,
-        quantity,
-        avgCost,
-        reference_number || `ADJ-${Date.now()}`,
-        `Reason: ${reason}${notes ? "\n" + notes : ""}`,
-      ]
-    );
-
-    // Update current_stock
-    if (stockCheck.rows.length > 0) {
-      await client.query(
-        `UPDATE current_stock 
-   SET quantity = $1,
-       average_cost = $2,
-       total_value = $1 * $2,
-       updated_at = CURRENT_TIMESTAMP
-   WHERE product_id = $3 AND location_id = $4`,
-        [newQty, avgCost, product_id, location_id]
-      );
-    } else {
-      const totalValue = newQty * avgCost;
-      await client.query(
-        `INSERT INTO current_stock (product_id, location_id, quantity, average_cost, total_value)
-   VALUES ($1, $2, $3, $4, $5)`,
-        [product_id, location_id, newQty, avgCost, totalValue]
-      );
-    }
-
-    await client.query("COMMIT");
-
-    res.status(201).json({
-      message: "Stock adjustment saved successfully",
-      movement_id: movementResult.rows[0].movement_id,
-    });
-  } catch (error) {
-    await client.query("ROLLBACK");
-    console.error("Error saving adjustment:", error);
-    res.status(500).json({ error: "Failed to save adjustment" });
-  } finally {
-    client.release();
-  }
-});
 
 // POST /api/movements/transfer - Transfer stock between locations
 router.post("/transfer", async (req, res) => {
