@@ -74,8 +74,8 @@ router.post("/", async (req, res) => {
     const result = await query(
       `INSERT INTO products 
        (product_code, product_name, family_group, unit, standard_cost, 
-        current_price, min_stock_level, max_stock_level, preferred_location_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        current_price, standard_sales_price, min_stock_level, max_stock_level, preferred_location_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $6, $7, $8, $9)
        RETURNING *`,
       [
         product_code,
@@ -127,6 +127,7 @@ router.put("/:id", async (req, res) => {
            unit = COALESCE($4, unit),
            standard_cost = COALESCE($5, standard_cost),
            current_price = COALESCE($6, current_price),
+           standard_sales_price = COALESCE($6, current_price),
            min_stock_level = COALESCE($7, min_stock_level),
            max_stock_level = COALESCE($8, max_stock_level),
            preferred_location_id = COALESCE($9, preferred_location_id),
