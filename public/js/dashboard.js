@@ -61,7 +61,8 @@ function calculateStats(data) {
     (sum, item) => sum + parseFloat(item.total_value || 0),
     0
   );
-  const productsCount = data.length;
+  const uniqueProducts = new Set(data.map(item => item.product_id));
+  const productsCount = uniqueProducts.size;
 
   return {
     productsWithStock: productsCount,
