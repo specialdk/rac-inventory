@@ -186,6 +186,18 @@ option.dataset.price = product.current_price;
     // Set active counts
     document.getElementById("activeVehicles").textContent = vehiclesData.length;
     document.getElementById("activeOperators").textContent = driversData.length;
+
+    // Load price lists
+    const priceListsRes = await fetch("/api/price-lists/active");
+    const priceListsData = await priceListsRes.json();
+    const salePriceListSelect = document.getElementById("salePriceList");
+    salePriceListSelect.innerHTML = "";
+
+    priceListsData.forEach((pl) => {
+      const option = new Option(pl.price_list_name, pl.price_list_id);
+      if (pl.is_default) option.selected = true;
+      salePriceListSelect.add(option);
+    });
   } catch (error) {
     console.error("Error loading dropdowns:", error);
   }
@@ -559,16 +571,36 @@ function closeSalesModal() {
   document.getElementById("salesModal").style.display = "none";
 }
 
-function updateSalePrice() {
-  const selectedOption =
-    document.getElementById("saleProduct").selectedOptions[0];
+async function updateSalePrice() {
+  const productId = document.getElementById("saleProduct").value;
+  const priceListId = document.getElementById("salePriceList").value;
   const priceInput = document.getElementById("salePrice");
 
+  if (productId && priceListId) {
+    try {
+      const response = await fetch(`/api/price-lists/${priceListId}/prices/${productId}`);
+      if (response.ok) {
+        const data = await response.json();
+        priceInput.value = parseFloat(data.price_per_tonne).toFixed(2);
+        return;
+      }
+    } catch (error) {
+      console.error("Error fetching price:", error);
+    }
+  }
+
+  // Fallback to product default price
+  const selectedOption = document.getElementById("saleProduct").selectedOptions[0];
   if (selectedOption && selectedOption.dataset.price) {
     priceInput.value = selectedOption.dataset.price;
   } else {
     priceInput.value = "";
   }
+}
+
+// Called when price list dropdown changes
+async function updateSalePriceFromList() {
+  await updateSalePrice();
 }
 
 // ============================================
@@ -615,7 +647,8 @@ async function saveSales() {
     driver_id: document.getElementById("saleDriver").value || null,
     delivery_id: document.getElementById("saleDelivery").value || null,
     trailer_count: parseInt(document.getElementById("saleTrailerCount").value) || 1,
-    carrier_id: document.getElementById("saleCarrier").value || null,
+   carrier_id: document.getElementById("saleCarrier").value || null,
+    price_list_id: document.getElementById("salePriceList").value || null,
     reference_number: document.getElementById("saleReference").value,
     notes: document.getElementById("saleNotes").value,
   };
