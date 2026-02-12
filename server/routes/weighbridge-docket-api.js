@@ -492,10 +492,10 @@ function generateWeighbridgeDocketPDF(doc, docket) {
     doc
     .font("Helvetica")
     .text(
-      `${parseFloat(docket.gross_weight || 0).toFixed(2)} t`,
-      weightsBoxX + 10,
+      `${parseFloat(docket.tare_weight || 0).toFixed(2)} t`,
+      weightsBoxX + 80,
       weightsY,
-      { width: weightsBoxWidth - 20, align: "right" }
+      { width: weightsBoxWidth - 90, align: "right" }
     );
   weightsY += 20;
 
