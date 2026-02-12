@@ -421,6 +421,7 @@
               <th>Destination</th>
               <th>Net Wt</th>
               <th>Fee</th>
+              <th>Delivery</th>
               <th>GST</th>
               <th>Total</th>
             </tr>
@@ -431,6 +432,7 @@
               <td colspan="6">Grand Total</td>
               <td id="totalNetWeight">0 t</td>
               <td id="totalFee">$0.00</td>
+              <td id="totalDelivery">$0.00</td>
               <td id="totalGST">$0.00</td>
               <td id="grandTotal">$0.00</td>
             </tr>
@@ -570,8 +572,9 @@
         const tbody = document.getElementById("reportTableBody");
         tbody.innerHTML = "";
 
-        let totalNetWt = 0,
+     let totalNetWt = 0,
           totalFee = 0,
+          totalDelivery = 0,
           totalGST = 0,
           totalAmount = 0;
 
@@ -579,6 +582,7 @@
           const row = document.createElement("tr");
           const netWt = parseFloat(docket.net_weight) || 0;
           const fee = parseFloat(docket.fee) || 0;
+          const deliveryFee = parseFloat(docket.delivery_fee) || 0;
           const gst = parseFloat(docket.gst) || 0;
           const total = parseFloat(docket.total) || 0;
 
@@ -593,6 +597,7 @@
             <td>${docket.destination || "-"}</td>
             <td>${netWt.toFixed(2)} t</td>
             <td>$${fee.toFixed(2)}</td>
+            <td>$${deliveryFee.toFixed(2)}</td>
             <td>$${gst.toFixed(2)}</td>
             <td>$${total.toFixed(2)}</td>
           `;
@@ -600,6 +605,7 @@
 
           totalNetWt += netWt;
           totalFee += fee;
+          totalDelivery += deliveryFee;
           totalGST += gst;
           totalAmount += total;
         });
@@ -608,6 +614,9 @@
           "totalNetWeight"
         ).textContent = `${totalNetWt.toFixed(1)} t`;
         document.getElementById("totalFee").textContent = `$${totalFee.toFixed(
+          2
+        )}`;
+        document.getElementById("totalDelivery").textContent = `$${totalDelivery.toFixed(
           2
         )}`;
         document.getElementById("totalGST").textContent = `$${totalGST.toFixed(
