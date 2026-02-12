@@ -39,9 +39,10 @@ router.get("/reports/account-detail", async (req, res) => {
         del.delivery_name as destination,
         (sm.quantity - COALESCE(sm.tare_weight, 0)) as net_weight,
         sm.unit_price,
-        sm.total_revenue as fee,
-        (sm.total_revenue * 0.10) as gst,
-        (sm.total_revenue * 1.10) as total,
+       sm.total_revenue as fee,
+        (sm.quantity * COALESCE(del.charge_per_tonne, 0)) as delivery_fee,
+        ((sm.total_revenue + (sm.quantity * COALESCE(del.charge_per_tonne, 0))) * 0.10) as gst,
+        ((sm.total_revenue + (sm.quantity * COALESCE(del.charge_per_tonne, 0))) * 1.10) as total,
         c.customer_name as account
       FROM stock_movements sm
       LEFT JOIN customers c ON sm.customer_id = c.customer_id
@@ -140,9 +141,10 @@ router.get("/reports/account-detail/pdf", async (req, res) => {
         del.delivery_name as destination,
         (sm.quantity - COALESCE(sm.tare_weight, 0)) as net_weight,
         sm.unit_price,
-        sm.total_revenue as fee,
-        (sm.total_revenue * 0.10) as gst,
-        (sm.total_revenue * 1.10) as total,
+       sm.total_revenue as fee,
+        (sm.quantity * COALESCE(del.charge_per_tonne, 0)) as delivery_fee,
+        ((sm.total_revenue + (sm.quantity * COALESCE(del.charge_per_tonne, 0))) * 0.10) as gst,
+        ((sm.total_revenue + (sm.quantity * COALESCE(del.charge_per_tonne, 0))) * 1.10) as total,
         c.customer_name as account
       FROM stock_movements sm
       LEFT JOIN customers c ON sm.customer_id = c.customer_id
@@ -244,9 +246,10 @@ router.get("/reports/account-detail/pdf-with-dockets", async (req, res) => {
         del.delivery_name as destination,
         (sm.quantity - COALESCE(sm.tare_weight, 0)) as net_weight,
         sm.unit_price,
-        sm.total_revenue as fee,
-        (sm.total_revenue * 0.10) as gst,
-        (sm.total_revenue * 1.10) as total,
+       sm.total_revenue as fee,
+        (sm.quantity * COALESCE(del.charge_per_tonne, 0)) as delivery_fee,
+        ((sm.total_revenue + (sm.quantity * COALESCE(del.charge_per_tonne, 0))) * 0.10) as gst,
+        ((sm.total_revenue + (sm.quantity * COALESCE(del.charge_per_tonne, 0))) * 1.10) as total,
         c.customer_name as account
       FROM stock_movements sm
       LEFT JOIN customers c ON sm.customer_id = c.customer_id
@@ -481,9 +484,10 @@ router.post("/reports/account-detail/email", async (req, res) => {
         del.delivery_name as destination,
         (sm.quantity - COALESCE(sm.tare_weight, 0)) as net_weight,
         sm.unit_price,
-        sm.total_revenue as fee,
-        (sm.total_revenue * 0.10) as gst,
-        (sm.total_revenue * 1.10) as total,
+       sm.total_revenue as fee,
+        (sm.quantity * COALESCE(del.charge_per_tonne, 0)) as delivery_fee,
+        ((sm.total_revenue + (sm.quantity * COALESCE(del.charge_per_tonne, 0))) * 0.10) as gst,
+        ((sm.total_revenue + (sm.quantity * COALESCE(del.charge_per_tonne, 0))) * 1.10) as total,
         c.customer_name as account
       FROM stock_movements sm
       LEFT JOIN customers c ON sm.customer_id = c.customer_id
