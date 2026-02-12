@@ -768,7 +768,7 @@
 
         // ALWAYS prompt - with pre-filled value
         let customerEmail = prompt(
-          "Enter recipient email address for docket:\\n\\n(Pre-filled from customer record - you can edit if needed)",
+          "Enter recipient email address for docket:\n\n(Pre-filled from customer record - you can edit if needed)",
           defaultEmail
         );
 
@@ -780,15 +780,14 @@
         customerEmail = customerEmail.trim();
 
         // Basic email validation
-        const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(customerEmail)) {
           alert("Invalid email address. Please try again.");
           return;
         }
 
-        // Prompt for CC email
         let ccEmail = prompt(
-          "Enter CC email address (optional):\\n\\n(Pre-filled from customer record - you can edit or leave blank)",
+          "Enter CC email address (optional):\n\n(Pre-filled from customer record - you can edit or leave blank)",
           defaultCcEmail
         );
 
@@ -806,11 +805,11 @@
         }
 
         // Build confirmation message
-        let confirmMsg = `Send Weighbridge Delivery Docket #${docketNumber} to:\\n\\nTo: ${customerEmail}`;
+       let confirmMsg = `Send Weighbridge Delivery Docket #${docketNumber} to:\n\nTo: ${customerEmail}`;
         if (ccEmail) {
-          confirmMsg += `\\nCC: ${ccEmail}`;
+          confirmMsg += `\nCC: ${ccEmail}`;
         }
-        confirmMsg += "\\n\\nProceed?";
+        confirmMsg += "\n\nProceed?";
 
         if (!confirm(confirmMsg)) {
           return;
@@ -850,7 +849,7 @@
           if (data.success) {
             let successMsg = `✅ Docket #${docketNumber} emailed successfully to ${customerEmail}`;
             if (ccEmail) {
-              successMsg += `\\nCC: ${ccEmail}`;
+              successMsg += `\nCC: ${ccEmail}`;
             }
             alert(successMsg);
           } else {
