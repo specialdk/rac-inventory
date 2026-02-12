@@ -1116,17 +1116,18 @@ function generateAccountDetailPDF(doc, dockets, dateFrom, dateTo) {
   let yPos = 200;
   doc.fontSize(9).fillColor("black");
 
-  const headers = [
-    { text: "Account", x: 50, width: 80 },
-    { text: "Date", x: 135, width: 90 },
-    { text: "Docket #", x: 230, width: 50 },
-    { text: "Rego", x: 285, width: 50 },
-    { text: "Product", x: 340, width: 100 },
-    { text: "Destination", x: 445, width: 80 },
-    { text: "Net Wt", x: 530, width: 45 },
-    { text: "Fee", x: 580, width: 50 },
-    { text: "GST", x: 635, width: 45 },
-    { text: "Total", x: 685, width: 50 },
+ const headers = [
+    { text: "Account", x: 50, width: 75 },
+    { text: "Date", x: 130, width: 85 },
+    { text: "Docket #", x: 220, width: 50 },
+    { text: "Rego", x: 275, width: 45 },
+    { text: "Product", x: 325, width: 95 },
+    { text: "Destination", x: 425, width: 70 },
+    { text: "Net Wt", x: 500, width: 40 },
+    { text: "Fee", x: 545, width: 50 },
+    { text: "Delivery", x: 600, width: 50 },
+    { text: "GST", x: 655, width: 45 },
+    { text: "Total", x: 705, width: 50 },
   ];
 
   // Print headers
@@ -1138,8 +1139,9 @@ function generateAccountDetailPDF(doc, dockets, dateFrom, dateTo) {
   // Draw line under headers
   doc.moveTo(50, yPos).lineTo(750, yPos).stroke();
   // Print data rows
-  let totalNetWt = 0,
+ let totalNetWt = 0,
     totalFee = 0,
+    totalDelivery = 0,
     totalGST = 0,
     totalAmount = 0;
 
@@ -1154,27 +1156,30 @@ function generateAccountDetailPDF(doc, dockets, dateFrom, dateTo) {
 
     const netWt = parseFloat(docket.net_weight) || 0;
     const fee = parseFloat(docket.fee) || 0;
+    const deliveryFee = parseFloat(docket.delivery_fee) || 0;
     const gst = parseFloat(docket.gst) || 0;
     const total = parseFloat(docket.total) || 0;
 
     // Accumulate totals
     totalNetWt += netWt;
     totalFee += fee;
+    totalDelivery += deliveryFee;
     totalGST += gst;
     totalAmount += total;
 
     // Print row data
-    doc.fontSize(8);
-    doc.text(docket.account || "-", 50, yPos, { width: 80 });
-    doc.text(formatDateShort(docket.movement_date), 135, yPos, { width: 90 });
-    doc.text(docket.docket_no || "-", 230, yPos, { width: 50 });
-    doc.text(docket.rego || "-", 285, yPos, { width: 50 });
-    doc.text(docket.product_name || "-", 340, yPos, { width: 100 });
-    doc.text(docket.destination || "-", 445, yPos, { width: 80 });
-    doc.text(`${netWt.toFixed(2)} t`, 530, yPos, { width: 45 });
-    doc.text(`$${fee.toFixed(2)}`, 580, yPos, { width: 50 });
-    doc.text(`$${gst.toFixed(2)}`, 635, yPos, { width: 45 });
-    doc.text(`$${total.toFixed(2)}`, 685, yPos, { width: 50 });
+   doc.fontSize(8);
+    doc.text(docket.account || "-", 50, yPos, { width: 75 });
+    doc.text(formatDateShort(docket.movement_date), 130, yPos, { width: 85 });
+    doc.text(docket.docket_no || "-", 220, yPos, { width: 50 });
+    doc.text(docket.rego || "-", 275, yPos, { width: 45 });
+    doc.text(docket.product_name || "-", 325, yPos, { width: 95 });
+    doc.text(docket.destination || "-", 425, yPos, { width: 70 });
+    doc.text(`${netWt.toFixed(2)} t`, 500, yPos, { width: 40 });
+    doc.text(`$${fee.toFixed(2)}`, 545, yPos, { width: 50 });
+    doc.text(`$${deliveryFee.toFixed(2)}`, 600, yPos, { width: 50 });
+    doc.text(`$${gst.toFixed(2)}`, 655, yPos, { width: 45 });
+    doc.text(`$${total.toFixed(2)}`, 705, yPos, { width: 50 });
 
     yPos += 18;
   });
@@ -1190,11 +1195,12 @@ function generateAccountDetailPDF(doc, dockets, dateFrom, dateTo) {
   yPos += 8;
 
   doc.fontSize(9).font("Helvetica-Bold");
-  doc.text("Grand Total", 50, yPos);
-  doc.text(`${totalNetWt.toFixed(1)} t`, 530, yPos, { width: 45 });
-  doc.text(`$${totalFee.toFixed(2)}`, 580, yPos, { width: 50 });
-  doc.text(`$${totalGST.toFixed(2)}`, 635, yPos, { width: 45 });
-  doc.text(`$${totalAmount.toFixed(2)}`, 685, yPos, { width: 50 });
+ doc.text("Grand Total", 50, yPos);
+  doc.text(`${totalNetWt.toFixed(1)} t`, 500, yPos, { width: 40 });
+  doc.text(`$${totalFee.toFixed(2)}`, 545, yPos, { width: 50 });
+  doc.text(`$${totalDelivery.toFixed(2)}`, 600, yPos, { width: 50 });
+  doc.text(`$${totalGST.toFixed(2)}`, 655, yPos, { width: 45 });
+  doc.text(`$${totalAmount.toFixed(2)}`, 705, yPos, { width: 50 });
 
   yPos += 15;
   doc.moveTo(50, yPos).lineTo(750, yPos).stroke();
