@@ -489,22 +489,24 @@ function generateWeighbridgeDocketPDF(doc, docket) {
   // Gross Wt
   doc.text("Gross Wt :", weightsBoxX + 10, weightsY);
   doc
+    doc
     .font("Helvetica")
     .text(
       `${parseFloat(docket.gross_weight || 0).toFixed(2)} t`,
-      weightsBoxX + 85,
-      weightsY
+      weightsBoxX + 10,
+      weightsY,
+      { width: weightsBoxWidth - 20, align: "right" }
     );
   weightsY += 20;
 
   // Tare Wt
-  doc.font("Helvetica-Bold").text("Tare Wt :", weightsBoxX + 10, weightsY);
   doc
     .font("Helvetica")
     .text(
       `${parseFloat(docket.tare_weight || 0).toFixed(2)} t`,
-      weightsBoxX + 85,
-      weightsY
+      weightsBoxX + 10,
+      weightsY,
+      { width: weightsBoxWidth - 20, align: "right" }
     );
   weightsY += 20;
 
@@ -520,8 +522,9 @@ function generateWeighbridgeDocketPDF(doc, docket) {
   doc.text("Net Wt :", weightsBoxX + 10, weightsY);
   doc.text(
     `${parseFloat(docket.net_weight || 0).toFixed(2)} t`,
-    weightsBoxX + 85,
-    weightsY
+    weightsBoxX + 10,
+    weightsY,
+    { width: weightsBoxWidth - 20, align: "right" }
   );
 
   // ============================================
@@ -548,14 +551,20 @@ function generateWeighbridgeDocketPDF(doc, docket) {
   doc.text("Docket Fee $", weightsBoxX + 10, pricesY);
   doc
     .font("Helvetica")
-    .text(`$${docketFee.toFixed(2)}`, weightsBoxX + 100, pricesY);
+    .text(`$${docketFee.toFixed(2)}`, weightsBoxX + 10, pricesY, {
+      width: weightsBoxWidth - 20,
+      align: "right",
+    });
   pricesY += 20;
 
   // Docket GST
   doc.font("Helvetica-Bold").text("Docket GST $", weightsBoxX + 10, pricesY);
   doc
     .font("Helvetica")
-    .text(`$${docketGST.toFixed(2)}`, weightsBoxX + 100, pricesY);
+    .text(`$${docketGST.toFixed(2)}`, weightsBoxX + 10, pricesY, {
+      width: weightsBoxWidth - 20,
+      align: "right",
+    });
   pricesY += 20;
 
   // Horizontal line before Total
@@ -568,7 +577,10 @@ function generateWeighbridgeDocketPDF(doc, docket) {
   // Docket Total (bold and larger)
   doc.fontSize(11).font("Helvetica-Bold");
   doc.text("Docket Total $", weightsBoxX + 10, pricesY);
-  doc.text(`$${docketTotal.toFixed(2)}`, weightsBoxX + 100, pricesY);
+ doc.text(`$${docketTotal.toFixed(2)}`, weightsBoxX + 10, pricesY, {
+    width: weightsBoxWidth - 20,
+    align: "right",
+  });
 
   // ============================================
   // SIGNATURE SECTIONS (Bottom)
