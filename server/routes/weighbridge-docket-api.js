@@ -488,26 +488,22 @@ function generateWeighbridgeDocketPDF(doc, docket) {
 
   // Gross Wt
   doc.text("Gross Wt :", weightsBoxX + 10, weightsY);
-  doc
-    doc
-    .font("Helvetica")
-    .text(
-      `${parseFloat(docket.tare_weight || 0).toFixed(2)} t`,
-      weightsBoxX + 80,
-      weightsY,
-      { width: weightsBoxWidth - 90, align: "right" }
-    );
+  doc.font("Helvetica").text(
+    `${parseFloat(docket.gross_weight || 0).toFixed(2)} t`,
+    weightsBoxX + 80,
+    weightsY,
+    { width: weightsBoxWidth - 90, align: "right" }
+  );
   weightsY += 20;
 
   // Tare Wt
-  doc
-    .font("Helvetica")
-    .text(
-      `${parseFloat(docket.tare_weight || 0).toFixed(2)} t`,
-      weightsBoxX + 10,
-      weightsY,
-      { width: weightsBoxWidth - 20, align: "right" }
-    );
+  doc.font("Helvetica-Bold").text("Tare Wt :", weightsBoxX + 10, weightsY);
+  doc.font("Helvetica").text(
+    `${parseFloat(docket.tare_weight || 0).toFixed(2)} t`,
+    weightsBoxX + 80,
+    weightsY,
+    { width: weightsBoxWidth - 90, align: "right" }
+  );
   weightsY += 20;
 
   // Horizontal line before Net Wt
