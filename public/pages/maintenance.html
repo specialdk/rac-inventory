@@ -56,6 +56,9 @@
       <button class="sub-nav-item" data-section="deliveries">
         📍 Deliveries
       </button>
+      <button class="sub-nav-item" data-section="delivery-rates">
+        💰 Delivery Rates
+      </button>
     </div>
 
     <div class="container">
@@ -461,6 +464,110 @@
             </tbody>
           </table>
         </div>
+      </div>
+   <!-- DELIVERY RATES SECTION -->
+      <div
+        id="delivery-rates-section"
+        class="maintenance-section"
+        style="display: none"
+      >
+        <div class="section-header">
+          <h2>💰 Delivery Hourly Rates</h2>
+          <div style="display: flex; gap: 1rem; align-items: center">
+            <button class="btn-primary" onclick="openDeliveryRateModal()">
+              ➕ Add Rate
+            </button>
+          </div>
+        </div>
+
+        <div class="data-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Trailer Count</th>
+                <th>Hourly Rate</th>
+                <th>Description</th>
+                <th>Status</th>
+                <th style="width: 120px">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="deliveryRatesTableBody">
+              <tr>
+                <td colspan="5" style="text-align: center; padding: 20px">
+                  Loading rates...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delivery Rate Modal -->
+    <div id="deliveryRateModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="deliveryRateModalTitle">Add Delivery Rate</h2>
+          <button class="modal-close" onclick="closeDeliveryRateModal()">×</button>
+        </div>
+        <form
+          id="deliveryRateForm"
+          onsubmit="event.preventDefault(); saveDeliveryRate();"
+        >
+          <input type="hidden" id="deliveryRateId" />
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label required">Trailer Count</label>
+              <input
+                type="text"
+                class="form-control"
+                id="rateTrailerCount"
+                required
+                placeholder="e.g., 1, 2, 3, HR"
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label required">Hourly Rate ($)</label>
+              <input
+                type="number"
+                class="form-control"
+                id="rateHourlyRate"
+                step="0.01"
+                min="0"
+                required
+                placeholder="e.g., 220.00"
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea
+              class="form-control"
+              id="rateDescription"
+              rows="2"
+              placeholder="Description of this rate"
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              <input type="checkbox" id="rateActive" checked /> Active
+            </label>
+          </div>
+
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn-secondary"
+              onclick="closeDeliveryRateModal()"
+            >
+              Cancel
+            </button>
+            <button type="submit" class="btn-primary">💾 Save Rate</button>
+          </div>
+        </form>
       </div>
     </div>
 

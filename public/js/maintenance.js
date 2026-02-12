@@ -65,6 +65,9 @@ async function loadSectionData(section) {
     case "deliveries":
       loadDeliveries();
       break;
+    case "delivery-rates":
+      loadDeliveryRates();
+      break;
   }
 }
 
@@ -1195,5 +1198,136 @@ async function deleteDelivery(deliveryId) {
     }
   } catch (error) {
     console.error("Error deleting delivery:", error);
+  }
+}
+
+// ============================================
+// DELIVERY HOURLY RATES MANAGEMENT
+// ============================================
+
+async function loadDeliveryRates() {
+  try {
+    const response = await fetch("/api/delivery-hourly-rates?is_active=true");
+    const rates = await response.json();
+
+    const tbody = document.getElementById("deliveryRatesTableBody");
+
+    if (rates.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="5" style="text-align: center; padding: 20px; color: #999">
+            No delivery rates found. Click "Add Rate" to create one.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = rates
+      .map(
+        (rate) => `
+      <tr>
+        <td><strong>${rate.trailer_count}</strong></td>
+        <td style="text-align: right">$${parseFloat(rate.hourly_rate).toFixed(2)}</td>
+        <td>${rate.description || "-"}</td>
+        <td>
+          <span class="badge ${rate.is_active ? "badge-success" : "badge-danger"}">
+            ${rate.is_active ? "Active" : "Inactive"}
+          </span>
+        </td>
+        <td>
+          <button class="btn-icon" onclick="editDeliveryRate(${rate.rate_id})" title="Edit">✏️</button>
+          <button class="btn-icon" onclick="deleteDeliveryRate(${rate.rate_id})" title="Delete">🗑️</button>
+        </td>
+      </tr>
+    `
+      )
+      .join("");
+  } catch (error) {
+    console.error("Error loading delivery rates:", error);
+  }
+}
+
+function openDeliveryRateModal() {
+  document.getElementById("deliveryRateModalTitle").textContent = "Add Delivery Rate";
+  document.getElementById("deliveryRateForm").reset();
+  document.getElementById("deliveryRateId").value = "";
+  document.getElementById("rateActive").checked = true;
+  document.getElementById("deliveryRateModal").style.display = "flex";
+}
+
+function closeDeliveryRateModal() {
+  document.getElementById("deliveryRateModal").style.display = "none";
+}
+
+async function saveDeliveryRate() {
+  const rateId = document.getElementById("deliveryRateId").value;
+  const formData = {
+    trailer_count: document.getElementById("rateTrailerCount").value,
+    hourly_rate: parseFloat(document.getElementById("rateHourlyRate").value),
+    description: document.getElementById("rateDescription").value,
+    is_active: document.getElementById("rateActive").checked,
+  };
+
+  try {
+    const url = rateId
+      ? `/api/delivery-hourly-rates/${rateId}`
+      : "/api/delivery-hourly-rates";
+    const method = rateId ? "PUT" : "POST";
+
+    const response = await fetch(url, {
+      method: method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
+    });
+
+    if (response.ok) {
+      alert(rateId ? "✅ Rate updated!" : "✅ Rate added!");
+      closeDeliveryRateModal();
+      loadDeliveryRates();
+    } else {
+      const err = await response.json();
+      alert("❌ Error: " + (err.error || "Failed to save rate"));
+    }
+  } catch (error) {
+    console.error("Error saving rate:", error);
+    alert("Error saving rate");
+  }
+}
+
+async function editDeliveryRate(rateId) {
+  try {
+    const response = await fetch(`/api/delivery-hourly-rates/${rateId}`);
+    const rate = await response.json();
+
+    document.getElementById("deliveryRateModalTitle").textContent = "Edit Delivery Rate";
+    document.getElementById("deliveryRateId").value = rate.rate_id;
+    document.getElementById("rateTrailerCount").value = rate.trailer_count;
+    document.getElementById("rateHourlyRate").value = rate.hourly_rate;
+    document.getElementById("rateDescription").value = rate.description || "";
+    document.getElementById("rateActive").checked = rate.is_active;
+
+    document.getElementById("deliveryRateModal").style.display = "flex";
+  } catch (error) {
+    console.error("Error loading rate:", error);
+  }
+}
+
+async function deleteDeliveryRate(rateId) {
+  if (!confirm("Are you sure you want to delete this rate?")) return;
+
+  try {
+    const response = await fetch(`/api/delivery-hourly-rates/${rateId}`, {
+      method: "DELETE",
+    });
+
+    if (response.ok) {
+      alert("✅ Rate deleted!");
+      loadDeliveryRates();
+    } else {
+      alert("❌ Error deleting rate");
+    }
+  } catch (error) {
+    console.error("Error deleting rate:", error);
   }
 }
