@@ -354,9 +354,6 @@ router.post("/sales", async (req, res) => {
 
     // Update current stock at source (decrease)
     await updateCurrentStock(
-
-    // Update current stock at source (decrease)
-    await updateCurrentStock(
       client,
       product_id,
       from_location_id,
