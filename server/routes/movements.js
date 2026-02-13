@@ -853,4 +853,49 @@ router.post("/transfer", async (req, res) => {
   }
 });
 
+// PUT update delivery hours on a sale
+router.put("/:id/delivery-hours", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { del_hours } = req.body;
+
+    if (del_hours === undefined || del_hours === null || del_hours <= 0) {
+      return res.status(400).json({ error: "Hours must be a positive number" });
+    }
+
+    // Verify this is a SALES movement with HOURS charge type
+    const check = await pool.query(
+      `SELECT movement_id, del_ct, docket_number FROM stock_movements 
+       WHERE movement_id = $1 AND movement_type = 'SALES'`,
+      [id]
+    );
+
+    if (check.rows.length === 0) {
+      return res.status(404).json({ error: "Sale not found" });
+    }
+
+    if (check.rows[0].del_ct !== 'HOURS') {
+      return res.status(400).json({ error: "This sale uses per-tonne delivery charging, not hourly" });
+    }
+
+    // Update the hours
+    const result = await pool.query(
+      `UPDATE stock_movements SET del_hours = $1, updated_at = NOW() 
+       WHERE movement_id = $2 RETURNING movement_id, docket_number, del_hours`,
+      [parseFloat(del_hours), id]
+    );
+
+    console.log(`✅ Delivery hours updated: Docket ${result.rows[0].docket_number} = ${del_hours} hours`);
+
+    res.json({
+      success: true,
+      message: "Delivery hours updated",
+      movement: result.rows[0]
+    });
+  } catch (error) {
+    console.error("Error updating delivery hours:", error);
+    res.status(500).json({ error: "Failed to update delivery hours" });
+  }
+});
+
 module.exports = router;

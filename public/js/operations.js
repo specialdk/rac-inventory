@@ -361,8 +361,10 @@ async function loadRecentMovements() {
               <th>Customer</th>
               <th>Docket #</th>
               <th>Location</th>
-              <th class="text-right">Quantity</th>
+            <th class="text-right">Quantity</th>
               <th>Reference</th>
+              <th></th>
+              <th></th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -951,7 +953,7 @@ function displayMovements(movements) {
 
   if (movements.length === 0) {
     tbody.innerHTML =
-      '<tr><td colspan="8" style="text-align: center; padding: 20px; color: #999;">No movements found</td></tr>';
+      '<tr><td colspan="9" style="text-align: center; padding: 20px; color: #999;">No movements found</td></tr>';
     return;
   }
 
@@ -995,6 +997,11 @@ function displayMovements(movements) {
       }</td>
       <td class="text-right">${parseFloat(movement.quantity).toFixed(1)}t</td>
       <td class="text-muted">${movement.reference_number || "-"}</td>
+      <td>${movement.movement_type === 'SALES' && movement.del_ct === 'HOURS' && !movement.del_hours 
+        ? `<button class="btn-sm" style="background:#ff9800;color:#fff;border:none;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:11px;" onclick="openHoursModal(${movement.movement_id}, '${movement.docket_number || ""}')">⏱️ Hours</button>`
+        : movement.del_ct === 'HOURS' && movement.del_hours 
+          ? `<span style="color:#28a745;font-size:11px;">⏱️ ${movement.del_hours}h</span>` 
+          : ''}</td>
     `;
 
     tbody.appendChild(row);
@@ -1439,5 +1446,67 @@ async function markTareAsUsed(tareId, docketNumber) {
     console.log("✓ Tare weight marked as used");
   } catch (error) {
     console.error("Error marking tare as used:", error);
+  }
+}
+
+// ============================================
+// DELIVERY HOURS MODAL
+// ============================================
+function openHoursModal(movementId, docketNumber) {
+  const modalHTML = `
+    <div id="hoursModal" class="modal" style="display: flex;">
+      <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-header">
+          <h2>⏱️ Enter Delivery Hours</h2>
+          <button class="modal-close" onclick="closeHoursModal()">×</button>
+        </div>
+        <p style="margin-bottom: 15px;">Docket: <strong>${docketNumber}</strong></p>
+        <div class="form-group">
+          <label class="form-label required">Hours Taken</label>
+          <input type="number" class="form-control" id="modalDelHours" step="0.5" min="0.5" placeholder="e.g., 4" autofocus />
+          <small style="color: #666">Round trip delivery time</small>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" onclick="closeHoursModal()">Cancel</button>
+          <button class="btn-primary" onclick="saveDeliveryHours(${movementId})">💾 Save Hours</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.insertAdjacentHTML("beforeend", modalHTML);
+}
+
+function closeHoursModal() {
+  const modal = document.getElementById("hoursModal");
+  if (modal) modal.remove();
+}
+
+async function saveDeliveryHours(movementId) {
+  const hours = parseFloat(document.getElementById("modalDelHours").value);
+  
+  if (!hours || hours <= 0) {
+    alert("Please enter a valid number of hours");
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/movements/${movementId}/delivery-hours`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ del_hours: hours })
+    });
+
+    const result = await response.json();
+
+    if (response.ok) {
+      alert(`✅ Delivery hours saved: ${hours} hours`);
+      closeHoursModal();
+      await loadRecentMovementsWithFilter();
+    } else {
+      alert("❌ " + (result.error || "Failed to save hours"));
+    }
+  } catch (error) {
+    console.error("Error saving delivery hours:", error);
+    alert("Error saving delivery hours");
   }
 }
