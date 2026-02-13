@@ -1560,8 +1560,8 @@ async function loadPricingMatrix() {
     const thead = document.getElementById("pricingMatrixHead");
     thead.innerHTML = `
       <tr>
-        <th style="width: 120px">Family</th>
-        <th style="min-width: 180px">Product</th>
+        <th style="width: 100px">Family</th>
+        <th style="width: 250px">Product</th>
         ${matrixPriceLists
           .map(
             (pl) =>
