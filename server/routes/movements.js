@@ -222,6 +222,8 @@ router.post("/sales", async (req, res) => {
      trailer_count = 1,
     price_list_id,
       carrier_id,
+      del_ct = "TONNES",
+      del_hours,
       reference_number,
       notes,
       created_by = "system",
@@ -302,8 +304,8 @@ router.post("/sales", async (req, res) => {
       `INSERT INTO stock_movements 
    (movement_date, movement_type, product_id, from_location_id, quantity, 
     unit_cost, total_cost, unit_price, total_revenue, customer_id, vehicle_id, 
-    driver_id, delivery_id, trailer_count, carrier_id, gross_weight, tare_weight, docket_number, reference_number, notes, created_by, price_list_id)
-   VALUES ($1, 'SALES', $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
+    driver_id, delivery_id, trailer_count, carrier_id, gross_weight, tare_weight, docket_number, reference_number, notes, created_by, price_list_id, del_ct, del_hours)
+   VALUES ($1, 'SALES', $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
    RETURNING *`,
       [
         movement_date,
@@ -327,6 +329,8 @@ router.post("/sales", async (req, res) => {
         notes,
         created_by,
         price_list_id || null,
+        del_ct,
+        del_hours || null,
       ]
     );
 
