@@ -59,6 +59,9 @@
       <button class="sub-nav-item" data-section="delivery-rates">
         💰 Delivery Rates
       </button>
+      <button class="sub-nav-item" data-section="price-lists">
+        💲 Price Lists
+      </button>
     </div>
 
     <div class="container">
@@ -465,6 +468,7 @@
           </table>
         </div>
       </div>
+
    <!-- DELIVERY RATES SECTION -->
       <div
         id="delivery-rates-section"
@@ -502,6 +506,161 @@
         </div>
       </div>
     </div>
+
+      <!-- PRICE LISTS SECTION -->
+      <div
+        id="price-lists-section"
+        class="maintenance-section"
+        style="display: none"
+      >
+        <div class="section-header">
+          <h2>💲 Price Lists Management</h2>
+          <div style="display: flex; gap: 1rem; align-items: center">
+            <button class="btn-primary" onclick="openPriceListModal()">
+              ➕ Add Price List
+            </button>
+          </div>
+        </div>
+
+        <p style="color: #666; margin-bottom: 1rem; font-size: 14px">
+          Manage pricing tiers for different customers. The default price list is auto-selected in Sales Entry.
+          To set product prices for each list, use the Edit Prices button.
+        </p>
+
+        <div class="data-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Default</th>
+                <th>Sort Order</th>
+                <th>Status</th>
+                <th style="width: 180px">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="priceListsTableBody">
+              <tr>
+                <td colspan="6" style="text-align: center; padding: 20px">
+                  Loading price lists...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Product Prices Sub-table (shown when editing prices) -->
+        <div id="productPricesSection" style="display: none; margin-top: 2rem">
+          <div class="section-header">
+            <h2 id="productPricesTitle">Product Prices</h2>
+            <button class="btn-secondary" onclick="closeProductPrices()">
+              ✕ Close
+            </button>
+          </div>
+          <div class="data-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Family</th>
+                  <th>Product</th>
+                  <th>Price per Tonne ($)</th>
+                  <th style="width: 100px">Action</th>
+                </tr>
+              </thead>
+              <tbody id="productPricesTableBody">
+              </tbody>
+            </table>
+          </div>
+          <div style="margin-top: 1rem; text-align: right">
+            <button class="btn-primary" onclick="saveAllProductPrices()">
+              💾 Save All Prices
+            </button>
+          </div>
+        </div>
+      </div>
+
+    <!-- Price List Modal -->
+    <div id="priceListModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="priceListModalTitle">Add Price List</h2>
+          <button class="modal-close" onclick="closePriceListModal()">×</button>
+        </div>
+        <form
+          id="priceListForm"
+          onsubmit="event.preventDefault(); savePriceList();"
+        >
+          <input type="hidden" id="priceListId" />
+
+          <div class="form-group">
+            <label class="form-label required">Price List Name</label>
+            <input
+              type="text"
+              class="form-control"
+              id="priceListName"
+              required
+              placeholder="e.g., Government, Rio Tinto"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea
+              class="form-control"
+              id="priceListDescription"
+              rows="2"
+              placeholder="Who uses this price list"
+            ></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Sort Order</label>
+              <input
+                type="number"
+                class="form-control"
+                id="priceListSortOrder"
+                value="10"
+                min="1"
+                placeholder="10"
+              />
+              <small style="color: #666; display: block; margin-top: 4px">
+                Lower numbers appear first in dropdowns
+              </small>
+            </div>
+            <div class="form-group" style="display: flex; flex-direction: column; justify-content: center">
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer">
+                <input type="checkbox" id="priceListDefault" />
+                <span>Set as Default</span>
+              </label>
+              <small style="color: #666; display: block; margin-top: 4px; margin-left: 24px">
+                Default price list is auto-selected in Sales
+              </small>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer">
+              <input type="checkbox" id="priceListActive" checked />
+              <span>Active</span>
+            </label>
+          </div>
+
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn-secondary"
+              onclick="closePriceListModal()"
+            >
+              Cancel
+            </button>
+            <button type="submit" class="btn-primary">💾 Save Price List</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Delivery Rate Modal -->
 
     <!-- Delivery Rate Modal -->
     <div id="deliveryRateModal" class="modal">

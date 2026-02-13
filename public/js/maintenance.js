@@ -68,6 +68,9 @@ async function loadSectionData(section) {
     case "delivery-rates":
       loadDeliveryRates();
       break;
+    case "price-lists":
+      loadPriceLists();
+      break;
   }
 }
 
@@ -1329,5 +1332,319 @@ async function deleteDeliveryRate(rateId) {
     }
   } catch (error) {
     console.error("Error deleting rate:", error);
+  }
+}
+
+// ============================================
+// PRICE LISTS MANAGEMENT
+// ============================================
+
+async function loadPriceLists() {
+  try {
+    const response = await fetch("/api/price-lists");
+    const priceLists = await response.json();
+
+    const tbody = document.getElementById("priceListsTableBody");
+
+    if (priceLists.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" style="text-align: center; padding: 20px; color: #999">
+            No price lists found. Click "Add Price List" to create one.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = priceLists
+      .map(
+        (pl) => `
+      <tr>
+        <td><strong>${pl.price_list_name}</strong></td>
+        <td>${pl.description || "-"}</td>
+        <td>${
+          pl.is_default
+            ? '<span class="badge badge-success">✓ Default</span>'
+            : "-"
+        }</td>
+        <td>${pl.sort_order || "-"}</td>
+        <td>
+          <span class="badge ${pl.is_active ? "badge-success" : "badge-danger"}">
+            ${pl.is_active ? "Active" : "Inactive"}
+          </span>
+        </td>
+        <td>
+          <button class="btn-icon" onclick="editPriceList(${pl.price_list_id})" title="Edit">✏️</button>
+          <button class="btn-icon" onclick="openProductPrices(${pl.price_list_id}, '${pl.price_list_name}')" title="Edit Prices" style="font-size: 12px; padding: 2px 6px; background: #e3f2fd; border-radius: 4px;">💲 Prices</button>
+          <button class="btn-icon" onclick="setDefaultPriceList(${pl.price_list_id})" title="Set as Default">⭐</button>
+          <button class="btn-icon" onclick="deletePriceList(${pl.price_list_id})" title="Delete">🗑️</button>
+        </td>
+      </tr>
+    `
+      )
+      .join("");
+  } catch (error) {
+    console.error("Error loading price lists:", error);
+  }
+}
+
+function openPriceListModal(priceListId = null) {
+  const modal = document.getElementById("priceListModal");
+  const form = document.getElementById("priceListForm");
+  const title = document.getElementById("priceListModalTitle");
+
+  if (priceListId) {
+    title.textContent = "Edit Price List";
+    loadPriceListData(priceListId);
+  } else {
+    title.textContent = "Add Price List";
+    form.reset();
+    document.getElementById("priceListId").value = "";
+    document.getElementById("priceListActive").checked = true;
+    document.getElementById("priceListSortOrder").value = "10";
+  }
+  modal.style.display = "flex";
+}
+
+function closePriceListModal() {
+  document.getElementById("priceListModal").style.display = "none";
+}
+
+async function loadPriceListData(priceListId) {
+  try {
+    const response = await fetch(`/api/price-lists/${priceListId}`);
+    const pl = await response.json();
+
+    document.getElementById("priceListId").value = pl.price_list_id;
+    document.getElementById("priceListName").value = pl.price_list_name;
+    document.getElementById("priceListDescription").value = pl.description || "";
+    document.getElementById("priceListSortOrder").value = pl.sort_order || 10;
+    document.getElementById("priceListDefault").checked = pl.is_default;
+    document.getElementById("priceListActive").checked = pl.is_active;
+  } catch (error) {
+    console.error("Error loading price list:", error);
+    alert("Failed to load price list data");
+  }
+}
+
+async function savePriceList() {
+  const priceListId = document.getElementById("priceListId").value;
+  const formData = {
+    price_list_name: document.getElementById("priceListName").value,
+    description: document.getElementById("priceListDescription").value,
+    sort_order: parseInt(document.getElementById("priceListSortOrder").value) || 10,
+    is_default: document.getElementById("priceListDefault").checked,
+    is_active: document.getElementById("priceListActive").checked,
+  };
+
+  try {
+    const url = priceListId
+      ? `/api/price-lists/${priceListId}`
+      : "/api/price-lists";
+    const method = priceListId ? "PUT" : "POST";
+
+    const response = await fetch(url, {
+      method: method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
+    });
+
+    if (response.ok) {
+      alert(priceListId ? "✅ Price list updated!" : "✅ Price list created!");
+      closePriceListModal();
+      loadPriceLists();
+    } else {
+      const err = await response.json();
+      alert("❌ Error: " + (err.error || "Failed to save price list"));
+    }
+  } catch (error) {
+    console.error("Error saving price list:", error);
+    alert("Error saving price list");
+  }
+}
+
+async function editPriceList(priceListId) {
+  openPriceListModal(priceListId);
+}
+
+async function setDefaultPriceList(priceListId) {
+  if (!confirm("Set this price list as the default for Sales Entry?")) return;
+
+  try {
+    const response = await fetch(`/api/price-lists/${priceListId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ is_default: true }),
+    });
+
+    if (response.ok) {
+      alert("✅ Default price list updated!");
+      loadPriceLists();
+    } else {
+      alert("❌ Failed to set default");
+    }
+  } catch (error) {
+    console.error("Error setting default:", error);
+  }
+}
+
+async function deletePriceList(priceListId) {
+  if (!confirm("Are you sure you want to deactivate this price list?")) return;
+
+  try {
+    const response = await fetch(`/api/price-lists/${priceListId}`, {
+      method: "DELETE",
+    });
+
+    if (response.ok) {
+      alert("✅ Price list deactivated!");
+      loadPriceLists();
+    } else {
+      alert("❌ Error deactivating price list");
+    }
+  } catch (error) {
+    console.error("Error deleting price list:", error);
+  }
+}
+
+// ============================================
+// PRODUCT PRICES PER PRICE LIST
+// ============================================
+
+let currentPriceListId = null;
+
+async function openProductPrices(priceListId, priceListName) {
+  currentPriceListId = priceListId;
+  document.getElementById("productPricesTitle").textContent =
+    `Product Prices — ${priceListName}`;
+  document.getElementById("productPricesSection").style.display = "block";
+
+  try {
+    // Get all active products
+    const productsRes = await fetch("/api/products?is_active=true");
+    const products = await productsRes.json();
+
+    // Get existing prices for this list
+    const pricesRes = await fetch(`/api/price-lists/${priceListId}/prices`);
+    const prices = await pricesRes.json();
+
+    // Create lookup
+    const priceMap = {};
+    prices.forEach((p) => {
+      priceMap[p.product_id] = p.price_per_tonne;
+    });
+
+    const tbody = document.getElementById("productPricesTableBody");
+    tbody.innerHTML = products
+      .map(
+        (product) => `
+      <tr>
+        <td><span class="badge badge-${product.family_group.toLowerCase()}">${product.family_group}</span></td>
+        <td>${product.product_name}</td>
+        <td>
+          <input type="number" step="0.01" min="0"
+            class="form-control product-price-input"
+            data-product-id="${product.product_id}"
+            value="${priceMap[product.product_id] !== undefined ? parseFloat(priceMap[product.product_id]).toFixed(2) : ""}"
+            placeholder="No price set"
+            style="width: 150px; padding: 4px 8px"
+          />
+        </td>
+        <td>
+          <button class="btn-icon" onclick="saveSingleProductPrice(${product.product_id}, this)" title="Save">💾</button>
+        </td>
+      </tr>
+    `
+      )
+      .join("");
+  } catch (error) {
+    console.error("Error loading product prices:", error);
+  }
+}
+
+function closeProductPrices() {
+  document.getElementById("productPricesSection").style.display = "none";
+  currentPriceListId = null;
+}
+
+async function saveSingleProductPrice(productId, btn) {
+  const input = document.querySelector(
+    `.product-price-input[data-product-id="${productId}"]`
+  );
+  const price = parseFloat(input.value);
+
+  if (isNaN(price) || price < 0) {
+    alert("Please enter a valid price");
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      `/api/price-lists/${currentPriceListId}/prices/${productId}`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ price_per_tonne: price }),
+      }
+    );
+
+    if (response.ok) {
+      input.style.backgroundColor = "#e8f5e9";
+      setTimeout(() => {
+        input.style.backgroundColor = "";
+      }, 1500);
+    } else {
+      alert("❌ Failed to save price");
+    }
+  } catch (error) {
+    console.error("Error saving price:", error);
+  }
+}
+
+async function saveAllProductPrices() {
+  const inputs = document.querySelectorAll(".product-price-input");
+  const prices = [];
+
+  inputs.forEach((input) => {
+    const val = parseFloat(input.value);
+    if (!isNaN(val) && val >= 0) {
+      prices.push({
+        product_id: parseInt(input.dataset.productId),
+        price_per_tonne: val,
+      });
+    }
+  });
+
+  if (prices.length === 0) {
+    alert("No prices to save");
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      `/api/price-lists/${currentPriceListId}/prices`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prices }),
+      }
+    );
+
+    if (response.ok) {
+      const result = await response.json();
+      alert(`✅ Saved ${result.count} product prices!`);
+      // Flash all inputs green briefly
+      inputs.forEach((input) => {
+        input.style.backgroundColor = "#e8f5e9";
+        setTimeout(() => {
+          input.style.backgroundColor = "";
+        }, 1500);
+      });
+    } else {
+      alert("❌ Failed to save prices");
+    }
+  } catch (error) {
+    console.error("Error saving prices:", error);
   }
 }
