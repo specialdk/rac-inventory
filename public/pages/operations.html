@@ -606,7 +606,7 @@
             </div>
           </div>
 
-          <!-- Row 6: Driver, Trailer Count, and Delivery Type -->
+         <!-- Row 6: Driver, Trailer Count, and Delivery Type -->
           <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 1rem; margin-bottom: 1rem;">
             <div class="form-group" style="margin-bottom: 0;">
               <label class="form-label">Driver</label>
@@ -620,6 +620,7 @@
                 <option value="1" selected>1</option>
                 <option value="2">2</option>
                 <option value="3">3</option>
+                <option value="HR">HR</option>
               </select>
             </div>
             <div class="form-group" style="margin-bottom: 0;">
@@ -627,6 +628,31 @@
               <select class="form-control" id="saleDelivery">
                 <option value="">Select Delivery Type</option>
               </select>
+            </div>
+          </div>
+
+          <!-- Row 6b: Delivery Charge Type and Hours -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label">Delivery Charge</label>
+              <select class="form-control" id="saleDelCT" onchange="toggleHoursField()">
+                <option value="TONNES" selected>Tonnes × Rate</option>
+                <option value="HOURS">Hourly Rate</option>
+              </select>
+              <small style="color: #666">How delivery fee is calculated</small>
+            </div>
+            <div class="form-group" style="margin-bottom: 0; display: none;" id="hoursFieldGroup">
+              <label class="form-label">Hours Taken</label>
+              <input
+                type="number"
+                class="form-control"
+                id="saleDelHours"
+                step="0.5"
+                min="0"
+                placeholder="e.g., 4"
+                style="width: 100px;"
+              />
+              <small style="color: #666">Enter after truck returns</small>
             </div>
           </div>
 

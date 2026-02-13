@@ -646,7 +646,9 @@ async function saveSales() {
     vehicle_id: document.getElementById("saleVehicle").value || null,
     driver_id: document.getElementById("saleDriver").value || null,
     delivery_id: document.getElementById("saleDelivery").value || null,
-    trailer_count: parseInt(document.getElementById("saleTrailerCount").value) || 1,
+    trailer_count: document.getElementById("saleTrailerCount").value,
+    del_ct: document.getElementById("saleDelCT").value || "TONNES",
+    del_hours: document.getElementById("saleDelHours").value ? parseFloat(document.getElementById("saleDelHours").value) : null,
    carrier_id: document.getElementById("saleCarrier").value || null,
     price_list_id: document.getElementById("salePriceList").value || null,
     reference_number: document.getElementById("saleReference").value,
@@ -1407,6 +1409,21 @@ async function loadRecentTareWeight(vehicleId) {
     }
   } catch (error) {
     console.error("Error loading recent tare weight:", error);
+  }
+}
+
+// ============================================
+// DELIVERY CHARGE TYPE TOGGLE
+// ============================================
+function toggleHoursField() {
+  const chargeType = document.getElementById("saleDelCT").value;
+  const hoursGroup = document.getElementById("hoursFieldGroup");
+  
+  if (chargeType === "HOURS") {
+    hoursGroup.style.display = "block";
+  } else {
+    hoursGroup.style.display = "none";
+    document.getElementById("saleDelHours").value = "";
   }
 }
 
