@@ -43,8 +43,8 @@ router.get("/current", async (req, res) => {
     p.min_stock_level,
     p.max_stock_level,
     p.unit,
-    COALESCE(
-      (SELECT SUM(quantity) 
+   COALESCE(
+      (SELECT SUM(quantity - COALESCE(fulfilled_quantity, 0)) 
        FROM demand_orders 
        WHERE product_id = p.product_id 
          AND status IN ('PENDING', 'CONFIRMED')
