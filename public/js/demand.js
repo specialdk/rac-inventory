@@ -360,35 +360,29 @@ async function editDemandOrder(demandOrderId) {
 
     // Open form and populate with existing data
     document.getElementById("demandOrderFormModal").style.display = "flex";
-    document.getElementById("demandOrderFormTitle").textContent =
+    document.getElementById("demandFormTitle").textContent =
       "✏️ Edit Demand Order";
 
     // Load dropdowns first
     populateDemandFormDropdowns();
 
     // Populate form fields
-    document.getElementById("demandOrderDate").value =
-      currentEditingOrder.order_date.split("T")[0];
     document.getElementById("demandRequiredDate").value =
       currentEditingOrder.required_date.split("T")[0];
-    document.getElementById("demandProductId").value =
+    document.getElementById("demandFormProduct").value =
       currentEditingOrder.product_id;
-    document.getElementById("demandCustomerId").value =
+    document.getElementById("demandFormCustomer").value =
       currentEditingOrder.customer_id;
-    document.getElementById("demandQuantity").value =
+    document.getElementById("demandFormQuantity").value =
       currentEditingOrder.quantity;
-    document.getElementById("demandPreferredLocation").value =
+    document.getElementById("demandFormLocation").value =
       currentEditingOrder.preferred_location_id || "";
-    document.getElementById("demandNotes").value =
+    document.getElementById("demandFormPO").value =
+      currentEditingOrder.po_number || "";
+    document.getElementById("demandFormNotes").value =
       currentEditingOrder.notes || "";
-
-    // Show status dropdown for editing (hidden for new orders)
-    const statusField = document.getElementById("demandStatusField");
-    if (statusField) {
-      statusField.style.display = "block";
-      document.getElementById("demandStatus").value =
-        currentEditingOrder.status;
-    }
+    document.getElementById("demandStatus").value =
+      currentEditingOrder.status;
   } catch (error) {
     console.error("Error loading demand order for edit:", error);
     alert("Error loading demand order");
