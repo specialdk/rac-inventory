@@ -139,6 +139,7 @@ router.put("/:id", async (req, res) => {
       required_date,
       preferred_location_id,
       notes,
+      po_number,
       status,
     } = req.body;
 
@@ -166,10 +167,11 @@ router.put("/:id", async (req, res) => {
            required_date = COALESCE($4, required_date),
            preferred_location_id = $5,
            notes = $6,
-           status = COALESCE($7, status),
+           po_number = $7,
+           status = COALESCE($8, status),
            last_modified_at = NOW(),
-           last_modified_by = $8
-       WHERE demand_order_id = $9
+           last_modified_by = $9
+       WHERE demand_order_id = $10
        RETURNING *`,
       [
         product_id,
@@ -178,8 +180,9 @@ router.put("/:id", async (req, res) => {
         required_date,
         preferred_location_id,
         notes,
+        po_number !== undefined ? po_number : null,
         status,
-        "Admin User", // TODO: Get from session/auth
+        "Admin User",
         id,
       ]
     );
