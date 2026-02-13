@@ -1083,7 +1083,7 @@ async function loadDeliveries() {
       <tr>
         <td><strong>${delivery.delivery_name}</strong></td>
         <td>${delivery.description || "-"}</td>
-        <td style="text-align: right">$${parseFloat(
+        <td>$${parseFloat(
           delivery.delivery_charge_per_tonne || 0
         ).toFixed(2)}</td>
         <td>
@@ -1228,7 +1228,7 @@ async function loadDeliveryRates() {
         (rate) => `
       <tr>
         <td><strong>${rate.trailer_count}</strong></td>
-        <td style="text-align: right">$${parseFloat(rate.hourly_rate).toFixed(2)}</td>
+       <td>$${parseFloat(rate.hourly_rate).toFixed(2)}</td>
         <td>${rate.description || "-"}</td>
         <td>
           <span class="badge ${rate.is_active ? "badge-success" : "badge-danger"}">
