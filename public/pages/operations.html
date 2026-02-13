@@ -668,10 +668,17 @@
             </div>
           </div>
 
-          <!-- Row 7: Reference and Docket Number -->
+          <!-- Row 7: Demand Link and PO/Reference -->
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">Sale Reference</label>
+              <label class="form-label">Linked Demand Order</label>
+              <select class="form-control" id="saleDemandOrder" onchange="onDemandOrderSelected()">
+                <option value="">No — Manual PO Entry</option>
+              </select>
+              <small style="color: #666">Link this sale to a confirmed demand order</small>
+            </div>
+            <div class="form-group">
+              <label class="form-label" id="saleReferenceLabel">Sale Reference / PO</label>
               <input
                 type="text"
                 class="form-control"
@@ -679,6 +686,10 @@
                 placeholder="e.g., PO444555888"
               />
             </div>
+          </div>
+
+          <!-- Row 7b: Docket Number -->
+          <div class="form-row">
             <div class="form-group">
               <label class="form-label"
                 >Docket Number

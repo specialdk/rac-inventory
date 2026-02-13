@@ -567,6 +567,7 @@ function openSalesModal() {
   document.getElementById("salesModal").style.display = "flex";
   document.getElementById("salesForm").reset();
   setDefaultDate();
+  loadDemandOrdersForSale();
 }
 
 function closeSalesModal() {
@@ -1525,3 +1526,87 @@ async function saveDeliveryHours(movementId) {
     alert("Error saving delivery hours");
   }
 }
+
+// ============================================
+// DEMAND ORDER LINK FOR SALES
+// ============================================
+async function loadDemandOrdersForSale() {
+  try {
+    const response = await fetch("/api/demand-orders?status=CONFIRMED");
+    const orders = await response.json();
+    
+    // Also get PENDING orders
+    const pendingRes = await fetch("/api/demand-orders?status=PENDING");
+    const pendingOrders = await pendingRes.json();
+    
+    const allOrders = [...orders, ...pendingOrders];
+    
+    const select = document.getElementById("saleDemandOrder");
+    select.innerHTML = '<option value="">No — Manual PO Entry</option>';
+    
+    allOrders.forEach(order => {
+      const remaining = parseFloat(order.quantity) - parseFloat(order.fulfilled_quantity || 0);
+      if (remaining > 0) {
+        const option = new Option(
+          `${order.order_number} | ${order.customer_name} | ${order.product_name} | ${remaining.toFixed(1)}t remaining${order.po_number ? ' | PO: ' + order.po_number : ''}`,
+          order.demand_order_id
+        );
+        option.dataset.customerId = order.customer_id;
+        option.dataset.productId = order.product_id;
+        option.dataset.poNumber = order.po_number || '';
+        option.dataset.preferredLocationId = order.preferred_location_id || '';
+        option.dataset.remaining = remaining;
+        select.add(option);
+      }
+    });
+  } catch (error) {
+    console.error("Error loading demand orders for sale:", error);
+  }
+}
+
+function onDemandOrderSelected() {
+  const select = document.getElementById("saleDemandOrder");
+  const selectedOption = select.selectedOptions[0];
+  const refInput = document.getElementById("saleReference");
+  const refLabel = document.getElementById("saleReferenceLabel");
+  
+  if (select.value && selectedOption.dataset) {
+    // Auto-fill fields from demand order
+    const customerId = selectedOption.dataset.customerId;
+    const productId = selectedOption.dataset.productId;
+    const poNumber = selectedOption.dataset.poNumber;
+    const preferredLocationId = selectedOption.dataset.preferredLocationId;
+    
+    // Set customer
+    if (customerId) {
+      document.getElementById("saleCustomer").value = customerId;
+    }
+    
+    // Set product and trigger stockpile reload
+    if (productId) {
+      document.getElementById("saleProduct").value = productId;
+      loadStockpileDropdown(productId, "saleLocation");
+      updateSalePrice();
+    }
+    
+    // Set preferred location after a short delay (let stockpiles load)
+    if (preferredLocationId) {
+      setTimeout(() => {
+        const locationSelect = document.getElementById("saleLocation");
+        if (locationSelect.querySelector(`option[value="${preferredLocationId}"]`)) {
+          locationSelect.value = preferredLocationId;
+        }
+      }, 500);
+    }
+    
+    // Set PO number
+    refInput.value = poNumber;
+    refInput.style.backgroundColor = "#e8f5e9";
+    refLabel.textContent = "PO Number (from Demand)";
+  } else {
+    // Clear auto-fill styling
+    refInput.style.backgroundColor = "";
+    refLabel.textContent = "Sale Reference / PO";
+  }
+}
+
