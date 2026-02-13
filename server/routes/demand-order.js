@@ -77,6 +77,7 @@ router.post("/", async (req, res) => {
       required_date,
       preferred_location_id,
       notes,
+      po_number,
       status = "PENDING",
     } = req.body;
 
@@ -101,9 +102,10 @@ router.post("/", async (req, res) => {
         required_date,
         preferred_location_id,
         notes,
+        po_number,
         status,
         created_by
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) 
       RETURNING *`,
       [
         order_number,
@@ -113,8 +115,9 @@ router.post("/", async (req, res) => {
         required_date,
         preferred_location_id,
         notes,
+        po_number || null,
         status,
-        "Admin User", // TODO: Get from session/auth
+        "Admin User",
       ]
     );
 

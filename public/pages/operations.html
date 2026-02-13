@@ -359,7 +359,7 @@
                   <th>Customer</th>
                   <th>Product</th>
                   <th style="text-align: right">Quantity</th>
-                  <th>Location</th>
+                  <th>PO Number</th>
                   <th>Status</th>
                   <th style="width: 120px">Actions</th>
                 </tr>
@@ -428,6 +428,17 @@
                 required
               />
             </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">PO Number</label>
+            <input
+              type="text"
+              class="form-control"
+              id="demandFormPO"
+              placeholder="e.g., PO-2026-001"
+            />
+            <small style="color: #666">Customer purchase order reference (required for Confirmed status)</small>
           </div>
 
           <div class="form-row">

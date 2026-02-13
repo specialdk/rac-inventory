@@ -134,21 +134,17 @@ function displayDemandOrders(orders) {
     }
 
     row.innerHTML = `
-      <td>${order.order_number}</td>
+    <td>${order.order_number}</td>
       <td>${orderDate}</td>
       <td>${requiredDate}</td>
-      <td>${order.product_name || "-"}</td>
       <td>${order.customer_name || "-"}</td>
+      <td>${order.product_name || "-"}</td>
       <td class="text-right">${parseFloat(order.quantity).toFixed(1)}t</td>
+      <td>${order.po_number || "-"}</td>
       <td>${statusBadge}</td>
       <td class="text-muted" style="max-width: 150px; overflow: hidden; text-overflow: ellipsis;">${
         order.notes || "-"
       }</td>
-      <td>
-        <div style="display: flex; gap: 5px; justify-content: center;">
-          ${actionButtons}
-        </div>
-      </td>
     `;
 
     tbody.appendChild(row);
@@ -267,6 +263,7 @@ async function saveDemandOrder() {
       ? parseInt(document.getElementById("demandFormLocation").value)
       : null,
     notes: document.getElementById("demandFormNotes").value,
+    po_number: document.getElementById("demandFormPO").value || null,
     status: document.getElementById("demandStatus")?.value || "PENDING",
   };
 
