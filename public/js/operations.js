@@ -997,11 +997,13 @@ function displayMovements(movements) {
       }</td>
       <td class="text-right">${parseFloat(movement.quantity).toFixed(1)}t</td>
       <td class="text-muted">${movement.reference_number || "-"}</td>
-      <td>${movement.movement_type === 'SALES' && movement.del_ct === 'HOURS' && !movement.del_hours 
+     <td>${movement.movement_type === 'SALES' && movement.del_ct === 'HOURS' && !movement.del_hours 
         ? `<button class="btn-sm" style="background:#ff9800;color:#fff;border:none;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:11px;" onclick="openHoursModal(${movement.movement_id}, '${movement.docket_number || ""}')">⏱️ Hours</button>`
         : movement.del_ct === 'HOURS' && movement.del_hours 
           ? `<span style="color:#28a745;font-size:11px;">⏱️ ${movement.del_hours}h</span>` 
-          : ''}</td>
+          : movement.del_ct === 'SET' && movement.del_hours
+            ? `<span style="color:#2196F3;font-size:11px;">💲 $${parseFloat(movement.del_hours).toFixed(0)}</span>`
+            : ''}</td>
     `;
 
     tbody.appendChild(row);
@@ -1425,12 +1427,25 @@ async function loadRecentTareWeight(vehicleId) {
 function toggleHoursField() {
   const chargeType = document.getElementById("saleDelCT").value;
   const hoursGroup = document.getElementById("hoursFieldGroup");
+  const hoursLabel = hoursGroup.querySelector("label");
+  const hoursInput = document.getElementById("saleDelHours");
+  const hoursSmall = hoursGroup.querySelector("small");
   
   if (chargeType === "HOURS") {
     hoursGroup.style.display = "block";
+    hoursLabel.textContent = "Hours Taken";
+    hoursInput.placeholder = "e.g., 4";
+    hoursInput.step = "0.5";
+    hoursSmall.textContent = "Enter after truck returns";
+  } else if (chargeType === "SET") {
+    hoursGroup.style.display = "block";
+    hoursLabel.textContent = "Set Value ($)";
+    hoursInput.placeholder = "e.g., 40";
+    hoursInput.step = "0.01";
+    hoursSmall.textContent = "Fixed delivery charge amount";
   } else {
     hoursGroup.style.display = "none";
-    document.getElementById("saleDelHours").value = "";
+    hoursInput.value = "";
   }
 }
 

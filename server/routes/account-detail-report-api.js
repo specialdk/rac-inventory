@@ -45,6 +45,8 @@ router.get("/reports/account-detail", async (req, res) => {
             THEN (sm.quantity * COALESCE(del.delivery_charge_per_tonne, 0))
           WHEN sm.del_ct = 'HOURS' AND sm.del_hours IS NOT NULL 
             THEN (COALESCE(dhr.hourly_rate, 0) * sm.del_hours)
+          WHEN sm.del_ct = 'SET' AND sm.del_hours IS NOT NULL
+            THEN sm.del_hours
           ELSE NULL
         END as delivery_fee,
         (sm.total_revenue + COALESCE(
@@ -168,8 +170,10 @@ router.get("/reports/account-detail/pdf", async (req, res) => {
         CASE 
           WHEN COALESCE(sm.del_ct, 'TONNES') = 'TONNES' 
             THEN (sm.quantity * COALESCE(del.delivery_charge_per_tonne, 0))
-          WHEN sm.del_ct = 'HOURS' AND sm.del_hours IS NOT NULL 
+         WHEN sm.del_ct = 'HOURS' AND sm.del_hours IS NOT NULL 
             THEN (COALESCE(dhr.hourly_rate, 0) * sm.del_hours)
+          WHEN sm.del_ct = 'SET' AND sm.del_hours IS NOT NULL
+            THEN sm.del_hours
           ELSE NULL
         END as delivery_fee,
         (sm.total_revenue + COALESCE(
@@ -298,6 +302,8 @@ router.get("/reports/account-detail/pdf-with-dockets", async (req, res) => {
             THEN (sm.quantity * COALESCE(del.delivery_charge_per_tonne, 0))
           WHEN sm.del_ct = 'HOURS' AND sm.del_hours IS NOT NULL 
             THEN (COALESCE(dhr.hourly_rate, 0) * sm.del_hours)
+          WHEN sm.del_ct = 'SET' AND sm.del_hours IS NOT NULL
+            THEN sm.del_hours
           ELSE NULL
         END as delivery_fee,
         (sm.total_revenue + COALESCE(
@@ -559,6 +565,8 @@ router.post("/reports/account-detail/email", async (req, res) => {
             THEN (sm.quantity * COALESCE(del.delivery_charge_per_tonne, 0))
           WHEN sm.del_ct = 'HOURS' AND sm.del_hours IS NOT NULL 
             THEN (COALESCE(dhr.hourly_rate, 0) * sm.del_hours)
+          WHEN sm.del_ct = 'SET' AND sm.del_hours IS NOT NULL
+            THEN sm.del_hours
           ELSE NULL
         END as delivery_fee,
         (sm.total_revenue + COALESCE(
