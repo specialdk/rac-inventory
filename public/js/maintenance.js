@@ -70,6 +70,7 @@ async function loadSectionData(section) {
       break;
     case "price-lists":
       loadPriceLists();
+      loadPricingMatrix();
       break;
   }
 }
@@ -1376,7 +1377,6 @@ async function loadPriceLists() {
         </td>
         <td>
           <button class="btn-icon" onclick="editPriceList(${pl.price_list_id})" title="Edit">✏️</button>
-          <button class="btn-icon" onclick="openProductPrices(${pl.price_list_id}, '${pl.price_list_name}')" title="Edit Prices" style="font-size: 12px; padding: 2px 6px; background: #e3f2fd; border-radius: 4px;">💲 Prices</button>
           <button class="btn-icon" onclick="setDefaultPriceList(${pl.price_list_id})" title="Set as Default">⭐</button>
           <button class="btn-icon" onclick="deletePriceList(${pl.price_list_id})" title="Delete">🗑️</button>
         </td>
@@ -1512,139 +1512,201 @@ async function deletePriceList(priceListId) {
 // PRODUCT PRICES PER PRICE LIST
 // ============================================
 
-let currentPriceListId = null;
+// ============================================
+// PRICING MATRIX
+// ============================================
 
-async function openProductPrices(priceListId, priceListName) {
-  currentPriceListId = priceListId;
-  document.getElementById("productPricesTitle").textContent =
-    `Product Prices — ${priceListName}`;
-  document.getElementById("productPricesSection").style.display = "block";
+let matrixPriceLists = [];
+let matrixOriginalPrices = {};
 
+async function loadPricingMatrix() {
   try {
-    // Get all active products
-    const productsRes = await fetch("/api/products?is_active=true");
-    const products = await productsRes.json();
+    // Get active price lists for column headers
+    const plRes = await fetch("/api/price-lists?is_active=true");
+    matrixPriceLists = await plRes.json();
+    matrixPriceLists.sort((a, b) => (a.sort_order || 10) - (b.sort_order || 10));
 
-    // Get existing prices for this list
-    const pricesRes = await fetch(`/api/price-lists/${priceListId}/prices`);
-    const prices = await pricesRes.json();
+    // Get full pricing matrix
+    const matrixRes = await fetch("/api/price-lists-matrix/all");
+    const matrixData = await matrixRes.json();
 
-    // Create lookup
-    const priceMap = {};
-    prices.forEach((p) => {
-      priceMap[p.product_id] = p.price_per_tonne;
+    // Build product lookup: { product_id: { name, family, prices: { pl_id: price } } }
+    const products = {};
+    matrixData.forEach((row) => {
+      if (!products[row.product_id]) {
+        products[row.product_id] = {
+          product_id: row.product_id,
+          product_name: row.product_name,
+          product_code: row.product_code,
+          family_group: row.family_group,
+          prices: {},
+        };
+      }
+      if (row.price_per_tonne !== null && row.price_per_tonne !== undefined) {
+        products[row.product_id].prices[row.price_list_id] = parseFloat(row.price_per_tonne);
+      }
     });
 
-    const tbody = document.getElementById("productPricesTableBody");
-    tbody.innerHTML = products
-      .map(
-        (product) => `
+    // Store originals for change detection
+    matrixOriginalPrices = {};
+    Object.values(products).forEach((p) => {
+      matrixPriceLists.forEach((pl) => {
+        const key = `${p.product_id}_${pl.price_list_id}`;
+        matrixOriginalPrices[key] = p.prices[pl.price_list_id] ?? null;
+      });
+    });
+
+    // Build header
+    const thead = document.getElementById("pricingMatrixHead");
+    thead.innerHTML = `
       <tr>
-        <td><span class="badge badge-${product.family_group.toLowerCase()}">${product.family_group}</span></td>
-        <td>${product.product_name}</td>
-        <td>
-          <input type="number" step="0.01" min="0"
-            class="form-control product-price-input"
-            data-product-id="${product.product_id}"
-            value="${priceMap[product.product_id] !== undefined ? parseFloat(priceMap[product.product_id]).toFixed(2) : ""}"
-            placeholder="No price set"
-            style="width: 150px; padding: 4px 8px"
-          />
-        </td>
-        <td>
-          <button class="btn-icon" onclick="saveSingleProductPrice(${product.product_id}, this)" title="Save">💾</button>
-        </td>
+        <th style="width: 120px">Family</th>
+        <th style="min-width: 180px">Product</th>
+        ${matrixPriceLists
+          .map(
+            (pl) =>
+              `<th style="width: 140px; text-align: center">
+                ${pl.price_list_name}
+                ${pl.is_default ? '<br><small style="color: #28a745">★ Default</small>' : ""}
+              </th>`
+          )
+          .join("")}
       </tr>
-    `
-      )
+    `;
+
+    // Build rows grouped by family
+    const sortedProducts = Object.values(products).sort((a, b) => {
+      if (a.family_group !== b.family_group)
+        return a.family_group.localeCompare(b.family_group);
+      return a.product_name.localeCompare(b.product_name);
+    });
+
+    const tbody = document.getElementById("pricingMatrixBody");
+    let lastFamily = "";
+
+    tbody.innerHTML = sortedProducts
+      .map((product) => {
+        let familyCell = "";
+        if (product.family_group !== lastFamily) {
+          // Count products in this family for rowspan
+          const familyCount = sortedProducts.filter(
+            (p) => p.family_group === product.family_group
+          ).length;
+          familyCell = `<td rowspan="${familyCount}" style="vertical-align: top; font-weight: bold; background: #f8f9fa; border-right: 2px solid #dee2e6">
+            <span class="badge badge-${product.family_group.toLowerCase()}">${product.family_group}</span>
+          </td>`;
+          lastFamily = product.family_group;
+        }
+
+        const priceCells = matrixPriceLists
+          .map((pl) => {
+            const price = product.prices[pl.price_list_id];
+            const key = `${product.product_id}_${pl.price_list_id}`;
+            return `<td style="text-align: center; padding: 4px">
+              <input type="number" step="0.01" min="0"
+                class="matrix-price-input"
+                data-key="${key}"
+                data-product-id="${product.product_id}"
+                data-price-list-id="${pl.price_list_id}"
+                value="${price !== undefined ? price.toFixed(2) : ""}"
+                placeholder="—"
+                style="width: 110px; padding: 4px 8px; text-align: right; border: 1px solid #ddd; border-radius: 4px"
+                onchange="markMatrixChanged(this)"
+              />
+            </td>`;
+          })
+          .join("");
+
+        return `<tr>${familyCell}<td>${product.product_name}</td>${priceCells}</tr>`;
+      })
       .join("");
   } catch (error) {
-    console.error("Error loading product prices:", error);
+    console.error("Error loading pricing matrix:", error);
   }
 }
 
-function closeProductPrices() {
-  document.getElementById("productPricesSection").style.display = "none";
-  currentPriceListId = null;
-}
+function markMatrixChanged(input) {
+  const key = input.dataset.key;
+  const original = matrixOriginalPrices[key];
+  const current = input.value ? parseFloat(input.value) : null;
 
-async function saveSingleProductPrice(productId, btn) {
-  const input = document.querySelector(
-    `.product-price-input[data-product-id="${productId}"]`
-  );
-  const price = parseFloat(input.value);
-
-  if (isNaN(price) || price < 0) {
-    alert("Please enter a valid price");
-    return;
-  }
-
-  try {
-    const response = await fetch(
-      `/api/price-lists/${currentPriceListId}/prices/${productId}`,
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ price_per_tonne: price }),
-      }
-    );
-
-    if (response.ok) {
-      input.style.backgroundColor = "#e8f5e9";
-      setTimeout(() => {
-        input.style.backgroundColor = "";
-      }, 1500);
-    } else {
-      alert("❌ Failed to save price");
-    }
-  } catch (error) {
-    console.error("Error saving price:", error);
+  if (original !== current) {
+    input.style.backgroundColor = "#fff9c4";
+    input.style.borderColor = "#ffc107";
+  } else {
+    input.style.backgroundColor = "";
+    input.style.borderColor = "#ddd";
   }
 }
 
-async function saveAllProductPrices() {
-  const inputs = document.querySelectorAll(".product-price-input");
-  const prices = [];
+async function saveAllMatrixPrices() {
+  const inputs = document.querySelectorAll(".matrix-price-input");
+  const changesByPriceList = {};
+  let changeCount = 0;
 
   inputs.forEach((input) => {
-    const val = parseFloat(input.value);
-    if (!isNaN(val) && val >= 0) {
-      prices.push({
+    const key = input.dataset.key;
+    const original = matrixOriginalPrices[key];
+    const current = input.value ? parseFloat(input.value) : null;
+
+    if (original !== current && current !== null) {
+      const plId = input.dataset.priceListId;
+      if (!changesByPriceList[plId]) {
+        changesByPriceList[plId] = [];
+      }
+      changesByPriceList[plId].push({
         product_id: parseInt(input.dataset.productId),
-        price_per_tonne: val,
+        price_per_tonne: current,
       });
+      changeCount++;
     }
   });
 
-  if (prices.length === 0) {
-    alert("No prices to save");
+  if (changeCount === 0) {
+    alert("No changes to save");
+    return;
+  }
+
+  if (!confirm(`Save ${changeCount} price change${changeCount > 1 ? "s" : ""} across ${Object.keys(changesByPriceList).length} price list${Object.keys(changesByPriceList).length > 1 ? "s" : ""}?`)) {
     return;
   }
 
   try {
-    const response = await fetch(
-      `/api/price-lists/${currentPriceListId}/prices`,
-      {
+    let saved = 0;
+    for (const [plId, prices] of Object.entries(changesByPriceList)) {
+      const response = await fetch(`/api/price-lists/${plId}/prices`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prices }),
-      }
-    );
-
-    if (response.ok) {
-      const result = await response.json();
-      alert(`✅ Saved ${result.count} product prices!`);
-      // Flash all inputs green briefly
-      inputs.forEach((input) => {
-        input.style.backgroundColor = "#e8f5e9";
-        setTimeout(() => {
-          input.style.backgroundColor = "";
-        }, 1500);
       });
-    } else {
-      alert("❌ Failed to save prices");
+
+      if (response.ok) {
+        const result = await response.json();
+        saved += result.count;
+      }
     }
+
+    alert(`✅ Saved ${saved} prices successfully!`);
+
+    // Reset change indicators
+    inputs.forEach((input) => {
+      input.style.backgroundColor = "#e8f5e9";
+      input.style.borderColor = "#4caf50";
+    });
+    setTimeout(() => {
+      inputs.forEach((input) => {
+        input.style.backgroundColor = "";
+        input.style.borderColor = "#ddd";
+      });
+    }, 1500);
+
+    // Update originals
+    inputs.forEach((input) => {
+      const key = input.dataset.key;
+      matrixOriginalPrices[key] = input.value ? parseFloat(input.value) : null;
+    });
   } catch (error) {
-    console.error("Error saving prices:", error);
+    console.error("Error saving matrix prices:", error);
+    alert("Error saving prices");
   }
 }

@@ -549,35 +549,27 @@
           </table>
         </div>
 
-        <!-- Product Prices Sub-table (shown when editing prices) -->
-        <div id="productPricesSection" style="display: none; margin-top: 2rem">
+        <!-- Pricing Matrix -->
+        <div id="pricingMatrixSection" style="margin-top: 2rem">
           <div class="section-header">
-            <h2 id="productPricesTitle">Product Prices</h2>
-            <button class="btn-secondary" onclick="closeProductPrices()">
-              ✕ Close
+            <h2>📊 Pricing Matrix</h2>
+            <button class="btn-primary" onclick="saveAllMatrixPrices()">
+              💾 Save All Changes
             </button>
           </div>
+          <p style="color: #666; margin-bottom: 1rem; font-size: 13px">
+            Edit prices directly in the table below. Changed cells highlight yellow. Click Save All Changes to commit.
+          </p>
           <div class="data-table">
-            <table>
-              <thead>
-                <tr>
-                  <th>Family</th>
-                  <th>Product</th>
-                  <th>Price per Tonne ($)</th>
-                  <th style="width: 100px">Action</th>
-                </tr>
+            <table id="pricingMatrixTable">
+              <thead id="pricingMatrixHead">
+                <tr><th>Loading...</th></tr>
               </thead>
-              <tbody id="productPricesTableBody">
+              <tbody id="pricingMatrixBody">
               </tbody>
             </table>
           </div>
-          <div style="margin-top: 1rem; text-align: right">
-            <button class="btn-primary" onclick="saveAllProductPrices()">
-              💾 Save All Prices
-            </button>
-          </div>
         </div>
-      </div>
 
     <!-- Price List Modal -->
     <div id="priceListModal" class="modal">
