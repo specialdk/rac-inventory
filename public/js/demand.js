@@ -134,14 +134,19 @@ function displayDemandOrders(orders) {
     }
 
     row.innerHTML = `
-    <td>${order.order_number}</td>
+      <td>${order.order_number}</td>
       <td>${orderDate}</td>
       <td>${requiredDate}</td>
       <td>${order.customer_name || "-"}</td>
       <td>${order.product_name || "-"}</td>
       <td class="text-right">${parseFloat(order.quantity).toFixed(1)}t</td>
-   <td>${order.po_number || "-"}</td>
+      <td>${order.po_number || "-"}</td>
       <td>${statusBadge}</td>
+      <td>
+        <div style="display: flex; gap: 5px; justify-content: center;">
+          ${actionButtons}
+        </div>
+      </td>
     `;
 
     tbody.appendChild(row);
