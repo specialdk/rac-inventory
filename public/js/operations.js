@@ -655,6 +655,7 @@ async function saveSales() {
    carrier_id: document.getElementById("saleCarrier").value || null,
     price_list_id: document.getElementById("salePriceList").value || null,
     reference_number: document.getElementById("saleReference").value,
+    demand_order_id: document.getElementById("saleDemandOrder").value || null,
     notes: document.getElementById("saleNotes").value,
   };
 

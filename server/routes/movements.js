@@ -222,9 +222,10 @@ router.post("/sales", async (req, res) => {
      trailer_count = 1,
     price_list_id,
       carrier_id,
-      del_ct = "TONNES",
+  del_ct = "TONNES",
       del_hours,
       reference_number,
+      demand_order_id,
       notes,
       created_by = "system",
     } = req.body;
@@ -300,18 +301,18 @@ router.post("/sales", async (req, res) => {
     const total_revenue = quantity * unit_price;
 
     // Insert movement record
-    const movementResult = await client.query(
+   const movementResult = await client.query(
       `INSERT INTO stock_movements 
    (movement_date, movement_type, product_id, from_location_id, quantity, 
     unit_cost, total_cost, unit_price, total_revenue, customer_id, vehicle_id, 
-    driver_id, delivery_id, trailer_count, carrier_id, gross_weight, tare_weight, docket_number, reference_number, notes, created_by, price_list_id, del_ct, del_hours)
-   VALUES ($1, 'SALES', $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
+    driver_id, delivery_id, trailer_count, carrier_id, gross_weight, tare_weight, docket_number, reference_number, notes, created_by, price_list_id, del_ct, del_hours, demand_order_id)
+   VALUES ($1, 'SALES', $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
    RETURNING *`,
       [
         movement_date,
         product_id,
         from_location_id,
-        quantity, // NET weight
+        quantity,
         unit_cost,
         total_cost,
         unit_price,
@@ -331,8 +332,28 @@ router.post("/sales", async (req, res) => {
         price_list_id || null,
         del_ct,
         del_hours || null,
+        demand_order_id || null,
       ]
     );
+
+    // Update demand order fulfillment if linked
+    if (demand_order_id) {
+      await client.query(
+        `UPDATE demand_orders 
+         SET fulfilled_quantity = COALESCE(fulfilled_quantity, 0) + $1,
+             status = CASE 
+               WHEN COALESCE(fulfilled_quantity, 0) + $1 >= quantity THEN 'FULFILLED'
+               ELSE status 
+             END,
+             last_modified_at = NOW()
+         WHERE demand_order_id = $2`,
+        [quantity, demand_order_id]
+      );
+      console.log(`📋 Demand order ${demand_order_id} updated: +${quantity}t fulfilled`);
+    }
+
+    // Update current stock at source (decrease)
+    await updateCurrentStock(
 
     // Update current stock at source (decrease)
     await updateCurrentStock(
