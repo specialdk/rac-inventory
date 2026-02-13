@@ -880,7 +880,7 @@ router.put("/:id/delivery-hours", async (req, res) => {
 
     // Update the hours
     const result = await pool.query(
-      `UPDATE stock_movements SET del_hours = $1, updated_at = NOW() 
+   `UPDATE stock_movements SET del_hours = $1 
        WHERE movement_id = $2 RETURNING movement_id, docket_number, del_hours`,
       [parseFloat(del_hours), id]
     );
