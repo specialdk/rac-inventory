@@ -140,11 +140,8 @@ function displayDemandOrders(orders) {
       <td>${order.customer_name || "-"}</td>
       <td>${order.product_name || "-"}</td>
       <td class="text-right">${parseFloat(order.quantity).toFixed(1)}t</td>
-      <td>${order.po_number || "-"}</td>
+   <td>${order.po_number || "-"}</td>
       <td>${statusBadge}</td>
-      <td class="text-muted" style="max-width: 150px; overflow: hidden; text-overflow: ellipsis;">${
-        order.notes || "-"
-      }</td>
     `;
 
     tbody.appendChild(row);
