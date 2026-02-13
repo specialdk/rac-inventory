@@ -1527,7 +1527,7 @@ async function loadPricingMatrix() {
     matrixPriceLists.sort((a, b) => (a.sort_order || 10) - (b.sort_order || 10));
 
     // Get full pricing matrix
-    const matrixRes = await fetch("/api/price-lists-matrix/all");
+    const matrixRes = await fetch("/api/price-lists/matrix/all");
     const matrixData = await matrixRes.json();
 
     // Build product lookup: { product_id: { name, family, prices: { pl_id: price } } }

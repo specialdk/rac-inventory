@@ -41,6 +41,26 @@ router.get("/active", async (req, res) => {
   }
 });
 
+// GET full pricing matrix (all products × all active price lists)
+router.get("/matrix/all", async (req, res) => {
+  try {
+    const result = await query(
+      `SELECT p.product_id, p.product_name, p.product_code, p.family_group,
+              pl.price_list_id, pl.price_list_name,
+              pp.price_per_tonne
+       FROM products p
+       CROSS JOIN price_lists pl
+       LEFT JOIN product_prices pp ON p.product_id = pp.product_id AND pl.price_list_id = pp.price_list_id
+       WHERE p.is_active = true AND pl.is_active = true
+       ORDER BY p.family_group, p.product_name, pl.sort_order`
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error("Error fetching pricing matrix:", error);
+    res.status(500).json({ error: "Failed to fetch pricing matrix" });
+  }
+});
+
 // GET single price list by ID
 router.get("/:id", async (req, res) => {
   try {
