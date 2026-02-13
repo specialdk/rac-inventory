@@ -40,15 +40,38 @@ router.get("/reports/account-detail", async (req, res) => {
         sm.quantity as net_weight,
         sm.unit_price,
        sm.total_revenue as fee,
-        (sm.quantity * COALESCE(del.delivery_charge_per_tonne, 0)) as delivery_fee,
-        ((sm.total_revenue + (sm.quantity * COALESCE(del.delivery_charge_per_tonne, 0))) * 0.10) as gst,
-        ((sm.total_revenue + (sm.quantity * COALESCE(del.delivery_charge_per_tonne, 0))) * 1.10) as total,
+        CASE 
+          WHEN COALESCE(sm.del_ct, 'TONNES') = 'TONNES' 
+            THEN (sm.quantity * COALESCE(del.delivery_charge_per_tonne, 0))
+          WHEN sm.del_ct = 'HOURS' AND sm.del_hours IS NOT NULL 
+            THEN (COALESCE(dhr.hourly_rate, 0) * sm.del_hours)
+          ELSE NULL
+        END as delivery_fee,
+        (sm.total_revenue + COALESCE(
+          CASE 
+            WHEN COALESCE(sm.del_ct, 'TONNES') = 'TONNES' 
+              THEN (sm.quantity * COALESCE(del.delivery_charge_per_tonne, 0))
+            WHEN sm.del_ct = 'HOURS' AND sm.del_hours IS NOT NULL 
+              THEN (COALESCE(dhr.hourly_rate, 0) * sm.del_hours)
+            ELSE 0
+          END, 0)) * 0.10 as gst,
+        (sm.total_revenue + COALESCE(
+          CASE 
+            WHEN COALESCE(sm.del_ct, 'TONNES') = 'TONNES' 
+              THEN (sm.quantity * COALESCE(del.delivery_charge_per_tonne, 0))
+            WHEN sm.del_ct = 'HOURS' AND sm.del_hours IS NOT NULL 
+              THEN (COALESCE(dhr.hourly_rate, 0) * sm.del_hours)
+            ELSE 0
+          END, 0)) * 1.10 as total,
+        sm.del_ct,
+        sm.del_hours,
         c.customer_name as account
       FROM stock_movements sm
       LEFT JOIN customers c ON sm.customer_id = c.customer_id
       LEFT JOIN products p ON sm.product_id = p.product_id
       LEFT JOIN vehicles v ON sm.vehicle_id = v.vehicle_id
       LEFT JOIN deliveries del ON sm.delivery_id = del.delivery_id
+      LEFT JOIN delivery_hourly_rates dhr ON sm.trailer_count::text = dhr.trailer_count AND dhr.is_active = true
       WHERE sm.movement_type = 'SALES'
         AND sm.movement_date BETWEEN $1 AND $2
     `;
@@ -142,15 +165,38 @@ router.get("/reports/account-detail/pdf", async (req, res) => {
         sm.quantity as net_weight,
         sm.unit_price,
        sm.total_revenue as fee,
-        (sm.quantity * COALESCE(del.delivery_charge_per_tonne, 0)) as delivery_fee,
-        ((sm.total_revenue + (sm.quantity * COALESCE(del.delivery_charge_per_tonne, 0))) * 0.10) as gst,
-        ((sm.total_revenue + (sm.quantity * COALESCE(del.delivery_charge_per_tonne, 0))) * 1.10) as total,
+        CASE 
+          WHEN COALESCE(sm.del_ct, 'TONNES') = 'TONNES' 
+            THEN (sm.quantity * COALESCE(del.delivery_charge_per_tonne, 0))
+          WHEN sm.del_ct = 'HOURS' AND sm.del_hours IS NOT NULL 
+            THEN (COALESCE(dhr.hourly_rate, 0) * sm.del_hours)
+          ELSE NULL
+        END as delivery_fee,
+        (sm.total_revenue + COALESCE(
+          CASE 
+            WHEN COALESCE(sm.del_ct, 'TONNES') = 'TONNES' 
+              THEN (sm.quantity * COALESCE(del.delivery_charge_per_tonne, 0))
+            WHEN sm.del_ct = 'HOURS' AND sm.del_hours IS NOT NULL 
+              THEN (COALESCE(dhr.hourly_rate, 0) * sm.del_hours)
+            ELSE 0
+          END, 0)) * 0.10 as gst,
+        (sm.total_revenue + COALESCE(
+          CASE 
+            WHEN COALESCE(sm.del_ct, 'TONNES') = 'TONNES' 
+              THEN (sm.quantity * COALESCE(del.delivery_charge_per_tonne, 0))
+            WHEN sm.del_ct = 'HOURS' AND sm.del_hours IS NOT NULL 
+              THEN (COALESCE(dhr.hourly_rate, 0) * sm.del_hours)
+            ELSE 0
+          END, 0)) * 1.10 as total,
+        sm.del_ct,
+        sm.del_hours,
         c.customer_name as account
       FROM stock_movements sm
       LEFT JOIN customers c ON sm.customer_id = c.customer_id
       LEFT JOIN products p ON sm.product_id = p.product_id
       LEFT JOIN vehicles v ON sm.vehicle_id = v.vehicle_id
       LEFT JOIN deliveries del ON sm.delivery_id = del.delivery_id
+      LEFT JOIN delivery_hourly_rates dhr ON sm.trailer_count::text = dhr.trailer_count AND dhr.is_active = true
       WHERE sm.movement_type = 'SALES'
         AND sm.movement_date BETWEEN $1 AND $2
     `;
@@ -247,15 +293,38 @@ router.get("/reports/account-detail/pdf-with-dockets", async (req, res) => {
         sm.quantity as net_weight,
         sm.unit_price,
        sm.total_revenue as fee,
-        (sm.quantity * COALESCE(del.delivery_charge_per_tonne, 0)) as delivery_fee,
-        ((sm.total_revenue + (sm.quantity * COALESCE(del.delivery_charge_per_tonne, 0))) * 0.10) as gst,
-        ((sm.total_revenue + (sm.quantity * COALESCE(del.delivery_charge_per_tonne, 0))) * 1.10) as total,
+        CASE 
+          WHEN COALESCE(sm.del_ct, 'TONNES') = 'TONNES' 
+            THEN (sm.quantity * COALESCE(del.delivery_charge_per_tonne, 0))
+          WHEN sm.del_ct = 'HOURS' AND sm.del_hours IS NOT NULL 
+            THEN (COALESCE(dhr.hourly_rate, 0) * sm.del_hours)
+          ELSE NULL
+        END as delivery_fee,
+        (sm.total_revenue + COALESCE(
+          CASE 
+            WHEN COALESCE(sm.del_ct, 'TONNES') = 'TONNES' 
+              THEN (sm.quantity * COALESCE(del.delivery_charge_per_tonne, 0))
+            WHEN sm.del_ct = 'HOURS' AND sm.del_hours IS NOT NULL 
+              THEN (COALESCE(dhr.hourly_rate, 0) * sm.del_hours)
+            ELSE 0
+          END, 0)) * 0.10 as gst,
+        (sm.total_revenue + COALESCE(
+          CASE 
+            WHEN COALESCE(sm.del_ct, 'TONNES') = 'TONNES' 
+              THEN (sm.quantity * COALESCE(del.delivery_charge_per_tonne, 0))
+            WHEN sm.del_ct = 'HOURS' AND sm.del_hours IS NOT NULL 
+              THEN (COALESCE(dhr.hourly_rate, 0) * sm.del_hours)
+            ELSE 0
+          END, 0)) * 1.10 as total,
+        sm.del_ct,
+        sm.del_hours,
         c.customer_name as account
       FROM stock_movements sm
       LEFT JOIN customers c ON sm.customer_id = c.customer_id
       LEFT JOIN products p ON sm.product_id = p.product_id
       LEFT JOIN vehicles v ON sm.vehicle_id = v.vehicle_id
       LEFT JOIN deliveries del ON sm.delivery_id = del.delivery_id
+      LEFT JOIN delivery_hourly_rates dhr ON sm.trailer_count::text = dhr.trailer_count AND dhr.is_active = true
       WHERE sm.movement_type = 'SALES'
         AND sm.movement_date BETWEEN $1 AND $2
     `;
@@ -485,15 +554,38 @@ router.post("/reports/account-detail/email", async (req, res) => {
        sm.quantity as net_weight,
         sm.unit_price,
        sm.total_revenue as fee,
-        (sm.quantity * COALESCE(del.delivery_charge_per_tonne, 0)) as delivery_fee,
-        ((sm.total_revenue + (sm.quantity * COALESCE(del.delivery_charge_per_tonne, 0))) * 0.10) as gst,
-        ((sm.total_revenue + (sm.quantity * COALESCE(del.delivery_charge_per_tonne, 0))) * 1.10) as total,
+        CASE 
+          WHEN COALESCE(sm.del_ct, 'TONNES') = 'TONNES' 
+            THEN (sm.quantity * COALESCE(del.delivery_charge_per_tonne, 0))
+          WHEN sm.del_ct = 'HOURS' AND sm.del_hours IS NOT NULL 
+            THEN (COALESCE(dhr.hourly_rate, 0) * sm.del_hours)
+          ELSE NULL
+        END as delivery_fee,
+        (sm.total_revenue + COALESCE(
+          CASE 
+            WHEN COALESCE(sm.del_ct, 'TONNES') = 'TONNES' 
+              THEN (sm.quantity * COALESCE(del.delivery_charge_per_tonne, 0))
+            WHEN sm.del_ct = 'HOURS' AND sm.del_hours IS NOT NULL 
+              THEN (COALESCE(dhr.hourly_rate, 0) * sm.del_hours)
+            ELSE 0
+          END, 0)) * 0.10 as gst,
+        (sm.total_revenue + COALESCE(
+          CASE 
+            WHEN COALESCE(sm.del_ct, 'TONNES') = 'TONNES' 
+              THEN (sm.quantity * COALESCE(del.delivery_charge_per_tonne, 0))
+            WHEN sm.del_ct = 'HOURS' AND sm.del_hours IS NOT NULL 
+              THEN (COALESCE(dhr.hourly_rate, 0) * sm.del_hours)
+            ELSE 0
+          END, 0)) * 1.10 as total,
+        sm.del_ct,
+        sm.del_hours,
         c.customer_name as account
       FROM stock_movements sm
       LEFT JOIN customers c ON sm.customer_id = c.customer_id
       LEFT JOIN products p ON sm.product_id = p.product_id
       LEFT JOIN vehicles v ON sm.vehicle_id = v.vehicle_id
       LEFT JOIN deliveries del ON sm.delivery_id = del.delivery_id
+      LEFT JOIN delivery_hourly_rates dhr ON sm.trailer_count::text = dhr.trailer_count AND dhr.is_active = true
       WHERE sm.movement_type = 'SALES'
         AND sm.movement_date BETWEEN $1 AND $2
     `;
@@ -1156,14 +1248,14 @@ function generateAccountDetailPDF(doc, dockets, dateFrom, dateTo) {
 
     const netWt = parseFloat(docket.net_weight) || 0;
     const fee = parseFloat(docket.fee) || 0;
-    const deliveryFee = parseFloat(docket.delivery_fee) || 0;
+    const deliveryFee = docket.delivery_fee !== null ? parseFloat(docket.delivery_fee) : null;
     const gst = parseFloat(docket.gst) || 0;
     const total = parseFloat(docket.total) || 0;
 
     // Accumulate totals
     totalNetWt += netWt;
     totalFee += fee;
-    totalDelivery += deliveryFee;
+    totalDelivery += deliveryFee || 0;
     totalGST += gst;
     totalAmount += total;
 
@@ -1177,7 +1269,7 @@ function generateAccountDetailPDF(doc, dockets, dateFrom, dateTo) {
     doc.text(docket.destination || "-", 425, yPos, { width: 70 });
     doc.text(`${netWt.toFixed(2)} t`, 500, yPos, { width: 40 });
     doc.text(`$${fee.toFixed(2)}`, 545, yPos, { width: 50 });
-    doc.text(`$${deliveryFee.toFixed(2)}`, 600, yPos, { width: 50 });
+    doc.text(deliveryFee !== null ? `$${deliveryFee.toFixed(2)}` : 'Pending', 600, yPos, { width: 50 });
     doc.text(`$${gst.toFixed(2)}`, 655, yPos, { width: 45 });
     doc.text(`$${total.toFixed(2)}`, 705, yPos, { width: 50 });
 
