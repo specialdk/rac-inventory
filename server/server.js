@@ -39,25 +39,18 @@ app.get("/api/health", async (req, res) => {
 // Dashboard statistics endpoint
 app.get("/api/dashboard/stats", async (req, res) => {
   try {
-    // Get products with stock
     const productsResult = await pool.query(
       "SELECT COUNT(DISTINCT product_id) as count FROM current_stock WHERE quantity > 0"
     );
-
-    // Get total inventory value
     const valueResult = await pool.query(
       "SELECT COALESCE(SUM(total_value), 0) as total FROM current_stock"
     );
-
-    // Get MTD production (current month)
     const productionResult = await pool.query(
       `SELECT COALESCE(SUM(quantity), 0) as total 
        FROM stock_movements 
        WHERE movement_type = 'PRODUCTION' 
        AND movement_date >= DATE_TRUNC('month', CURRENT_DATE)`
     );
-
-    // Get MTD sales (current month)
     const salesResult = await pool.query(
       `SELECT COALESCE(SUM(ABS(quantity)), 0) as total 
        FROM stock_movements 
@@ -93,6 +86,9 @@ app.use("/api/price-lists", require("./routes/price-lists"));
 app.use("/api", require("./routes/carriers"));
 app.use("/api", require("./routes/tare-weights"));
 app.use("/api", require("./routes/inventory-api"));
+
+// BOM / Production Rates & Templates (NEW)
+app.use("/api/production-rates", require("./routes/production-rates"));
 
 // Report Routes
 app.use("/api", require("./routes/account-detail-report-api"));
@@ -131,6 +127,7 @@ app.listen(PORT, () => {
   console.log(`   - /api/customers`);
   console.log(`   - /api/vehicles`);
   console.log(`   - /api/drivers`);
+  console.log(`   - /api/production-rates  (BOM rates and templates)`);
   console.log(`   - /api/reports/account-detail (GET)`);
   console.log(`   - /api/reports/account-detail/email (POST)`);
   console.log(`   - POST /api/dockets/edit (Edit Docket)`);
