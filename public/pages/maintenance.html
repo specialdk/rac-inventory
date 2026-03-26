@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="/css/styles.css" />
   </head>
   <body>
-    <!-- Header -->
     <header class="header">
       <div class="header-content">
         <div class="logo-section">
@@ -22,15 +21,11 @@
             <div class="stat-label">Total Inventory Value</div>
             <div class="stat-value" id="headerTotalValue">$0</div>
           </div>
-          <div class="user-info">
-            <span>👤</span>
-            <span>Admin User</span>
-          </div>
+          <div class="user-info"><span>👤</span><span>Admin User</span></div>
         </div>
       </div>
     </header>
 
-    <!-- Navigation -->
     <nav class="nav">
       <div class="nav-content">
         <a href="dashboard.html" class="nav-item">📊 Dashboard</a>
@@ -41,33 +36,21 @@
     </nav>
 
     <div class="sub-nav">
-      <button class="sub-nav-item active" data-section="products">
-        📦 Products
-      </button>
-      <button class="sub-nav-item" data-section="customers">
-        👥 Customers
-      </button>
-      <button class="sub-nav-item" data-section="locations">
-        📍 Locations
-      </button>
+      <button class="sub-nav-item active" data-section="products">📦 Products</button>
+      <button class="sub-nav-item" data-section="customers">👥 Customers</button>
+      <button class="sub-nav-item" data-section="locations">📍 Locations</button>
       <button class="sub-nav-item" data-section="vehicles">🚛 Vehicles</button>
       <button class="sub-nav-item" data-section="drivers">👷 Drivers</button>
       <button class="sub-nav-item" data-section="carriers">🚚 Carriers</button>
-      <button class="sub-nav-item" data-section="deliveries">
-        📍 Deliveries
-      </button>
-      <button class="sub-nav-item" data-section="delivery-rates">
-        💰 Delivery Rates
-      </button>
-      <button class="sub-nav-item" data-section="price-lists">
-        💲 Price Lists
-      </button>
-      <button class="sub-nav-item" data-section="production-rates" onclick="loadProductionRates()">
-        🏭 Production Rates
-      </button>
+      <button class="sub-nav-item" data-section="deliveries">📍 Deliveries</button>
+      <button class="sub-nav-item" data-section="delivery-rates">💰 Delivery Rates</button>
+      <button class="sub-nav-item" data-section="price-lists">💲 Price Lists</button>
+      <button class="sub-nav-item" data-section="production-rates" onclick="loadProductionRates()">🏭 Production Rates</button>
+      <button class="sub-nav-item" data-section="machines" onclick="loadMachines()">🚜 Machines</button>
     </div>
 
     <div class="container">
+
       <!-- PRODUCTS SECTION -->
       <div id="products-section" class="maintenance-section">
         <div class="section-header">
@@ -76,617 +59,383 @@
             <div class="filter-toggle">
               <span class="toggle-label" id="productsToggleLabel">Active</span>
               <label class="toggle-switch">
-                <input
-                  type="checkbox"
-                  id="toggleActiveProducts"
-                  checked
-                  onchange="loadProducts()"
-                />
+                <input type="checkbox" id="toggleActiveProducts" checked onchange="loadProducts()" />
                 <span class="toggle-slider"></span>
               </label>
             </div>
-            <button class="btn-primary" onclick="openProductModal()">
-              ➕ Add Product
-            </button>
+            <button class="btn-primary" onclick="openProductModal()">➕ Add Product</button>
           </div>
         </div>
-
         <div class="search-bar">
-          <input
-            type="text"
-            id="productsSearch"
-            placeholder="Search products..."
-            onkeyup="searchItems('products')"
-          />
+          <input type="text" id="productsSearch" placeholder="Search products..." onkeyup="searchItems('products')" />
         </div>
-
         <div class="data-table">
           <table>
-            <thead>
-              <tr>
-                <th>Code</th>
-                <th>Name</th>
-                <th>Family</th>
-                <th>Cost</th>
-                <th>Price</th>
-                <th>Min Stock</th>
-                <th>Max Stock</th>
-                <th>Unit</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="productsTableBody">
-              <tr>
-                <td colspan="10" style="text-align: center; padding: 2rem">
-                  Loading products...
-                </td>
-              </tr>
-            </tbody>
+            <thead><tr><th>Code</th><th>Name</th><th>Family</th><th>Cost</th><th>Price</th><th>Min Stock</th><th>Max Stock</th><th>Unit</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="productsTableBody"><tr><td colspan="10" style="text-align:center;padding:2rem">Loading products...</td></tr></tbody>
           </table>
         </div>
       </div>
 
       <!-- CUSTOMERS SECTION -->
-      <div
-        id="customers-section"
-        class="maintenance-section"
-        style="display: none"
-      >
+      <div id="customers-section" class="maintenance-section" style="display:none">
         <div class="section-header">
           <h2>Customers Management</h2>
           <div style="display: flex; gap: 1rem; align-items: center">
             <div class="filter-toggle">
               <span class="toggle-label" id="customersToggleLabel">Active</span>
               <label class="toggle-switch">
-                <input
-                  type="checkbox"
-                  id="toggleActiveCustomers"
-                  checked
-                  onchange="loadCustomers()"
-                />
+                <input type="checkbox" id="toggleActiveCustomers" checked onchange="loadCustomers()" />
                 <span class="toggle-slider"></span>
               </label>
             </div>
-            <button class="btn-primary" onclick="openCustomerModal()">
-              ➕ Add Customer
-            </button>
+            <button class="btn-primary" onclick="openCustomerModal()">➕ Add Customer</button>
           </div>
         </div>
-
         <div class="search-bar">
-          <input
-            type="text"
-            id="customersSearch"
-            placeholder="Search customers..."
-            onkeyup="searchItems('customers')"
-          />
+          <input type="text" id="customersSearch" placeholder="Search customers..." onkeyup="searchItems('customers')" />
         </div>
-
         <div class="data-table">
           <table>
-            <thead>
-              <tr>
-                <th>Code</th>
-                <th>Name</th>
-                <th>Contact Person</th>
-                <th>Phone</th>
-                <th>Email</th>
-                <th>Type</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="customersTableBody">
-              <tr>
-                <td colspan="8" style="text-align: center; padding: 2rem">
-                  Loading customers...
-                </td>
-              </tr>
-            </tbody>
+            <thead><tr><th>Code</th><th>Name</th><th>Contact Person</th><th>Phone</th><th>Email</th><th>Type</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="customersTableBody"><tr><td colspan="8" style="text-align:center;padding:2rem">Loading customers...</td></tr></tbody>
           </table>
         </div>
       </div>
 
       <!-- LOCATIONS SECTION -->
-      <div
-        id="locations-section"
-        class="maintenance-section"
-        style="display: none"
-      >
+      <div id="locations-section" class="maintenance-section" style="display:none">
         <div class="section-header">
           <h2>Locations Management</h2>
           <div style="display: flex; gap: 1rem; align-items: center">
             <div class="filter-toggle">
               <span class="toggle-label" id="locationsToggleLabel">Active</span>
               <label class="toggle-switch">
-                <input
-                  type="checkbox"
-                  id="toggleActiveLocations"
-                  checked
-                  onchange="loadLocations()"
-                />
+                <input type="checkbox" id="toggleActiveLocations" checked onchange="loadLocations()" />
                 <span class="toggle-slider"></span>
               </label>
             </div>
-            <button class="btn-primary" onclick="openLocationModal()">
-              ➕ Add Location
-            </button>
+            <button class="btn-primary" onclick="openLocationModal()">➕ Add Location</button>
           </div>
         </div>
-
         <div class="search-bar">
-          <input
-            type="text"
-            id="locationsSearch"
-            placeholder="Search locations..."
-            onkeyup="searchItems('locations')"
-          />
+          <input type="text" id="locationsSearch" placeholder="Search locations..." onkeyup="searchItems('locations')" />
         </div>
-
         <div class="data-table">
           <table>
-            <thead>
-              <tr>
-                <th>Code</th>
-                <th>Name</th>
-                <th>Type</th>
-                <th>Capacity</th>
-                <th>Assigned Product</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="locationsTableBody">
-              <tr>
-                <td colspan="7" style="text-align: center; padding: 2rem">
-                  Loading locations...
-                </td>
-              </tr>
-            </tbody>
+            <thead><tr><th>Code</th><th>Name</th><th>Type</th><th>Capacity</th><th>Assigned Product</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="locationsTableBody"><tr><td colspan="7" style="text-align:center;padding:2rem">Loading locations...</td></tr></tbody>
           </table>
         </div>
       </div>
 
       <!-- VEHICLES SECTION -->
-      <div
-        id="vehicles-section"
-        class="maintenance-section"
-        style="display: none"
-      >
+      <div id="vehicles-section" class="maintenance-section" style="display:none">
         <div class="section-header">
           <h2>Vehicles Management</h2>
           <div style="display: flex; gap: 1rem; align-items: center">
             <div class="filter-toggle">
               <span class="toggle-label" id="vehiclesToggleLabel">Active</span>
               <label class="toggle-switch">
-                <input
-                  type="checkbox"
-                  id="toggleActiveVehicles"
-                  checked
-                  onchange="loadVehicles()"
-                />
+                <input type="checkbox" id="toggleActiveVehicles" checked onchange="loadVehicles()" />
                 <span class="toggle-slider"></span>
               </label>
             </div>
-            <button class="btn-primary" onclick="openVehicleModal()">
-              ➕ Add Vehicle
-            </button>
+            <button class="btn-primary" onclick="openVehicleModal()">➕ Add Vehicle</button>
           </div>
         </div>
-
         <div class="search-bar">
-          <input
-            type="text"
-            id="vehiclesSearch"
-            placeholder="Search vehicles..."
-            onkeyup="searchItems('vehicles')"
-          />
+          <input type="text" id="vehiclesSearch" placeholder="Search vehicles..." onkeyup="searchItems('vehicles')" />
         </div>
-
         <div class="data-table">
           <table>
-            <thead>
-              <tr>
-                <th>Registration</th>
-                <th>Type</th>
-                <th>Capacity</th>
-                <th>Last Service</th>
-                <th>Next Service</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="vehiclesTableBody">
-              <tr>
-                <td colspan="6" style="text-align: center; padding: 2rem">
-                  Loading vehicles...
-                </td>
-              </tr>
-            </tbody>
+            <thead><tr><th>Registration</th><th>Type</th><th>Capacity</th><th>Last Service</th><th>Next Service</th><th>Actions</th></tr></thead>
+            <tbody id="vehiclesTableBody"><tr><td colspan="6" style="text-align:center;padding:2rem">Loading vehicles...</td></tr></tbody>
           </table>
         </div>
       </div>
 
       <!-- DRIVERS SECTION -->
-      <div
-        id="drivers-section"
-        class="maintenance-section"
-        style="display: none"
-      >
+      <div id="drivers-section" class="maintenance-section" style="display:none">
         <div class="section-header">
           <h2>Driver Management</h2>
           <div style="display: flex; gap: 1rem; align-items: center">
             <div class="filter-toggle">
               <span class="toggle-label" id="driversToggleLabel">Active</span>
               <label class="toggle-switch">
-                <input
-                  type="checkbox"
-                  id="toggleActiveDrivers"
-                  checked
-                  onchange="loadDrivers()"
-                />
+                <input type="checkbox" id="toggleActiveDrivers" checked onchange="loadDrivers()" />
                 <span class="toggle-slider"></span>
               </label>
             </div>
-            <button class="btn-primary" onclick="openDriverModal()">
-              ➕ Add Driver
-            </button>
+            <button class="btn-primary" onclick="openDriverModal()">➕ Add Driver</button>
           </div>
         </div>
-
         <div class="search-bar">
-          <input
-            type="text"
-            id="driversSearch"
-            placeholder="Search drivers..."
-            onkeyup="searchItems('drivers')"
-          />
+          <input type="text" id="driversSearch" placeholder="Search drivers..." onkeyup="searchItems('drivers')" />
         </div>
-
         <div class="data-table">
           <table>
-            <thead>
-              <tr>
-                <th>Code</th>
-                <th>Name</th>
-                <th>License</th>
-                <th>Class</th>
-                <th>Expiry</th>
-                <th>Certifications</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="driversTableBody">
-              <tr>
-                <td colspan="7" style="text-align: center; padding: 2rem">
-                  Loading drivers...
-                </td>
-              </tr>
-            </tbody>
+            <thead><tr><th>Code</th><th>Name</th><th>License</th><th>Class</th><th>Expiry</th><th>Certifications</th><th>Actions</th></tr></thead>
+            <tbody id="driversTableBody"><tr><td colspan="7" style="text-align:center;padding:2rem">Loading drivers...</td></tr></tbody>
           </table>
         </div>
       </div>
 
       <!-- CARRIERS SECTION -->
-      <div
-        id="carriers-section"
-        class="maintenance-section"
-        style="display: none"
-      >
+      <div id="carriers-section" class="maintenance-section" style="display:none">
         <div class="section-header">
           <h2>Carriers Management</h2>
           <div style="display: flex; gap: 1rem; align-items: center">
             <div class="filter-toggle">
               <span class="toggle-label" id="carriersToggleLabel">Active</span>
               <label class="toggle-switch">
-                <input
-                  type="checkbox"
-                  id="toggleActiveCarriers"
-                  checked
-                  onchange="loadCarriers()"
-                />
+                <input type="checkbox" id="toggleActiveCarriers" checked onchange="loadCarriers()" />
                 <span class="toggle-slider"></span>
               </label>
             </div>
-            <button class="btn-primary" onclick="openCarrierModal()">
-              ➕ Add Carrier
-            </button>
+            <button class="btn-primary" onclick="openCarrierModal()">➕ Add Carrier</button>
           </div>
         </div>
-
         <div class="search-bar">
-          <input
-            type="text"
-            id="carriersSearch"
-            placeholder="Search carriers..."
-            onkeyup="searchItems('carriers')"
-          />
+          <input type="text" id="carriersSearch" placeholder="Search carriers..." onkeyup="searchItems('carriers')" />
         </div>
         <div class="data-table">
           <table>
-            <thead>
-              <tr>
-                <th>Carrier Name</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="carriersTableBody">
-              <tr>
-                <td colspan="2" style="text-align: center; padding: 2rem">
-                  Loading carriers...
-                </td>
-              </tr>
-            </tbody>
+            <thead><tr><th>Carrier Name</th><th>Actions</th></tr></thead>
+            <tbody id="carriersTableBody"><tr><td colspan="2" style="text-align:center;padding:2rem">Loading carriers...</td></tr></tbody>
           </table>
         </div>
       </div>
 
-      <!-- Deliveries Section -->
-      <div
-        id="deliveries-section"
-        class="maintenance-section"
-        style="display: none"
-      >
+      <!-- DELIVERIES SECTION -->
+      <div id="deliveries-section" class="maintenance-section" style="display:none">
         <div class="section-header">
           <h2>📍 Deliveries Management</h2>
           <div style="display: flex; gap: 1rem; align-items: center">
             <div class="filter-toggle">
-              <span class="toggle-label" id="deliveriesToggleLabel"
-                >Active</span
-              >
+              <span class="toggle-label" id="deliveriesToggleLabel">Active</span>
               <label class="toggle-switch">
-                <input
-                  type="checkbox"
-                  id="toggleActiveDeliveries"
-                  checked
-                  onchange="loadDeliveries()"
-                />
+                <input type="checkbox" id="toggleActiveDeliveries" checked onchange="loadDeliveries()" />
                 <span class="toggle-slider"></span>
               </label>
             </div>
-            <button class="btn-primary" onclick="openDeliveryModal()">
-              ➕ Add Delivery
-            </button>
+            <button class="btn-primary" onclick="openDeliveryModal()">➕ Add Delivery</button>
           </div>
         </div>
-
         <div class="data-table">
           <table>
-            <thead>
-              <tr>
-                <th>Delivery Name</th>
-                <th>Description</th>
-                <th>Charge per Tonne</th>
-                <th>Status</th>
-                <th style="width: 120px">Actions</th>
-              </tr>
-            </thead>
-            <tbody id="deliveriesTableBody">
-              <tr>
-                <td colspan="5" style="text-align: center; padding: 20px">
-                  Loading deliveries...
-                </td>
-              </tr>
-            </tbody>
+            <thead><tr><th>Delivery Name</th><th>Description</th><th>Charge per Tonne</th><th>Status</th><th style="width:120px">Actions</th></tr></thead>
+            <tbody id="deliveriesTableBody"><tr><td colspan="5" style="text-align:center;padding:20px">Loading deliveries...</td></tr></tbody>
           </table>
         </div>
       </div>
 
-   <!-- DELIVERY RATES SECTION -->
-      <div
-        id="delivery-rates-section"
-        class="maintenance-section"
-        style="display: none"
-      >
+      <!-- DELIVERY RATES SECTION -->
+      <div id="delivery-rates-section" class="maintenance-section" style="display:none">
         <div class="section-header">
           <h2>💰 Delivery Hourly Rates</h2>
-          <div style="display: flex; gap: 1rem; align-items: center">
-            <button class="btn-primary" onclick="openDeliveryRateModal()">
-              ➕ Add Rate
-            </button>
-          </div>
+          <button class="btn-primary" onclick="openDeliveryRateModal()">➕ Add Rate</button>
         </div>
-
         <div class="data-table">
           <table>
-            <thead>
-              <tr>
-                <th>Trailer Count</th>
-                <th>Hourly Rate</th>
-                <th>Description</th>
-                <th>Status</th>
-                <th style="width: 120px">Actions</th>
-              </tr>
-            </thead>
-            <tbody id="deliveryRatesTableBody">
-              <tr>
-                <td colspan="5" style="text-align: center; padding: 20px">
-                  Loading rates...
-                </td>
-              </tr>
-            </tbody>
+            <thead><tr><th>Trailer Count</th><th>Hourly Rate</th><th>Description</th><th>Status</th><th style="width:120px">Actions</th></tr></thead>
+            <tbody id="deliveryRatesTableBody"><tr><td colspan="5" style="text-align:center;padding:20px">Loading rates...</td></tr></tbody>
           </table>
         </div>
       </div>
 
       <!-- PRICE LISTS SECTION -->
-      <div
-        id="price-lists-section"
-        class="maintenance-section"
-        style="display: none"
-      >
+      <div id="price-lists-section" class="maintenance-section" style="display:none">
         <div class="section-header">
           <h2>💲 Price Lists Management</h2>
-          <div style="display: flex; gap: 1rem; align-items: center">
-            <button class="btn-primary" onclick="openPriceListModal()">
-              ➕ Add Price List
-            </button>
-          </div>
+          <button class="btn-primary" onclick="openPriceListModal()">➕ Add Price List</button>
         </div>
-
-        <p style="color: #666; margin-bottom: 1rem; font-size: 14px">
+        <p style="color:#666;margin-bottom:1rem;font-size:14px">
           Manage pricing tiers for different customers. The default price list is auto-selected in Sales Entry.
-          To set product prices for each list, use the Edit Prices button.
         </p>
-
         <div class="data-table">
           <table>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Description</th>
-                <th>Default</th>
-                <th>Sort Order</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="priceListsTableBody">
-              <tr>
-                <td colspan="6" style="text-align: center; padding: 20px">
-                  Loading price lists...
-                </td>
-              </tr>
-            </tbody>
+            <thead><tr><th>Name</th><th>Description</th><th>Default</th><th>Sort Order</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="priceListsTableBody"><tr><td colspan="6" style="text-align:center;padding:20px">Loading price lists...</td></tr></tbody>
           </table>
         </div>
-
-        <!-- Pricing Matrix -->
-        <div id="pricingMatrixSection" style="margin-top: 2rem">
+        <div id="pricingMatrixSection" style="margin-top:2rem">
           <div class="section-header">
             <h2>📊 Pricing Matrix</h2>
-            <button class="btn-primary" onclick="saveAllMatrixPrices()">
-              💾 Save All Changes
-            </button>
+            <button class="btn-primary" onclick="saveAllMatrixPrices()">💾 Save All Changes</button>
           </div>
-          <p style="color: #666; margin-bottom: 1rem; font-size: 13px">
-            Edit prices directly in the table below. Changed cells highlight yellow. Click Save All Changes to commit.
-          </p>
+          <p style="color:#666;margin-bottom:1rem;font-size:13px">Edit prices directly in the table below. Changed cells highlight yellow.</p>
           <div class="data-table">
             <table id="pricingMatrixTable">
-              <thead id="pricingMatrixHead">
-                <tr><th>Loading...</th></tr>
-              </thead>
-              <tbody id="pricingMatrixBody">
-              </tbody>
+              <thead id="pricingMatrixHead"><tr><th>Loading...</th></tr></thead>
+              <tbody id="pricingMatrixBody"></tbody>
             </table>
           </div>
         </div>
       </div>
 
-      <!-- ============================================================ -->
-      <!-- PRODUCTION RATES SECTION                                      -->
-      <!-- Admin/Manager maintained. Stable month to month.             -->
-      <!-- ============================================================ -->
-      <div
-        id="production-rates-section"
-        class="maintenance-section"
-        style="display: none"
-      >
-        <div class="section-header">
-          <h2>🏭 Production Rates</h2>
-        </div>
-
-        <p style="color: #666; margin-bottom: 1.5rem; font-size: 14px; line-height: 1.6;">
+      <!-- PRODUCTION RATES SECTION -->
+      <div id="production-rates-section" class="maintenance-section" style="display:none">
+        <div class="section-header"><h2>🏭 Production Rates</h2></div>
+        <p style="color:#666;margin-bottom:1.5rem;font-size:14px;line-height:1.6;">
           These rates are used to calculate the cost of each production run.
           Rates are stable month to month — update only when actual costs change.
-          Changes apply to all future production runs. Past runs retain the rates
-          that were active at the time.
+          Changes apply to all future production runs. Past runs retain the rates active at the time.
         </p>
-
-        <!-- Badges -->
-        <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem;">
-          <span style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 4px 10px; font-size: 12px; color: #856404;">
+        <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem;">
+          <span style="background:#fff3cd;border:1px solid #ffc107;border-radius:4px;padding:4px 10px;font-size:12px;color:#856404;">
             ⚠️ Blast WIP rate sources from Xero — update when Xero WIP cost changes
           </span>
-          <span style="background: #d1ecf1; border: 1px solid #bee5eb; border-radius: 4px; padding: 4px 10px; font-size: 12px; color: #0c5460;">
-            ℹ️ Maintenance cost is derived from Machine Hours — no separate rate needed
+          <span style="background:#d1ecf1;border:1px solid #bee5eb;border-radius:4px;padding:4px 10px;font-size:12px;color:#0c5460;">
+            ℹ️ Maintenance cost is derived from Machine Hours — see Machines tab for per-machine rates
           </span>
         </div>
+        <div class="data-table">
+          <table>
+            <thead><tr><th>Rate Type</th><th>Description</th><th style="text-align:right">Current Rate</th><th>Unit</th><th>Effective From</th><th>Last Updated</th><th>Notes</th><th style="width:80px">Action</th></tr></thead>
+            <tbody id="productionRatesTableBody"><tr><td colspan="8" style="text-align:center;padding:2rem;color:#999">Loading production rates...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
 
+      <!-- ============================================================ -->
+      <!-- MACHINES SECTION                                              -->
+      <!-- ============================================================ -->
+      <div id="machines-section" class="maintenance-section" style="display:none">
+        <div class="section-header">
+          <h2>🚜 Machine Register</h2>
+          <button class="btn-primary" onclick="openMachineModal()">➕ Add Machine</button>
+        </div>
+        <p style="color:#666;margin-bottom:1.5rem;font-size:14px;line-height:1.6;">
+          Each machine carries its own operating rate, maintenance provision, and fuel consumption rate.
+          These feed directly into BOM templates and production run cost calculations.
+        </p>
         <div class="data-table">
           <table>
             <thead>
               <tr>
-                <th>Rate Type</th>
-                <th>Description</th>
-                <th style="text-align: right;">Current Rate</th>
-                <th>Unit</th>
-                <th>Effective From</th>
-                <th>Last Updated</th>
+                <th>Machine</th>
+                <th>Type</th>
+                <th style="text-align:right">Rate ($/hr)</th>
+                <th style="text-align:right">Maintenance ($/hr)</th>
+                <th style="text-align:right">Fuel (L/hr)</th>
+                <th style="text-align:right">Total Cost/hr</th>
                 <th>Notes</th>
-                <th style="width: 80px;">Action</th>
+                <th style="width:100px">Actions</th>
               </tr>
             </thead>
-            <tbody id="productionRatesTableBody">
-              <tr>
-                <td colspan="8" style="text-align: center; padding: 2rem; color: #999;">
-                  Loading production rates...
-                </td>
-              </tr>
+            <tbody id="machinesTableBody">
+              <tr><td colspan="8" style="text-align:center;padding:2rem;color:#999">Loading machines...</td></tr>
             </tbody>
           </table>
+        </div>
+        <div style="background:#f0f7ff;border:1px solid #bee3f8;border-radius:6px;padding:12px 16px;margin-top:1rem;font-size:13px;color:#2c5282;">
+          ℹ️ <strong>Total Cost/hr</strong> = Operating Rate + Maintenance Rate (fuel cost is calculated separately using the Fuel rate from Production Rates).
+          This figure gives you the all-in machine cost before fuel.
         </div>
       </div>
 
     </div><!-- end .container -->
 
-    <!-- ============================================================ -->
-    <!-- PRODUCTION RATE EDIT MODAL                                    -->
-    <!-- ============================================================ -->
-    <div id="productionRateModal" class="modal">
-      <div class="modal-content" style="max-width: 480px;">
+    <!-- MACHINE MODAL -->
+    <div id="machineModal" class="modal">
+      <div class="modal-content" style="max-width:560px">
         <div class="modal-header">
-          <h2 id="rateModalTitle">Edit Rate</h2>
-          <button class="modal-close" onclick="closeRateEditModal()">×</button>
+          <h2 id="machineModalTitle">Add Machine</h2>
+          <button class="modal-close" onclick="closeMachineModal()">×</button>
+        </div>
+        <input type="hidden" id="machineId" />
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label required">Machine Name</label>
+            <input type="text" class="form-control" id="machineName" required placeholder="e.g., Primary Jaw Crusher" />
+          </div>
+          <div class="form-group">
+            <label class="form-label required">Type</label>
+            <select class="form-control" id="machineType" required>
+              <option value="">Select Type</option>
+              <option value="CRUSHER">Crusher</option>
+              <option value="SCREEN">Screening Plant</option>
+              <option value="EXCAVATOR">Excavator</option>
+              <option value="DOZER">Bulldozer</option>
+              <option value="LOADER">Loader</option>
+              <option value="GRADER">Grader</option>
+              <option value="TRUCK">Truck</option>
+              <option value="OTHER">Other</option>
+            </select>
+          </div>
         </div>
 
-        <input type="hidden" id="editRateId" />
-
-        <div style="background: #f8f9fa; border-radius: 6px; padding: 12px; margin-bottom: 1.5rem;">
-          <div style="font-size: 13px; color: #6c757d; margin-bottom: 4px;">Rate Type</div>
-          <div id="editRateType" style="font-weight: 600; font-size: 15px; color: #212529;"></div>
-          <div id="editRateUnit" style="font-size: 13px; color: #6c757d; margin-top: 2px;"></div>
+        <div style="background:#f8f9fa;border-radius:6px;padding:14px;margin-bottom:1rem;">
+          <div style="font-size:12px;color:#6c757d;margin-bottom:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">
+            Cost Rates — enter $0.00 if unknown, update before first production run
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Operating Rate ($/hr)</label>
+              <input type="number" class="form-control" id="machineRatePerHour" step="0.01" min="0" placeholder="0.00" />
+              <small style="color:#666">Capital + operating cost per hour</small>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Maintenance Provision ($/hr)</label>
+              <input type="number" class="form-control" id="machineMaintenanceRate" step="0.01" min="0" placeholder="0.00" />
+              <small style="color:#666">Set-aside for repairs and servicing</small>
+            </div>
+          </div>
+          <div class="form-group" style="max-width:200px">
+            <label class="form-label">Fuel Consumption (L/hr)</label>
+            <input type="number" class="form-control" id="machineFuelLitres" step="0.1" min="0" placeholder="0.0" />
+            <small style="color:#666">Average litres burned per hour</small>
+          </div>
         </div>
 
-        <div class="form-group">
-          <label class="form-label required">Rate Value</label>
-          <input
-            type="number"
-            class="form-control"
-            id="editRateValue"
-            step="0.01"
-            min="0"
-            placeholder="0.00"
-            style="font-size: 1.2rem; font-weight: 600; text-align: right;"
-          />
-          <small style="color: #666; display: block; margin-top: 4px;">
-            Enter the dollar value per unit. Set to 0.00 if not yet determined.
-          </small>
+        <!-- Live cost preview -->
+        <div id="machineCostPreview" style="background:#e8f4e8;border:1px solid #c3e6cb;border-radius:6px;padding:10px 14px;margin-bottom:1rem;font-size:13px;display:none;">
+          <strong>Estimated total cost/hr (ex. fuel):</strong>
+          <span id="machineCostPreviewValue" style="font-size:1.1rem;font-weight:700;color:#155724;margin-left:8px;">$0.00</span>
         </div>
 
         <div class="form-group">
           <label class="form-label">Notes</label>
-          <textarea
-            class="form-control"
-            id="editRateNotes"
-            rows="3"
-            placeholder="e.g. Updated March 2026 — sourced from Xero WIP report"
-          ></textarea>
-        </div>
-
-        <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 6px;
-                    padding: 10px 14px; margin-bottom: 1rem; font-size: 13px; color: #856404;">
-          ⚠️ This change applies to all future production runs. Existing records are not affected.
+          <textarea class="form-control" id="machineNotes" rows="2" placeholder="e.g. 2018 Sandvik QJ341 jaw crusher — purchased 2nd hand March 2026"></textarea>
         </div>
 
         <div class="modal-footer">
-          <button type="button" class="btn-secondary" onclick="closeRateEditModal()">
-            Cancel
-          </button>
-          <button type="button" class="btn-primary" onclick="saveProductionRate()">
-            💾 Save Rate
-          </button>
+          <button type="button" class="btn-secondary" onclick="closeMachineModal()">Cancel</button>
+          <button type="button" class="btn-primary" onclick="saveMachine()">💾 Save Machine</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRODUCTION RATE EDIT MODAL -->
+    <div id="productionRateModal" class="modal">
+      <div class="modal-content" style="max-width:480px">
+        <div class="modal-header">
+          <h2 id="rateModalTitle">Edit Rate</h2>
+          <button class="modal-close" onclick="closeRateEditModal()">×</button>
+        </div>
+        <input type="hidden" id="editRateId" />
+        <div style="background:#f8f9fa;border-radius:6px;padding:12px;margin-bottom:1.5rem">
+          <div style="font-size:13px;color:#6c757d;margin-bottom:4px">Rate Type</div>
+          <div id="editRateType" style="font-weight:600;font-size:15px;color:#212529"></div>
+          <div id="editRateUnit" style="font-size:13px;color:#6c757d;margin-top:2px"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label required">Rate Value</label>
+          <input type="number" class="form-control" id="editRateValue" step="0.01" min="0" placeholder="0.00"
+            style="font-size:1.2rem;font-weight:600;text-align:right" />
+          <small style="color:#666;display:block;margin-top:4px">Enter the dollar value per unit.</small>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes</label>
+          <textarea class="form-control" id="editRateNotes" rows="3" placeholder="e.g. Updated March 2026 — sourced from Xero WIP report"></textarea>
+        </div>
+        <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:6px;padding:10px 14px;margin-bottom:1rem;font-size:13px;color:#856404">
+          ⚠️ This change applies to all future production runs. Existing records are not affected.
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeRateEditModal()">Cancel</button>
+          <button type="button" class="btn-primary" onclick="saveProductionRate()">💾 Save Rate</button>
         </div>
       </div>
     </div>
@@ -711,21 +460,18 @@
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">Sort Order</label>
-              <input type="number" class="form-control" id="priceListSortOrder" value="10" min="1" placeholder="10" />
-              <small style="color: #666; display: block; margin-top: 4px;">Lower numbers appear first in dropdowns</small>
+              <input type="number" class="form-control" id="priceListSortOrder" value="10" min="1" />
+              <small style="color:#666;display:block;margin-top:4px">Lower numbers appear first</small>
             </div>
-            <div class="form-group" style="display: flex; flex-direction: column; justify-content: center;">
-              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                <input type="checkbox" id="priceListDefault" />
-                <span>Set as Default</span>
+            <div class="form-group" style="display:flex;flex-direction:column;justify-content:center">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                <input type="checkbox" id="priceListDefault" /><span>Set as Default</span>
               </label>
-              <small style="color: #666; display: block; margin-top: 4px; margin-left: 24px;">Default price list is auto-selected in Sales</small>
             </div>
           </div>
           <div class="form-group">
-            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-              <input type="checkbox" id="priceListActive" checked />
-              <span>Active</span>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+              <input type="checkbox" id="priceListActive" checked /><span>Active</span>
             </label>
           </div>
           <div class="modal-footer">
@@ -780,14 +526,8 @@
         <form id="productForm" onsubmit="event.preventDefault(); saveProduct();">
           <input type="hidden" id="productId" />
           <div class="form-row">
-            <div class="form-group">
-              <label for="productCode">Product Code *</label>
-              <input type="text" id="productCode" required placeholder="e.g., A20-STD" />
-            </div>
-            <div class="form-group">
-              <label for="productName">Product Name *</label>
-              <input type="text" id="productName" required placeholder="e.g., 20mm Aggregate" />
-            </div>
+            <div class="form-group"><label for="productCode">Product Code *</label><input type="text" id="productCode" required placeholder="e.g., A20-STD" /></div>
+            <div class="form-group"><label for="productName">Product Name *</label><input type="text" id="productName" required placeholder="e.g., 20mm Aggregate" /></div>
           </div>
           <div class="form-row">
             <div class="form-group">
@@ -812,36 +552,19 @@
             </div>
           </div>
           <div class="form-row">
-            <div class="form-group">
-              <label for="avgCostPerUnit">Cost per Unit ($)</label>
-              <input type="number" id="avgCostPerUnit" step="0.01" placeholder="0.00" />
-            </div>
-            <div class="form-group">
-              <label for="sellingPricePerUnit">Selling Price ($)</label>
-              <input type="number" id="sellingPricePerUnit" step="0.01" placeholder="0.00" />
-            </div>
+            <div class="form-group"><label for="avgCostPerUnit">Cost per Unit ($)</label><input type="number" id="avgCostPerUnit" step="0.01" placeholder="0.00" /></div>
+            <div class="form-group"><label for="sellingPricePerUnit">Selling Price ($)</label><input type="number" id="sellingPricePerUnit" step="0.01" placeholder="0.00" /></div>
           </div>
           <div class="form-row">
-            <div class="form-group">
-              <label for="minStockLevel">Min Stock Level</label>
-              <input type="number" id="minStockLevel" step="0.01" placeholder="0" />
-            </div>
-            <div class="form-group">
-              <label for="maxStockLevel">Max Stock Level</label>
-              <input type="number" id="maxStockLevel" step="0.01" placeholder="0" />
-            </div>
+            <div class="form-group"><label for="minStockLevel">Min Stock Level</label><input type="number" id="minStockLevel" step="0.01" placeholder="0" /></div>
+            <div class="form-group"><label for="maxStockLevel">Max Stock Level</label><input type="number" id="maxStockLevel" step="0.01" placeholder="0" /></div>
           </div>
           <div class="form-group">
             <label for="productPreferredLocation">Preferred Stockpile</label>
-            <select id="productPreferredLocation">
-              <option value="">No Preference</option>
-            </select>
-            <small style="color: #666; display: block; margin-top: 4px">Default location for production and demand tracking</small>
+            <select id="productPreferredLocation"><option value="">No Preference</option></select>
+            <small style="color:#666;display:block;margin-top:4px">Default location for production and demand tracking</small>
           </div>
-          <div class="form-group">
-            <label for="productDescription">Description</label>
-            <textarea id="productDescription" rows="3" placeholder="Product description or notes"></textarea>
-          </div>
+          <div class="form-group"><label for="productDescription">Description</label><textarea id="productDescription" rows="3" placeholder="Product description or notes"></textarea></div>
           <div class="modal-footer">
             <button type="button" class="btn-secondary" onclick="closeProductModal()">Cancel</button>
             <button type="submit" class="btn-primary">💾 Save Product</button>
@@ -860,62 +583,34 @@
         <form id="customerForm" onsubmit="event.preventDefault(); saveCustomer();">
           <input type="hidden" id="customerId" />
           <div class="form-row">
-            <div class="form-group">
-              <label for="customerCode">Customer Code *</label>
-              <input type="text" id="customerCode" required placeholder="e.g., BEN-HAL" />
-            </div>
-            <div class="form-group">
-              <label for="customerName">Customer Name *</label>
-              <input type="text" id="customerName" required placeholder="e.g., Ben Hall Construction" />
-            </div>
+            <div class="form-group"><label for="customerCode">Customer Code *</label><input type="text" id="customerCode" required placeholder="e.g., BEN-HAL" /></div>
+            <div class="form-group"><label for="customerName">Customer Name *</label><input type="text" id="customerName" required placeholder="e.g., Ben Hall Construction" /></div>
           </div>
           <div class="form-row">
-            <div class="form-group">
-              <label for="contactPerson">Contact Person</label>
-              <input type="text" id="contactPerson" placeholder="Contact name" />
-            </div>
-            <div class="form-group">
-              <label for="phone">Phone</label>
-              <input type="tel" id="customerPhone" placeholder="Phone number" />
-            </div>
+            <div class="form-group"><label for="contactPerson">Contact Person</label><input type="text" id="contactPerson" placeholder="Contact name" /></div>
+            <div class="form-group"><label for="phone">Phone</label><input type="tel" id="customerPhone" placeholder="Phone number" /></div>
           </div>
+          <div class="form-group"><label for="email">Email</label><input type="email" id="customerEmail" placeholder="email@example.com" /></div>
           <div class="form-group">
-            <label for="email">Email</label>
-            <input type="email" id="customerEmail" placeholder="email@example.com" />
-          </div>
-          <div class="form-group">
-            <label for="emailCC">Email CC (Additional Recipients)</label>
+            <label for="emailCC">Email CC</label>
             <input type="text" id="customerEmailCC" placeholder="email1@example.com, email2@example.com" />
-            <small style="color: #666; display: block; margin-top: 4px;">
-              Separate multiple email addresses with commas. These will receive copies of Account Detail Reports and Weighbridge Dockets.
-            </small>
+            <small style="color:#666;display:block;margin-top:4px">Separate with commas. Receives Account Detail Reports and Weighbridge Dockets.</small>
           </div>
           <div class="form-group">
             <label for="customerType">Customer Type</label>
             <select id="customerType">
               <option value="">Select Type</option>
-              <option value="CC">CC</option>
-              <option value="ACCOUNT">Account</option>
-              <option value="CASH">Cash</option>
-              <option value="STOP_CREDIT">Stop Credit</option>
+              <option value="CC">CC</option><option value="ACCOUNT">Account</option>
+              <option value="CASH">Cash</option><option value="STOP_CREDIT">Stop Credit</option>
             </select>
           </div>
+          <div class="form-group"><label for="billingAddress">Billing Address</label><textarea id="customerAddress" rows="3" placeholder="Street address, city, postcode"></textarea></div>
+          <div class="form-group"><label for="customerNotes">Notes</label><textarea id="customerNotes" rows="2" placeholder="Additional customer information"></textarea></div>
           <div class="form-group">
-            <label for="billingAddress">Billing Address</label>
-            <textarea id="customerAddress" rows="3" placeholder="Street address, city, postcode"></textarea>
-          </div>
-          <div class="form-group">
-            <label for="customerNotes">Notes</label>
-            <textarea id="customerNotes" rows="2" placeholder="Additional customer information"></textarea>
-          </div>
-          <div class="form-group">
-            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-              <input type="checkbox" id="customerActive" checked />
-              <span>Active Customer</span>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+              <input type="checkbox" id="customerActive" checked /><span>Active Customer</span>
             </label>
-            <small style="color: #666; display: block; margin-top: 4px; margin-left: 24px;">
-              Inactive customers won't appear in sales dropdowns
-            </small>
+            <small style="color:#666;display:block;margin-top:4px;margin-left:24px">Inactive customers won't appear in sales dropdowns</small>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn-secondary" onclick="closeCustomerModal()">Cancel</button>
@@ -935,40 +630,23 @@
         <form id="locationForm" onsubmit="event.preventDefault(); saveLocation();">
           <input type="hidden" id="locationId" />
           <div class="form-row">
-            <div class="form-group">
-              <label for="locationCode">Location Code *</label>
-              <input type="text" id="locationCode" required placeholder="e.g., 10" />
-            </div>
-            <div class="form-group">
-              <label for="locationName">Location Name *</label>
-              <input type="text" id="locationName" required placeholder="e.g., Stockpile 22" />
-            </div>
+            <div class="form-group"><label for="locationCode">Location Code *</label><input type="text" id="locationCode" required placeholder="e.g., 10" /></div>
+            <div class="form-group"><label for="locationName">Location Name *</label><input type="text" id="locationName" required placeholder="e.g., Stockpile 22" /></div>
           </div>
           <div class="form-row">
             <div class="form-group">
               <label for="locationType">Location Type *</label>
               <select id="locationType" required>
                 <option value="">Select Type</option>
-                <option value="PRODUCTION">Production Area</option>
-                <option value="STOCKPILE">Stockpile</option>
-                <option value="DISPATCH">Dispatch Area</option>
-                <option value="OVERBURDEN">Overburden</option>
+                <option value="PRODUCTION">Production Area</option><option value="STOCKPILE">Stockpile</option>
+                <option value="DISPATCH">Dispatch Area</option><option value="OVERBURDEN">Overburden</option>
                 <option value="MULCH">Mulch</option>
               </select>
             </div>
-            <div class="form-group">
-              <label for="capacityTonnes">Capacity (tonnes)</label>
-              <input type="number" id="capacityTonnes" step="0.01" placeholder="e.g., 1000" />
-            </div>
+            <div class="form-group"><label for="capacityTonnes">Capacity (tonnes)</label><input type="number" id="capacityTonnes" step="0.01" placeholder="e.g., 1000" /></div>
           </div>
-          <div class="form-group">
-            <label for="assignedProduct">Assigned Product</label>
-            <select id="assignedProduct"><option value="">None</option></select>
-          </div>
-          <div class="form-group">
-            <label for="locationDescription">Description</label>
-            <textarea id="locationDescription" rows="3" placeholder="Additional notes about this location"></textarea>
-          </div>
+          <div class="form-group"><label for="assignedProduct">Assigned Product</label><select id="assignedProduct"><option value="">None</option></select></div>
+          <div class="form-group"><label for="locationDescription">Description</label><textarea id="locationDescription" rows="3" placeholder="Additional notes about this location"></textarea></div>
           <div class="modal-footer">
             <button type="button" class="btn-secondary" onclick="closeLocationModal()">Cancel</button>
             <button type="submit" class="btn-primary">💾 Save Location</button>
@@ -987,40 +665,23 @@
         <form id="vehicleForm" onsubmit="event.preventDefault(); saveVehicle();">
           <input type="hidden" id="vehicleId" />
           <div class="form-row">
-            <div class="form-group">
-              <label for="registration">Registration *</label>
-              <input type="text" id="registration" required placeholder="e.g., RAC-003" />
-            </div>
+            <div class="form-group"><label for="registration">Registration *</label><input type="text" id="registration" required placeholder="e.g., RAC-003" /></div>
             <div class="form-group">
               <label for="vehicleType">Vehicle Type *</label>
               <select id="vehicleType" required>
                 <option value="">Select Type</option>
-                <option value="TRUCK">Truck</option>
-                <option value="LOADER">Loader</option>
-                <option value="EXCAVATOR">Excavator</option>
-                <option value="GRADER">Grader</option>
+                <option value="TRUCK">Truck</option><option value="LOADER">Loader</option>
+                <option value="EXCAVATOR">Excavator</option><option value="GRADER">Grader</option>
                 <option value="OTHER">Other</option>
               </select>
             </div>
           </div>
-          <div class="form-group">
-            <label for="vehicleCapacity">Capacity (tonnes)</label>
-            <input type="number" id="vehicleCapacity" step="0.01" placeholder="e.g., 30" />
-          </div>
+          <div class="form-group"><label for="vehicleCapacity">Capacity (tonnes)</label><input type="number" id="vehicleCapacity" step="0.01" placeholder="e.g., 30" /></div>
           <div class="form-row">
-            <div class="form-group">
-              <label for="lastServiceDate">Last Service Date</label>
-              <input type="date" id="lastServiceDate" />
-            </div>
-            <div class="form-group">
-              <label for="nextServiceDate">Next Service Date</label>
-              <input type="date" id="nextServiceDate" />
-            </div>
+            <div class="form-group"><label for="lastServiceDate">Last Service Date</label><input type="date" id="lastServiceDate" /></div>
+            <div class="form-group"><label for="nextServiceDate">Next Service Date</label><input type="date" id="nextServiceDate" /></div>
           </div>
-          <div class="form-group">
-            <label for="vehicleNotes">Notes</label>
-            <textarea id="vehicleNotes" rows="3" placeholder="Service history, issues, etc."></textarea>
-          </div>
+          <div class="form-group"><label for="vehicleNotes">Notes</label><textarea id="vehicleNotes" rows="3" placeholder="Service history, issues, etc."></textarea></div>
           <div class="modal-footer">
             <button type="button" class="btn-secondary" onclick="closeVehicleModal()">Cancel</button>
             <button type="submit" class="btn-primary">💾 Save Vehicle</button>
@@ -1039,41 +700,23 @@
         <form id="driverForm" onsubmit="event.preventDefault(); saveDriver();">
           <input type="hidden" id="driverId" />
           <div class="form-row">
-            <div class="form-group">
-              <label for="driverCode">Driver Code *</label>
-              <input type="text" id="driverCode" required placeholder="e.g., JW-01" />
-            </div>
-            <div class="form-group">
-              <label for="driverName">Driver Name *</label>
-              <input type="text" id="driverName" required placeholder="e.g., Joe Williams" />
-            </div>
+            <div class="form-group"><label for="driverCode">Driver Code *</label><input type="text" id="driverCode" required placeholder="e.g., JW-01" /></div>
+            <div class="form-group"><label for="driverName">Driver Name *</label><input type="text" id="driverName" required placeholder="e.g., Joe Williams" /></div>
           </div>
           <div class="form-row">
-            <div class="form-group">
-              <label for="licenseNumber">License Number</label>
-              <input type="text" id="licenseNumber" placeholder="License number" />
-            </div>
+            <div class="form-group"><label for="licenseNumber">License Number</label><input type="text" id="licenseNumber" placeholder="License number" /></div>
             <div class="form-group">
               <label for="licenseClass">License Class</label>
               <select id="licenseClass">
                 <option value="">Select Class</option>
-                <option value="C">C - Car</option>
-                <option value="LR">LR - Light Rigid</option>
-                <option value="MR">MR - Medium Rigid</option>
-                <option value="HR">HR - Heavy Rigid</option>
-                <option value="HC">HC - Heavy Combination</option>
-                <option value="MC">MC - Multi Combination</option>
+                <option value="C">C - Car</option><option value="LR">LR - Light Rigid</option>
+                <option value="MR">MR - Medium Rigid</option><option value="HR">HR - Heavy Rigid</option>
+                <option value="HC">HC - Heavy Combination</option><option value="MC">MC - Multi Combination</option>
               </select>
             </div>
           </div>
-          <div class="form-group">
-            <label for="licenseExpiry">License Expiry</label>
-            <input type="date" id="licenseExpiry" />
-          </div>
-          <div class="form-group">
-            <label for="certifications">Certifications</label>
-            <textarea id="certifications" rows="3" placeholder="Forklift, Loader, Excavator, etc."></textarea>
-          </div>
+          <div class="form-group"><label for="licenseExpiry">License Expiry</label><input type="date" id="licenseExpiry" /></div>
+          <div class="form-group"><label for="certifications">Certifications</label><textarea id="certifications" rows="3" placeholder="Forklift, Loader, Excavator, etc."></textarea></div>
           <div class="modal-footer">
             <button type="button" class="btn-secondary" onclick="closeDriverModal()">Cancel</button>
             <button type="submit" class="btn-primary">💾 Save Driver</button>
@@ -1091,10 +734,7 @@
         </div>
         <form id="carrierForm" onsubmit="event.preventDefault(); saveCarrier();">
           <input type="hidden" id="carrierId" />
-          <div class="form-group">
-            <label for="carrierName">Carrier Name *</label>
-            <input type="text" id="carrierName" required placeholder="e.g., RAC Mining" />
-          </div>
+          <div class="form-group"><label for="carrierName">Carrier Name *</label><input type="text" id="carrierName" required placeholder="e.g., RAC Mining" /></div>
           <div class="modal-footer">
             <button type="button" class="btn-secondary" onclick="closeCarrierModal()">Cancel</button>
             <button type="submit" class="btn-primary">💾 Save Carrier</button>
@@ -1113,21 +753,10 @@
         <div class="modal-body">
           <form id="deliveryForm" onsubmit="event.preventDefault(); saveDelivery();">
             <input type="hidden" id="deliveryId" />
-            <div class="form-group">
-              <label class="form-label required">Delivery Name</label>
-              <input type="text" class="form-control" id="deliveryName" required placeholder="e.g., Nhulunbuy Township" />
-            </div>
-            <div class="form-group">
-              <label class="form-label">Description</label>
-              <textarea class="form-control" id="deliveryDescription" rows="2" placeholder="Additional delivery details"></textarea>
-            </div>
-            <div class="form-group">
-              <label class="form-label required">Charge per Tonne ($)</label>
-              <input type="number" class="form-control" id="deliveryCharge" step="0.01" min="0" required placeholder="e.g., 6.00" />
-            </div>
-            <div class="form-group">
-              <label class="form-label"><input type="checkbox" id="deliveryActive" checked /> Active</label>
-            </div>
+            <div class="form-group"><label class="form-label required">Delivery Name</label><input type="text" class="form-control" id="deliveryName" required placeholder="e.g., Nhulunbuy Township" /></div>
+            <div class="form-group"><label class="form-label">Description</label><textarea class="form-control" id="deliveryDescription" rows="2" placeholder="Additional delivery details"></textarea></div>
+            <div class="form-group"><label class="form-label required">Charge per Tonne ($)</label><input type="number" class="form-control" id="deliveryCharge" step="0.01" min="0" required placeholder="e.g., 6.00" /></div>
+            <div class="form-group"><label class="form-label"><input type="checkbox" id="deliveryActive" checked /> Active</label></div>
             <div class="modal-footer">
               <button type="button" class="btn-secondary" onclick="closeDeliveryModal()">Cancel</button>
               <button type="submit" class="btn-primary">💾 Save Delivery</button>
@@ -1139,140 +768,218 @@
 
     <script src="/js/maintenance.js"></script>
     <script>
-      // ── Header inventory value ──────────────────────────────────────
+      // ── Header ──────────────────────────────────────────────────────
       async function updateHeaderValue() {
         try {
           const response = await fetch("/api/stock/summary");
           const data = await response.json();
-          const totalValue = data.total_inventory_value || 0;
           document.getElementById("headerTotalValue").textContent =
-            new Intl.NumberFormat("en-AU", {
-              style: "currency",
-              currency: "AUD",
-              minimumFractionDigits: 0,
-            }).format(totalValue);
-        } catch (error) {
-          console.error("Error loading header value:", error);
-        }
+            new Intl.NumberFormat("en-AU", { style:"currency", currency:"AUD", minimumFractionDigits:0 })
+              .format(data.total_inventory_value || 0);
+        } catch (e) { console.error("Header value error:", e); }
       }
       updateHeaderValue();
 
       // ── Production Rates ────────────────────────────────────────────
-      // Store rates in memory so the edit modal can read them safely
-      // (avoids passing text with quotes/commas through onclick attributes)
       let _productionRatesCache = [];
 
       async function loadProductionRates() {
         const tbody = document.getElementById("productionRatesTableBody");
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:#999;">Loading...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:#999">Loading...</td></tr>';
         try {
           const res = await fetch("/api/production-rates");
           _productionRatesCache = await res.json();
-
           if (!_productionRatesCache.length) {
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:#999;">No rates found.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:#999">No rates found.</td></tr>';
             return;
           }
-
           tbody.innerHTML = _productionRatesCache.map(rate => {
-            const rateVal = parseFloat(rate.rate_per_unit);
-            const isZero  = rateVal === 0;
+            const v = parseFloat(rate.rate_per_unit);
             const effDate = new Date(rate.effective_from).toLocaleDateString("en-AU");
             const updDate = new Date(rate.updated_at).toLocaleDateString("en-AU");
-
-            return `
-              <tr>
-                <td><span style="font-weight:600;color:#495057;">${rate.rate_type.replace('_', ' ')}</span></td>
-                <td style="color:#6c757d;font-size:13px;">${rate.rate_description}</td>
-                <td style="text-align:right;font-weight:700;font-size:1.05rem;color:${isZero ? '#dc3545' : '#28a745'};">
-                  $${rateVal.toFixed(2)}
-                </td>
-                <td style="color:#6c757d;font-size:13px;">${rate.rate_unit}</td>
-                <td style="font-size:13px;">${effDate}</td>
-                <td style="font-size:13px;color:#6c757d;">${updDate}</td>
-                <td style="font-size:12px;color:#6c757d;max-width:200px;">${rate.notes || '—'}</td>
-                <td>
-                  <button
-                    class="btn-secondary btn-sm rate-edit-btn"
-                    data-rate-id="${rate.rate_id}"
-                  >✏️ Edit</button>
-                </td>
-              </tr>
-            `;
+            return `<tr>
+              <td><span style="font-weight:600;color:#495057">${rate.rate_type.replace('_',' ')}</span></td>
+              <td style="color:#6c757d;font-size:13px">${rate.rate_description}</td>
+              <td style="text-align:right;font-weight:700;font-size:1.05rem;color:${v===0?'#dc3545':'#28a745'}">$${v.toFixed(2)}</td>
+              <td style="color:#6c757d;font-size:13px">${rate.rate_unit}</td>
+              <td style="font-size:13px">${effDate}</td>
+              <td style="font-size:13px;color:#6c757d">${updDate}</td>
+              <td style="font-size:12px;color:#6c757d;max-width:200px">${rate.notes||'—'}</td>
+              <td><button class="btn-secondary btn-sm rate-edit-btn" data-rate-id="${rate.rate_id}">✏️ Edit</button></td>
+            </tr>`;
           }).join('');
-
-          // Warn if any rates still $0
-          const zeroCount = _productionRatesCache.filter(r => parseFloat(r.rate_per_unit) === 0).length;
-          if (zeroCount > 0) {
-            tbody.innerHTML += `
-              <tr>
-                <td colspan="8" style="background:#fff3cd;color:#856404;padding:10px 16px;
-                                       font-size:13px;border-top:1px solid #ffc107;">
-                  ⚠️ ${zeroCount} rate${zeroCount > 1 ? 's are' : ' is'} still set to $0.00 —
-                  update before recording production runs.
-                </td>
-              </tr>
-            `;
+          const zeros = _productionRatesCache.filter(r => parseFloat(r.rate_per_unit) === 0).length;
+          if (zeros > 0) {
+            tbody.innerHTML += `<tr><td colspan="8" style="background:#fff3cd;color:#856404;padding:10px 16px;font-size:13px;border-top:1px solid #ffc107">
+              ⚠️ ${zeros} rate${zeros>1?'s are':' is'} still $0.00 — update before recording production runs.</td></tr>`;
           }
-
-          // Wire up edit buttons via delegation (safe — no inline data)
           tbody.querySelectorAll('.rate-edit-btn').forEach(btn => {
             btn.addEventListener('click', function() {
-              const rateId = parseInt(this.dataset.rateId);
-              const rate   = _productionRatesCache.find(r => r.rate_id === rateId);
+              const rate = _productionRatesCache.find(r => r.rate_id === parseInt(this.dataset.rateId));
               if (rate) openRateEditModal(rate);
             });
           });
-
-        } catch (err) {
-          console.error("Error loading production rates:", err);
-          tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:#dc3545;">Failed to load rates.</td></tr>';
+        } catch (e) {
+          console.error("Rates error:", e);
+          tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:#dc3545">Failed to load rates.</td></tr>';
         }
       }
 
       function openRateEditModal(rate) {
-        document.getElementById("editRateId").value            = rate.rate_id;
-        document.getElementById("rateModalTitle").textContent  = "Edit Rate — " + rate.rate_description;
-        document.getElementById("editRateType").textContent    = rate.rate_description;
-        document.getElementById("editRateUnit").textContent    = rate.rate_unit;
-        document.getElementById("editRateValue").value         = parseFloat(rate.rate_per_unit).toFixed(2);
-        document.getElementById("editRateNotes").value         = rate.notes || "";
+        document.getElementById("editRateId").value           = rate.rate_id;
+        document.getElementById("rateModalTitle").textContent = "Edit Rate — " + rate.rate_description;
+        document.getElementById("editRateType").textContent   = rate.rate_description;
+        document.getElementById("editRateUnit").textContent   = rate.rate_unit;
+        document.getElementById("editRateValue").value        = parseFloat(rate.rate_per_unit).toFixed(2);
+        document.getElementById("editRateNotes").value        = rate.notes || "";
         document.getElementById("productionRateModal").style.display = "flex";
       }
-
-      function closeRateEditModal() {
-        document.getElementById("productionRateModal").style.display = "none";
-      }
+      function closeRateEditModal() { document.getElementById("productionRateModal").style.display = "none"; }
 
       async function saveProductionRate() {
-        const rateId    = document.getElementById("editRateId").value;
-        const rateValue = parseFloat(document.getElementById("editRateValue").value);
-        const notes     = document.getElementById("editRateNotes").value;
-
-        if (isNaN(rateValue) || rateValue < 0) {
-          alert("Please enter a valid rate value (0 or greater).");
-          return;
-        }
-
+        const rateId = document.getElementById("editRateId").value;
+        const val    = parseFloat(document.getElementById("editRateValue").value);
+        const notes  = document.getElementById("editRateNotes").value;
+        if (isNaN(val) || val < 0) { alert("Please enter a valid rate value."); return; }
         try {
           const res = await fetch(`/api/production-rates/${rateId}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ rate_per_unit: rateValue, notes })
+            method:"PUT", headers:{"Content-Type":"application/json"},
+            body: JSON.stringify({ rate_per_unit: val, notes })
           });
-
           const result = await res.json();
-          if (!res.ok) {
-            alert("Error: " + (result.error || "Failed to save rate"));
-            return;
-          }
-
+          if (!res.ok) { alert("Error: " + (result.error || "Failed to save rate")); return; }
           closeRateEditModal();
           await loadProductionRates();
-        } catch (err) {
-          console.error("Error saving rate:", err);
-          alert("Failed to save rate. Please try again.");
+        } catch (e) { console.error(e); alert("Failed to save rate."); }
+      }
+
+      // ── Machines ────────────────────────────────────────────────────
+      let _machinesCache = [];
+
+      const machineTypeLabels = {
+        CRUSHER:'Crusher', SCREEN:'Screening Plant', EXCAVATOR:'Excavator',
+        DOZER:'Bulldozer', LOADER:'Loader', GRADER:'Grader', TRUCK:'Truck', OTHER:'Other'
+      };
+
+      async function loadMachines() {
+        const tbody = document.getElementById("machinesTableBody");
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:#999">Loading...</td></tr>';
+        try {
+          const res = await fetch("/api/production-rates/machines");
+          _machinesCache = await res.json();
+          if (!_machinesCache.length) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:#999">No machines found. Add your first machine above.</td></tr>';
+            return;
+          }
+          tbody.innerHTML = _machinesCache.map(m => {
+            const rate  = parseFloat(m.rate_per_hour);
+            const maint = parseFloat(m.maintenance_rate_per_hour);
+            const fuel  = parseFloat(m.fuel_litres_per_hour);
+            const total = rate + maint;
+            const rateZero  = rate  === 0;
+            const maintZero = maint === 0;
+            return `<tr>
+              <td><span style="font-weight:600;color:#495057">${m.machine_name}</span></td>
+              <td><span style="background:#e9ecef;border-radius:3px;padding:2px 7px;font-size:12px;color:#495057">${machineTypeLabels[m.machine_type]||m.machine_type}</span></td>
+              <td style="text-align:right;font-weight:600;color:${rateZero?'#dc3545':'#28a745'}">$${rate.toFixed(2)}</td>
+              <td style="text-align:right;font-weight:600;color:${maintZero?'#dc3545':'#28a745'}">$${maint.toFixed(2)}</td>
+              <td style="text-align:right;color:#6c757d">${fuel.toFixed(1)} L</td>
+              <td style="text-align:right;font-weight:700;color:${total===0?'#dc3545':'#212529'}">$${total.toFixed(2)}</td>
+              <td style="font-size:12px;color:#6c757d;max-width:180px">${m.notes||'—'}</td>
+              <td>
+                <button class="btn-secondary btn-sm machine-edit-btn" data-machine-id="${m.machine_id}" style="margin-right:4px">✏️ Edit</button>
+                <button class="btn-sm machine-del-btn" data-machine-id="${m.machine_id}" data-machine-name="${m.machine_name}"
+                  style="background:#dc3545;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:12px">🗑</button>
+              </td>
+            </tr>`;
+          }).join('');
+
+          const zeros = _machinesCache.filter(m => parseFloat(m.rate_per_hour) === 0).length;
+          if (zeros > 0) {
+            tbody.innerHTML += `<tr><td colspan="8" style="background:#fff3cd;color:#856404;padding:10px 16px;font-size:13px;border-top:1px solid #ffc107">
+              ⚠️ ${zeros} machine${zeros>1?'s have':' has'} $0.00 operating rate — update before recording production runs.</td></tr>`;
+          }
+
+          tbody.querySelectorAll('.machine-edit-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+              const m = _machinesCache.find(x => x.machine_id === parseInt(this.dataset.machineId));
+              if (m) openMachineModal(m);
+            });
+          });
+          tbody.querySelectorAll('.machine-del-btn').forEach(btn => {
+            btn.addEventListener('click', async function() {
+              const id   = parseInt(this.dataset.machineId);
+              const name = this.dataset.machineName;
+              if (!confirm(`Deactivate "${name}"? It will no longer appear in BOM templates or production forms.`)) return;
+              try {
+                const res = await fetch(`/api/production-rates/machines/${id}`, { method:'DELETE' });
+                const result = await res.json();
+                if (!res.ok) { alert("Error: " + (result.error || "Failed")); return; }
+                await loadMachines();
+              } catch(e) { alert("Failed to deactivate machine."); }
+            });
+          });
+        } catch (e) {
+          console.error("Machines error:", e);
+          tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:#dc3545">Failed to load machines.</td></tr>';
         }
+      }
+
+      function openMachineModal(machine = null) {
+        document.getElementById("machineModalTitle").textContent = machine ? "Edit Machine" : "Add Machine";
+        document.getElementById("machineId").value              = machine ? machine.machine_id : "";
+        document.getElementById("machineName").value            = machine ? machine.machine_name : "";
+        document.getElementById("machineType").value            = machine ? machine.machine_type : "";
+        document.getElementById("machineRatePerHour").value     = machine ? parseFloat(machine.rate_per_hour).toFixed(2) : "";
+        document.getElementById("machineMaintenanceRate").value = machine ? parseFloat(machine.maintenance_rate_per_hour).toFixed(2) : "";
+        document.getElementById("machineFuelLitres").value      = machine ? parseFloat(machine.fuel_litres_per_hour).toFixed(1) : "";
+        document.getElementById("machineNotes").value           = machine ? (machine.notes || "") : "";
+        updateMachineCostPreview();
+        document.getElementById("machineModal").style.display = "flex";
+      }
+      function closeMachineModal() { document.getElementById("machineModal").style.display = "none"; }
+
+      function updateMachineCostPreview() {
+        const rate  = parseFloat(document.getElementById("machineRatePerHour").value)     || 0;
+        const maint = parseFloat(document.getElementById("machineMaintenanceRate").value) || 0;
+        const total = rate + maint;
+        const preview = document.getElementById("machineCostPreview");
+        if (rate > 0 || maint > 0) {
+          document.getElementById("machineCostPreviewValue").textContent = "$" + total.toFixed(2);
+          preview.style.display = "block";
+        } else {
+          preview.style.display = "none";
+        }
+      }
+
+      // Wire up live preview inputs
+      ["machineRatePerHour","machineMaintenanceRate"].forEach(id => {
+        document.getElementById(id).addEventListener("input", updateMachineCostPreview);
+      });
+
+      async function saveMachine() {
+        const id    = document.getElementById("machineId").value;
+        const body  = {
+          machine_name:              document.getElementById("machineName").value.trim(),
+          machine_type:              document.getElementById("machineType").value,
+          rate_per_hour:             parseFloat(document.getElementById("machineRatePerHour").value)     || 0,
+          maintenance_rate_per_hour: parseFloat(document.getElementById("machineMaintenanceRate").value) || 0,
+          fuel_litres_per_hour:      parseFloat(document.getElementById("machineFuelLitres").value)      || 0,
+          notes:                     document.getElementById("machineNotes").value.trim()
+        };
+        if (!body.machine_name) { alert("Machine name is required."); return; }
+        if (!body.machine_type) { alert("Machine type is required."); return; }
+        try {
+          const url    = id ? `/api/production-rates/machines/${id}` : "/api/production-rates/machines";
+          const method = id ? "PUT" : "POST";
+          const res    = await fetch(url, {
+            method, headers:{"Content-Type":"application/json"}, body: JSON.stringify(body)
+          });
+          const result = await res.json();
+          if (!res.ok) { alert("Error: " + (result.error || "Failed to save machine")); return; }
+          closeMachineModal();
+          await loadMachines();
+        } catch(e) { console.error(e); alert("Failed to save machine."); }
       }
     </script>
   </body>
