@@ -62,6 +62,9 @@
       <button class="sub-nav-item" data-section="price-lists">
         💲 Price Lists
       </button>
+      <button class="sub-nav-item" data-section="production-rates" onclick="loadProductionRates()">
+        🏭 Production Rates
+      </button>
     </div>
 
     <div class="container">
@@ -570,6 +573,124 @@
           </div>
         </div>
       </div>
+
+      <!-- ============================================================ -->
+      <!-- PRODUCTION RATES SECTION                                      -->
+      <!-- Admin/Manager maintained. Stable month to month.             -->
+      <!-- ============================================================ -->
+      <div
+        id="production-rates-section"
+        class="maintenance-section"
+        style="display: none"
+      >
+        <div class="section-header">
+          <h2>🏭 Production Rates</h2>
+        </div>
+
+        <p style="color: #666; margin-bottom: 1.5rem; font-size: 14px; line-height: 1.6;">
+          These rates are used to calculate the cost of each production run.
+          Rates are stable month to month — update only when actual costs change.
+          Changes apply to all future production runs. Past runs retain the rates
+          that were active at the time.
+        </p>
+
+        <!-- Rate type legend -->
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem;">
+          <span style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 4px 10px; font-size: 12px; color: #856404;">
+            ⚠️ Blast WIP rate sources from Xero — update when Xero WIP cost changes
+          </span>
+          <span style="background: #d1ecf1; border: 1px solid #bee5eb; border-radius: 4px; padding: 4px 10px; font-size: 12px; color: #0c5460;">
+            ℹ️ Maintenance cost is derived from Machine Hours — no separate rate needed
+          </span>
+        </div>
+
+        <div class="data-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Rate Type</th>
+                <th>Description</th>
+                <th style="text-align: right;">Current Rate</th>
+                <th>Unit</th>
+                <th>Effective From</th>
+                <th>Last Updated</th>
+                <th>Notes</th>
+                <th style="width: 80px;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="productionRatesTableBody">
+              <tr>
+                <td colspan="8" style="text-align: center; padding: 2rem; color: #999;">
+                  Loading production rates...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- end .container -->
+
+    <!-- ============================================================ -->
+    <!-- PRODUCTION RATE EDIT MODAL                                    -->
+    <!-- ============================================================ -->
+    <div id="productionRateModal" class="modal">
+      <div class="modal-content" style="max-width: 480px;">
+        <div class="modal-header">
+          <h2 id="rateModalTitle">Edit Rate</h2>
+          <button class="modal-close" onclick="closeRateEditModal()">×</button>
+        </div>
+
+        <input type="hidden" id="editRateId" />
+
+        <div style="background: #f8f9fa; border-radius: 6px; padding: 12px; margin-bottom: 1.5rem;">
+          <div style="font-size: 13px; color: #6c757d; margin-bottom: 4px;">Rate Type</div>
+          <div id="editRateType" style="font-weight: 600; font-size: 15px; color: #212529;"></div>
+          <div id="editRateUnit" style="font-size: 13px; color: #6c757d; margin-top: 2px;"></div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label required">Rate Value</label>
+          <input
+            type="number"
+            class="form-control"
+            id="editRateValue"
+            step="0.01"
+            min="0"
+            placeholder="0.00"
+            style="font-size: 1.2rem; font-weight: 600; text-align: right;"
+          />
+          <small style="color: #666; display: block; margin-top: 4px;">
+            Enter the dollar value per unit. Set to 0.00 if not yet determined.
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Notes</label>
+          <textarea
+            class="form-control"
+            id="editRateNotes"
+            rows="3"
+            placeholder="e.g. Updated March 2026 — sourced from Xero WIP report"
+          ></textarea>
+        </div>
+
+        <div
+          style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 6px;
+                 padding: 10px 14px; margin-bottom: 1rem; font-size: 13px; color: #856404;"
+        >
+          ⚠️ This change applies to all future production runs. Existing records are not affected.
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeRateEditModal()">
+            Cancel
+          </button>
+          <button type="button" class="btn-primary" onclick="saveProductionRate()">
+            💾 Save Rate
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Price List Modal -->
@@ -617,23 +738,23 @@
                 min="1"
                 placeholder="10"
               />
-              <small style="color: #666; display: block; margin-top: 4px">
+              <small style="color: #666; display: block; margin-top: 4px;">
                 Lower numbers appear first in dropdowns
               </small>
             </div>
-            <div class="form-group" style="display: flex; flex-direction: column; justify-content: center">
-              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer">
+            <div class="form-group" style="display: flex; flex-direction: column; justify-content: center;">
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
                 <input type="checkbox" id="priceListDefault" />
                 <span>Set as Default</span>
               </label>
-              <small style="color: #666; display: block; margin-top: 4px; margin-left: 24px">
+              <small style="color: #666; display: block; margin-top: 4px; margin-left: 24px;">
                 Default price list is auto-selected in Sales
               </small>
             </div>
           </div>
 
           <div class="form-group">
-            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
               <input type="checkbox" id="priceListActive" checked />
               <span>Active</span>
             </label>
@@ -918,7 +1039,7 @@
               id="customerEmailCC"
               placeholder="email1@example.com, email2@example.com"
             />
-            <small style="color: #666; display: block; margin-top: 4px">
+            <small style="color: #666; display: block; margin-top: 4px;">
               Separate multiple email addresses with commas. These will receive
               copies of Account Detail Reports and Weighbridge Dockets.
             </small>
@@ -1348,7 +1469,7 @@
 
     <script src="/js/maintenance.js"></script>
     <script>
-      // Update header inventory value
+      // ── Header inventory value ──────────────────────────────────────
       async function updateHeaderValue() {
         try {
           const response = await fetch("/api/stock/summary");
@@ -1365,6 +1486,120 @@
         }
       }
       updateHeaderValue();
+
+      // ── Production Rates ────────────────────────────────────────────
+      async function loadProductionRates() {
+        const tbody = document.getElementById("productionRatesTableBody");
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:#999;">Loading...</td></tr>';
+        try {
+          const res = await fetch("/api/production-rates");
+          const rates = await res.json();
+
+          if (!rates.length) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:#999;">No rates found.</td></tr>';
+            return;
+          }
+
+          tbody.innerHTML = rates.map(rate => {
+            const rateVal = parseFloat(rate.rate_per_unit);
+            const isZero  = rateVal === 0;
+            const effDate = new Date(rate.effective_from).toLocaleDateString("en-AU");
+            const updDate = new Date(rate.updated_at).toLocaleDateString("en-AU");
+
+            return `
+              <tr>
+                <td>
+                  <span style="font-weight:600; color:#495057;">${rate.rate_type.replace('_', ' ')}</span>
+                </td>
+                <td style="color:#6c757d; font-size:13px;">${rate.rate_description}</td>
+                <td style="text-align:right; font-weight:700; font-size:1.05rem;
+                           color:${isZero ? '#dc3545' : '#28a745'};">
+                  $${rateVal.toFixed(2)}
+                </td>
+                <td style="color:#6c757d; font-size:13px;">${rate.rate_unit}</td>
+                <td style="font-size:13px;">${effDate}</td>
+                <td style="font-size:13px; color:#6c757d;">${updDate}</td>
+                <td style="font-size:12px; color:#6c757d; max-width:200px;">${rate.notes || '—'}</td>
+                <td>
+                  <button
+                    class="btn-secondary btn-sm"
+                    onclick="openRateEditModal(${rate.rate_id}, '${rate.rate_description}', ${rateVal}, '${rate.rate_unit}', ${JSON.stringify(rate.notes || '')})"
+                  >
+                    ✏️ Edit
+                  </button>
+                </td>
+              </tr>
+            `;
+          }).join('');
+
+          // Warn if any rates are still $0
+          const zeroCount = rates.filter(r => parseFloat(r.rate_per_unit) === 0).length;
+          if (zeroCount > 0) {
+            tbody.innerHTML += `
+              <tr>
+                <td colspan="8" style="background:#fff3cd; color:#856404; padding:10px 16px;
+                                       font-size:13px; border-top:1px solid #ffc107;">
+                  ⚠️ ${zeroCount} rate${zeroCount > 1 ? 's are' : ' is'} still set to $0.00 —
+                  update before recording production runs.
+                </td>
+              </tr>
+            `;
+          }
+        } catch (err) {
+          console.error("Error loading production rates:", err);
+          tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:#dc3545;">Failed to load rates.</td></tr>';
+        }
+      }
+
+      function openRateEditModal(rateId, description, currentRate, unit, notes) {
+        document.getElementById("editRateId").value    = rateId;
+        document.getElementById("rateModalTitle").textContent = "Edit Rate — " + description;
+        document.getElementById("editRateType").textContent   = description;
+        document.getElementById("editRateUnit").textContent   = unit;
+        document.getElementById("editRateValue").value        = currentRate.toFixed(2);
+        document.getElementById("editRateNotes").value        = notes || "";
+        document.getElementById("productionRateModal").style.display = "flex";
+      }
+
+      function closeRateEditModal() {
+        document.getElementById("productionRateModal").style.display = "none";
+      }
+
+      async function saveProductionRate() {
+        const rateId = document.getElementById("editRateId").value;
+        const rateValue = parseFloat(document.getElementById("editRateValue").value);
+        const notes  = document.getElementById("editRateNotes").value;
+
+        if (isNaN(rateValue) || rateValue < 0) {
+          alert("Please enter a valid rate value (0 or greater).");
+          return;
+        }
+
+        try {
+          const res = await fetch(`/api/production-rates/${rateId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ rate_per_unit: rateValue, notes })
+          });
+
+          const result = await res.json();
+          if (!res.ok) {
+            alert("Error: " + (result.error || "Failed to save rate"));
+            return;
+          }
+
+          closeRateEditModal();
+          await loadProductionRates();
+          // Brief success flash on the table
+          const tbody = document.getElementById("productionRatesTableBody");
+          tbody.style.transition = "opacity 0.3s";
+          tbody.style.opacity = "0.5";
+          setTimeout(() => { tbody.style.opacity = "1"; }, 300);
+        } catch (err) {
+          console.error("Error saving rate:", err);
+          alert("Failed to save rate. Please try again.");
+        }
+      }
     </script>
   </body>
 </html>
