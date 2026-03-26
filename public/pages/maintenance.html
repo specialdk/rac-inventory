@@ -594,7 +594,7 @@
           that were active at the time.
         </p>
 
-        <!-- Rate type legend -->
+        <!-- Badges -->
         <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem;">
           <span style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 4px 10px; font-size: 12px; color: #856404;">
             ⚠️ Blast WIP rate sources from Xero — update when Xero WIP cost changes
@@ -675,10 +675,8 @@
           ></textarea>
         </div>
 
-        <div
-          style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 6px;
-                 padding: 10px 14px; margin-bottom: 1rem; font-size: 13px; color: #856404;"
-        >
+        <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 6px;
+                    padding: 10px 14px; margin-bottom: 1rem; font-size: 13px; color: #856404;">
           ⚠️ This change applies to all future production runs. Existing records are not affected.
         </div>
 
@@ -700,74 +698,38 @@
           <h2 id="priceListModalTitle">Add Price List</h2>
           <button class="modal-close" onclick="closePriceListModal()">×</button>
         </div>
-        <form
-          id="priceListForm"
-          onsubmit="event.preventDefault(); savePriceList();"
-        >
+        <form id="priceListForm" onsubmit="event.preventDefault(); savePriceList();">
           <input type="hidden" id="priceListId" />
-
           <div class="form-group">
             <label class="form-label required">Price List Name</label>
-            <input
-              type="text"
-              class="form-control"
-              id="priceListName"
-              required
-              placeholder="e.g., Government, Rio Tinto"
-            />
+            <input type="text" class="form-control" id="priceListName" required placeholder="e.g., Government, Rio Tinto" />
           </div>
-
           <div class="form-group">
             <label class="form-label">Description</label>
-            <textarea
-              class="form-control"
-              id="priceListDescription"
-              rows="2"
-              placeholder="Who uses this price list"
-            ></textarea>
+            <textarea class="form-control" id="priceListDescription" rows="2" placeholder="Who uses this price list"></textarea>
           </div>
-
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">Sort Order</label>
-              <input
-                type="number"
-                class="form-control"
-                id="priceListSortOrder"
-                value="10"
-                min="1"
-                placeholder="10"
-              />
-              <small style="color: #666; display: block; margin-top: 4px;">
-                Lower numbers appear first in dropdowns
-              </small>
+              <input type="number" class="form-control" id="priceListSortOrder" value="10" min="1" placeholder="10" />
+              <small style="color: #666; display: block; margin-top: 4px;">Lower numbers appear first in dropdowns</small>
             </div>
             <div class="form-group" style="display: flex; flex-direction: column; justify-content: center;">
               <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
                 <input type="checkbox" id="priceListDefault" />
                 <span>Set as Default</span>
               </label>
-              <small style="color: #666; display: block; margin-top: 4px; margin-left: 24px;">
-                Default price list is auto-selected in Sales
-              </small>
+              <small style="color: #666; display: block; margin-top: 4px; margin-left: 24px;">Default price list is auto-selected in Sales</small>
             </div>
           </div>
-
           <div class="form-group">
             <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
               <input type="checkbox" id="priceListActive" checked />
               <span>Active</span>
             </label>
           </div>
-
           <div class="modal-footer">
-            <button
-              type="button"
-              class="btn-secondary"
-              onclick="closePriceListModal()"
-            >
-              Cancel
-            </button>
+            <button type="button" class="btn-secondary" onclick="closePriceListModal()">Cancel</button>
             <button type="submit" class="btn-primary">💾 Save Price List</button>
           </div>
         </form>
@@ -781,61 +743,27 @@
           <h2 id="deliveryRateModalTitle">Add Delivery Rate</h2>
           <button class="modal-close" onclick="closeDeliveryRateModal()">×</button>
         </div>
-        <form
-          id="deliveryRateForm"
-          onsubmit="event.preventDefault(); saveDeliveryRate();"
-        >
+        <form id="deliveryRateForm" onsubmit="event.preventDefault(); saveDeliveryRate();">
           <input type="hidden" id="deliveryRateId" />
-
           <div class="form-row">
             <div class="form-group">
               <label class="form-label required">Trailer Count</label>
-              <input
-                type="text"
-                class="form-control"
-                id="rateTrailerCount"
-                required
-                placeholder="e.g., 1, 2, 3, HR"
-              />
+              <input type="text" class="form-control" id="rateTrailerCount" required placeholder="e.g., 1, 2, 3, HR" />
             </div>
             <div class="form-group">
               <label class="form-label required">Hourly Rate ($)</label>
-              <input
-                type="number"
-                class="form-control"
-                id="rateHourlyRate"
-                step="0.01"
-                min="0"
-                required
-                placeholder="e.g., 220.00"
-              />
+              <input type="number" class="form-control" id="rateHourlyRate" step="0.01" min="0" required placeholder="e.g., 220.00" />
             </div>
           </div>
-
           <div class="form-group">
             <label class="form-label">Description</label>
-            <textarea
-              class="form-control"
-              id="rateDescription"
-              rows="2"
-              placeholder="Description of this rate"
-            ></textarea>
+            <textarea class="form-control" id="rateDescription" rows="2" placeholder="Description of this rate"></textarea>
           </div>
-
           <div class="form-group">
-            <label class="form-label">
-              <input type="checkbox" id="rateActive" checked /> Active
-            </label>
+            <label class="form-label"><input type="checkbox" id="rateActive" checked /> Active</label>
           </div>
-
           <div class="modal-footer">
-            <button
-              type="button"
-              class="btn-secondary"
-              onclick="closeDeliveryRateModal()"
-            >
-              Cancel
-            </button>
+            <button type="button" class="btn-secondary" onclick="closeDeliveryRateModal()">Cancel</button>
             <button type="submit" class="btn-primary">💾 Save Rate</button>
           </div>
         </form>
@@ -849,33 +777,18 @@
           <h2 id="productModalTitle">Add Product</h2>
           <button class="modal-close" onclick="closeProductModal()">×</button>
         </div>
-        <form
-          id="productForm"
-          onsubmit="event.preventDefault(); saveProduct();"
-        >
+        <form id="productForm" onsubmit="event.preventDefault(); saveProduct();">
           <input type="hidden" id="productId" />
-
           <div class="form-row">
             <div class="form-group">
               <label for="productCode">Product Code *</label>
-              <input
-                type="text"
-                id="productCode"
-                required
-                placeholder="e.g., A20-STD"
-              />
+              <input type="text" id="productCode" required placeholder="e.g., A20-STD" />
             </div>
             <div class="form-group">
               <label for="productName">Product Name *</label>
-              <input
-                type="text"
-                id="productName"
-                required
-                placeholder="e.g., 20mm Aggregate"
-              />
+              <input type="text" id="productName" required placeholder="e.g., 20mm Aggregate" />
             </div>
           </div>
-
           <div class="form-row">
             <div class="form-group">
               <label for="familyGroup">Family Group *</label>
@@ -898,76 +811,39 @@
               </select>
             </div>
           </div>
-
           <div class="form-row">
             <div class="form-group">
               <label for="avgCostPerUnit">Cost per Unit ($)</label>
-              <input
-                type="number"
-                id="avgCostPerUnit"
-                step="0.01"
-                placeholder="0.00"
-              />
+              <input type="number" id="avgCostPerUnit" step="0.01" placeholder="0.00" />
             </div>
             <div class="form-group">
               <label for="sellingPricePerUnit">Selling Price ($)</label>
-              <input
-                type="number"
-                id="sellingPricePerUnit"
-                step="0.01"
-                placeholder="0.00"
-              />
+              <input type="number" id="sellingPricePerUnit" step="0.01" placeholder="0.00" />
             </div>
           </div>
-
           <div class="form-row">
             <div class="form-group">
               <label for="minStockLevel">Min Stock Level</label>
-              <input
-                type="number"
-                id="minStockLevel"
-                step="0.01"
-                placeholder="0"
-              />
+              <input type="number" id="minStockLevel" step="0.01" placeholder="0" />
             </div>
             <div class="form-group">
               <label for="maxStockLevel">Max Stock Level</label>
-              <input
-                type="number"
-                id="maxStockLevel"
-                step="0.01"
-                placeholder="0"
-              />
+              <input type="number" id="maxStockLevel" step="0.01" placeholder="0" />
             </div>
           </div>
-
           <div class="form-group">
             <label for="productPreferredLocation">Preferred Stockpile</label>
             <select id="productPreferredLocation">
               <option value="">No Preference</option>
             </select>
-            <small style="color: #666; display: block; margin-top: 4px"
-              >Default location for production and demand tracking</small
-            >
+            <small style="color: #666; display: block; margin-top: 4px">Default location for production and demand tracking</small>
           </div>
-
           <div class="form-group">
             <label for="productDescription">Description</label>
-            <textarea
-              id="productDescription"
-              rows="3"
-              placeholder="Product description or notes"
-            ></textarea>
+            <textarea id="productDescription" rows="3" placeholder="Product description or notes"></textarea>
           </div>
-
           <div class="modal-footer">
-            <button
-              type="button"
-              class="btn-secondary"
-              onclick="closeProductModal()"
-            >
-              Cancel
-            </button>
+            <button type="button" class="btn-secondary" onclick="closeProductModal()">Cancel</button>
             <button type="submit" class="btn-primary">💾 Save Product</button>
           </div>
         </form>
@@ -981,70 +857,39 @@
           <h2 id="customerModalTitle">Add Customer</h2>
           <button class="modal-close" onclick="closeCustomerModal()">×</button>
         </div>
-        <form
-          id="customerForm"
-          onsubmit="event.preventDefault(); saveCustomer();"
-        >
+        <form id="customerForm" onsubmit="event.preventDefault(); saveCustomer();">
           <input type="hidden" id="customerId" />
-
           <div class="form-row">
             <div class="form-group">
               <label for="customerCode">Customer Code *</label>
-              <input
-                type="text"
-                id="customerCode"
-                required
-                placeholder="e.g., BEN-HAL"
-              />
+              <input type="text" id="customerCode" required placeholder="e.g., BEN-HAL" />
             </div>
             <div class="form-group">
               <label for="customerName">Customer Name *</label>
-              <input
-                type="text"
-                id="customerName"
-                required
-                placeholder="e.g., Ben Hall Construction"
-              />
+              <input type="text" id="customerName" required placeholder="e.g., Ben Hall Construction" />
             </div>
           </div>
-
           <div class="form-row">
             <div class="form-group">
               <label for="contactPerson">Contact Person</label>
-              <input
-                type="text"
-                id="contactPerson"
-                placeholder="Contact name"
-              />
+              <input type="text" id="contactPerson" placeholder="Contact name" />
             </div>
             <div class="form-group">
               <label for="phone">Phone</label>
               <input type="tel" id="customerPhone" placeholder="Phone number" />
             </div>
           </div>
-
           <div class="form-group">
             <label for="email">Email</label>
-            <input
-              type="email"
-              id="customerEmail"
-              placeholder="email@example.com"
-            />
+            <input type="email" id="customerEmail" placeholder="email@example.com" />
           </div>
-
           <div class="form-group">
             <label for="emailCC">Email CC (Additional Recipients)</label>
-            <input
-              type="text"
-              id="customerEmailCC"
-              placeholder="email1@example.com, email2@example.com"
-            />
+            <input type="text" id="customerEmailCC" placeholder="email1@example.com, email2@example.com" />
             <small style="color: #666; display: block; margin-top: 4px;">
-              Separate multiple email addresses with commas. These will receive
-              copies of Account Detail Reports and Weighbridge Dockets.
+              Separate multiple email addresses with commas. These will receive copies of Account Detail Reports and Weighbridge Dockets.
             </small>
           </div>
-
           <div class="form-group">
             <label for="customerType">Customer Type</label>
             <select id="customerType">
@@ -1055,57 +900,25 @@
               <option value="STOP_CREDIT">Stop Credit</option>
             </select>
           </div>
-
           <div class="form-group">
             <label for="billingAddress">Billing Address</label>
-            <textarea
-              id="customerAddress"
-              rows="3"
-              placeholder="Street address, city, postcode"
-            ></textarea>
+            <textarea id="customerAddress" rows="3" placeholder="Street address, city, postcode"></textarea>
           </div>
-
           <div class="form-group">
             <label for="customerNotes">Notes</label>
-            <textarea
-              id="customerNotes"
-              rows="2"
-              placeholder="Additional customer information"
-            ></textarea>
+            <textarea id="customerNotes" rows="2" placeholder="Additional customer information"></textarea>
           </div>
-
           <div class="form-group">
-            <label
-              style="
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                cursor: pointer;
-              "
-            >
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
               <input type="checkbox" id="customerActive" checked />
               <span>Active Customer</span>
             </label>
-            <small
-              style="
-                color: #666;
-                display: block;
-                margin-top: 4px;
-                margin-left: 24px;
-              "
-            >
+            <small style="color: #666; display: block; margin-top: 4px; margin-left: 24px;">
               Inactive customers won't appear in sales dropdowns
             </small>
           </div>
-
           <div class="modal-footer">
-            <button
-              type="button"
-              class="btn-secondary"
-              onclick="closeCustomerModal()"
-            >
-              Cancel
-            </button>
+            <button type="button" class="btn-secondary" onclick="closeCustomerModal()">Cancel</button>
             <button type="submit" class="btn-primary">💾 Save Customer</button>
           </div>
         </form>
@@ -1119,33 +932,18 @@
           <h2 id="locationModalTitle">Add Location</h2>
           <button class="modal-close" onclick="closeLocationModal()">×</button>
         </div>
-        <form
-          id="locationForm"
-          onsubmit="event.preventDefault(); saveLocation();"
-        >
+        <form id="locationForm" onsubmit="event.preventDefault(); saveLocation();">
           <input type="hidden" id="locationId" />
-
           <div class="form-row">
             <div class="form-group">
               <label for="locationCode">Location Code *</label>
-              <input
-                type="text"
-                id="locationCode"
-                required
-                placeholder="e.g., 10"
-              />
+              <input type="text" id="locationCode" required placeholder="e.g., 10" />
             </div>
             <div class="form-group">
               <label for="locationName">Location Name *</label>
-              <input
-                type="text"
-                id="locationName"
-                required
-                placeholder="e.g., Stockpile 22"
-              />
+              <input type="text" id="locationName" required placeholder="e.g., Stockpile 22" />
             </div>
           </div>
-
           <div class="form-row">
             <div class="form-group">
               <label for="locationType">Location Type *</label>
@@ -1160,39 +958,19 @@
             </div>
             <div class="form-group">
               <label for="capacityTonnes">Capacity (tonnes)</label>
-              <input
-                type="number"
-                id="capacityTonnes"
-                step="0.01"
-                placeholder="e.g., 1000"
-              />
+              <input type="number" id="capacityTonnes" step="0.01" placeholder="e.g., 1000" />
             </div>
           </div>
-
           <div class="form-group">
             <label for="assignedProduct">Assigned Product</label>
-            <select id="assignedProduct">
-              <option value="">None</option>
-            </select>
+            <select id="assignedProduct"><option value="">None</option></select>
           </div>
-
           <div class="form-group">
             <label for="locationDescription">Description</label>
-            <textarea
-              id="locationDescription"
-              rows="3"
-              placeholder="Additional notes about this location"
-            ></textarea>
+            <textarea id="locationDescription" rows="3" placeholder="Additional notes about this location"></textarea>
           </div>
-
           <div class="modal-footer">
-            <button
-              type="button"
-              class="btn-secondary"
-              onclick="closeLocationModal()"
-            >
-              Cancel
-            </button>
+            <button type="button" class="btn-secondary" onclick="closeLocationModal()">Cancel</button>
             <button type="submit" class="btn-primary">💾 Save Location</button>
           </div>
         </form>
@@ -1206,21 +984,12 @@
           <h2 id="vehicleModalTitle">Add Vehicle</h2>
           <button class="modal-close" onclick="closeVehicleModal()">×</button>
         </div>
-        <form
-          id="vehicleForm"
-          onsubmit="event.preventDefault(); saveVehicle();"
-        >
+        <form id="vehicleForm" onsubmit="event.preventDefault(); saveVehicle();">
           <input type="hidden" id="vehicleId" />
-
           <div class="form-row">
             <div class="form-group">
               <label for="registration">Registration *</label>
-              <input
-                type="text"
-                id="registration"
-                required
-                placeholder="e.g., RAC-003"
-              />
+              <input type="text" id="registration" required placeholder="e.g., RAC-003" />
             </div>
             <div class="form-group">
               <label for="vehicleType">Vehicle Type *</label>
@@ -1234,17 +1003,10 @@
               </select>
             </div>
           </div>
-
           <div class="form-group">
             <label for="vehicleCapacity">Capacity (tonnes)</label>
-            <input
-              type="number"
-              id="vehicleCapacity"
-              step="0.01"
-              placeholder="e.g., 30"
-            />
+            <input type="number" id="vehicleCapacity" step="0.01" placeholder="e.g., 30" />
           </div>
-
           <div class="form-row">
             <div class="form-group">
               <label for="lastServiceDate">Last Service Date</label>
@@ -1255,24 +1017,12 @@
               <input type="date" id="nextServiceDate" />
             </div>
           </div>
-
           <div class="form-group">
             <label for="vehicleNotes">Notes</label>
-            <textarea
-              id="vehicleNotes"
-              rows="3"
-              placeholder="Service history, issues, etc."
-            ></textarea>
+            <textarea id="vehicleNotes" rows="3" placeholder="Service history, issues, etc."></textarea>
           </div>
-
           <div class="modal-footer">
-            <button
-              type="button"
-              class="btn-secondary"
-              onclick="closeVehicleModal()"
-            >
-              Cancel
-            </button>
+            <button type="button" class="btn-secondary" onclick="closeVehicleModal()">Cancel</button>
             <button type="submit" class="btn-primary">💾 Save Vehicle</button>
           </div>
         </form>
@@ -1288,36 +1038,20 @@
         </div>
         <form id="driverForm" onsubmit="event.preventDefault(); saveDriver();">
           <input type="hidden" id="driverId" />
-
           <div class="form-row">
             <div class="form-group">
               <label for="driverCode">Driver Code *</label>
-              <input
-                type="text"
-                id="driverCode"
-                required
-                placeholder="e.g., JW-01"
-              />
+              <input type="text" id="driverCode" required placeholder="e.g., JW-01" />
             </div>
             <div class="form-group">
               <label for="driverName">Driver Name *</label>
-              <input
-                type="text"
-                id="driverName"
-                required
-                placeholder="e.g., Joe Williams"
-              />
+              <input type="text" id="driverName" required placeholder="e.g., Joe Williams" />
             </div>
           </div>
-
           <div class="form-row">
             <div class="form-group">
               <label for="licenseNumber">License Number</label>
-              <input
-                type="text"
-                id="licenseNumber"
-                placeholder="License number"
-              />
+              <input type="text" id="licenseNumber" placeholder="License number" />
             </div>
             <div class="form-group">
               <label for="licenseClass">License Class</label>
@@ -1332,29 +1066,16 @@
               </select>
             </div>
           </div>
-
           <div class="form-group">
             <label for="licenseExpiry">License Expiry</label>
             <input type="date" id="licenseExpiry" />
           </div>
-
           <div class="form-group">
             <label for="certifications">Certifications</label>
-            <textarea
-              id="certifications"
-              rows="3"
-              placeholder="Forklift, Loader, Excavator, etc."
-            ></textarea>
+            <textarea id="certifications" rows="3" placeholder="Forklift, Loader, Excavator, etc."></textarea>
           </div>
-
           <div class="modal-footer">
-            <button
-              type="button"
-              class="btn-secondary"
-              onclick="closeDriverModal()"
-            >
-              Cancel
-            </button>
+            <button type="button" class="btn-secondary" onclick="closeDriverModal()">Cancel</button>
             <button type="submit" class="btn-primary">💾 Save Driver</button>
           </div>
         </form>
@@ -1368,28 +1089,14 @@
           <h2 id="carrierModalTitle">Add Carrier</h2>
           <button class="modal-close" onclick="closeCarrierModal()">×</button>
         </div>
-        <form
-          id="carrierForm"
-          onsubmit="event.preventDefault(); saveCarrier();"
-        >
+        <form id="carrierForm" onsubmit="event.preventDefault(); saveCarrier();">
           <input type="hidden" id="carrierId" />
           <div class="form-group">
             <label for="carrierName">Carrier Name *</label>
-            <input
-              type="text"
-              id="carrierName"
-              required
-              placeholder="e.g., RAC Mining"
-            />
+            <input type="text" id="carrierName" required placeholder="e.g., RAC Mining" />
           </div>
           <div class="modal-footer">
-            <button
-              type="button"
-              class="btn-secondary"
-              onclick="closeCarrierModal()"
-            >
-              Cancel
-            </button>
+            <button type="button" class="btn-secondary" onclick="closeCarrierModal()">Cancel</button>
             <button type="submit" class="btn-primary">💾 Save Carrier</button>
           </div>
         </form>
@@ -1404,63 +1111,26 @@
           <button class="modal-close" onclick="closeDeliveryModal()">×</button>
         </div>
         <div class="modal-body">
-          <form
-            id="deliveryForm"
-            onsubmit="event.preventDefault(); saveDelivery();"
-          >
+          <form id="deliveryForm" onsubmit="event.preventDefault(); saveDelivery();">
             <input type="hidden" id="deliveryId" />
-
             <div class="form-group">
               <label class="form-label required">Delivery Name</label>
-              <input
-                type="text"
-                class="form-control"
-                id="deliveryName"
-                required
-                placeholder="e.g., Nhulunbuy Township"
-              />
+              <input type="text" class="form-control" id="deliveryName" required placeholder="e.g., Nhulunbuy Township" />
             </div>
-
             <div class="form-group">
               <label class="form-label">Description</label>
-              <textarea
-                class="form-control"
-                id="deliveryDescription"
-                rows="2"
-                placeholder="Additional delivery details"
-              ></textarea>
+              <textarea class="form-control" id="deliveryDescription" rows="2" placeholder="Additional delivery details"></textarea>
             </div>
-
             <div class="form-group">
               <label class="form-label required">Charge per Tonne ($)</label>
-              <input
-                type="number"
-                class="form-control"
-                id="deliveryCharge"
-                step="0.01"
-                min="0"
-                required
-                placeholder="e.g., 6.00"
-              />
+              <input type="number" class="form-control" id="deliveryCharge" step="0.01" min="0" required placeholder="e.g., 6.00" />
             </div>
-
             <div class="form-group">
-              <label class="form-label">
-                <input type="checkbox" id="deliveryActive" checked /> Active
-              </label>
+              <label class="form-label"><input type="checkbox" id="deliveryActive" checked /> Active</label>
             </div>
-
             <div class="modal-footer">
-              <button
-                type="button"
-                class="btn-secondary"
-                onclick="closeDeliveryModal()"
-              >
-                Cancel
-              </button>
-              <button type="submit" class="btn-primary">
-                💾 Save Delivery
-              </button>
+              <button type="button" class="btn-secondary" onclick="closeDeliveryModal()">Cancel</button>
+              <button type="submit" class="btn-primary">💾 Save Delivery</button>
             </div>
           </form>
         </div>
@@ -1488,19 +1158,23 @@
       updateHeaderValue();
 
       // ── Production Rates ────────────────────────────────────────────
+      // Store rates in memory so the edit modal can read them safely
+      // (avoids passing text with quotes/commas through onclick attributes)
+      let _productionRatesCache = [];
+
       async function loadProductionRates() {
         const tbody = document.getElementById("productionRatesTableBody");
         tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:#999;">Loading...</td></tr>';
         try {
           const res = await fetch("/api/production-rates");
-          const rates = await res.json();
+          _productionRatesCache = await res.json();
 
-          if (!rates.length) {
+          if (!_productionRatesCache.length) {
             tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:#999;">No rates found.</td></tr>';
             return;
           }
 
-          tbody.innerHTML = rates.map(rate => {
+          tbody.innerHTML = _productionRatesCache.map(rate => {
             const rateVal = parseFloat(rate.rate_per_unit);
             const isZero  = rateVal === 0;
             const effDate = new Date(rate.effective_from).toLocaleDateString("en-AU");
@@ -1508,56 +1182,61 @@
 
             return `
               <tr>
-                <td>
-                  <span style="font-weight:600; color:#495057;">${rate.rate_type.replace('_', ' ')}</span>
-                </td>
-                <td style="color:#6c757d; font-size:13px;">${rate.rate_description}</td>
-                <td style="text-align:right; font-weight:700; font-size:1.05rem;
-                           color:${isZero ? '#dc3545' : '#28a745'};">
+                <td><span style="font-weight:600;color:#495057;">${rate.rate_type.replace('_', ' ')}</span></td>
+                <td style="color:#6c757d;font-size:13px;">${rate.rate_description}</td>
+                <td style="text-align:right;font-weight:700;font-size:1.05rem;color:${isZero ? '#dc3545' : '#28a745'};">
                   $${rateVal.toFixed(2)}
                 </td>
-                <td style="color:#6c757d; font-size:13px;">${rate.rate_unit}</td>
+                <td style="color:#6c757d;font-size:13px;">${rate.rate_unit}</td>
                 <td style="font-size:13px;">${effDate}</td>
-                <td style="font-size:13px; color:#6c757d;">${updDate}</td>
-                <td style="font-size:12px; color:#6c757d; max-width:200px;">${rate.notes || '—'}</td>
+                <td style="font-size:13px;color:#6c757d;">${updDate}</td>
+                <td style="font-size:12px;color:#6c757d;max-width:200px;">${rate.notes || '—'}</td>
                 <td>
                   <button
-                    class="btn-secondary btn-sm"
-                    onclick="openRateEditModal(${rate.rate_id}, '${rate.rate_description}', ${rateVal}, '${rate.rate_unit}', ${JSON.stringify(rate.notes || '')})"
-                  >
-                    ✏️ Edit
-                  </button>
+                    class="btn-secondary btn-sm rate-edit-btn"
+                    data-rate-id="${rate.rate_id}"
+                  >✏️ Edit</button>
                 </td>
               </tr>
             `;
           }).join('');
 
-          // Warn if any rates are still $0
-          const zeroCount = rates.filter(r => parseFloat(r.rate_per_unit) === 0).length;
+          // Warn if any rates still $0
+          const zeroCount = _productionRatesCache.filter(r => parseFloat(r.rate_per_unit) === 0).length;
           if (zeroCount > 0) {
             tbody.innerHTML += `
               <tr>
-                <td colspan="8" style="background:#fff3cd; color:#856404; padding:10px 16px;
-                                       font-size:13px; border-top:1px solid #ffc107;">
+                <td colspan="8" style="background:#fff3cd;color:#856404;padding:10px 16px;
+                                       font-size:13px;border-top:1px solid #ffc107;">
                   ⚠️ ${zeroCount} rate${zeroCount > 1 ? 's are' : ' is'} still set to $0.00 —
                   update before recording production runs.
                 </td>
               </tr>
             `;
           }
+
+          // Wire up edit buttons via delegation (safe — no inline data)
+          tbody.querySelectorAll('.rate-edit-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+              const rateId = parseInt(this.dataset.rateId);
+              const rate   = _productionRatesCache.find(r => r.rate_id === rateId);
+              if (rate) openRateEditModal(rate);
+            });
+          });
+
         } catch (err) {
           console.error("Error loading production rates:", err);
           tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:#dc3545;">Failed to load rates.</td></tr>';
         }
       }
 
-      function openRateEditModal(rateId, description, currentRate, unit, notes) {
-        document.getElementById("editRateId").value    = rateId;
-        document.getElementById("rateModalTitle").textContent = "Edit Rate — " + description;
-        document.getElementById("editRateType").textContent   = description;
-        document.getElementById("editRateUnit").textContent   = unit;
-        document.getElementById("editRateValue").value        = currentRate.toFixed(2);
-        document.getElementById("editRateNotes").value        = notes || "";
+      function openRateEditModal(rate) {
+        document.getElementById("editRateId").value            = rate.rate_id;
+        document.getElementById("rateModalTitle").textContent  = "Edit Rate — " + rate.rate_description;
+        document.getElementById("editRateType").textContent    = rate.rate_description;
+        document.getElementById("editRateUnit").textContent    = rate.rate_unit;
+        document.getElementById("editRateValue").value         = parseFloat(rate.rate_per_unit).toFixed(2);
+        document.getElementById("editRateNotes").value         = rate.notes || "";
         document.getElementById("productionRateModal").style.display = "flex";
       }
 
@@ -1566,9 +1245,9 @@
       }
 
       async function saveProductionRate() {
-        const rateId = document.getElementById("editRateId").value;
+        const rateId    = document.getElementById("editRateId").value;
         const rateValue = parseFloat(document.getElementById("editRateValue").value);
-        const notes  = document.getElementById("editRateNotes").value;
+        const notes     = document.getElementById("editRateNotes").value;
 
         if (isNaN(rateValue) || rateValue < 0) {
           alert("Please enter a valid rate value (0 or greater).");
@@ -1590,11 +1269,6 @@
 
           closeRateEditModal();
           await loadProductionRates();
-          // Brief success flash on the table
-          const tbody = document.getElementById("productionRatesTableBody");
-          tbody.style.transition = "opacity 0.3s";
-          tbody.style.opacity = "0.5";
-          setTimeout(() => { tbody.style.opacity = "1"; }, 300);
         } catch (err) {
           console.error("Error saving rate:", err);
           alert("Failed to save rate. Please try again.");
