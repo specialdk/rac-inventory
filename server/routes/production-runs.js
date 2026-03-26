@@ -15,29 +15,18 @@ const { pool } = require('../config/database');
 
 // ----------------------------------------
 // GET /api/production-runs
-// Recent production runs, newest first
 // ----------------------------------------
 router.get('/', async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 20;
     const result = await pool.query(`
       SELECT
-        pr.run_id,
-        pr.run_date,
-        pr.operator,
-        pr.reference_number,
-        pr.entry_mode,
-        pr.wip_tonnes_used,
-        pr.labour_hours,
-        pr.total_run_cost,
-        pr.variance_zone,
-        pr.override_required,
-        pr.notes,
-        pr.created_at,
-        -- Aggregate products made
+        pr.run_id, pr.run_date, pr.operator, pr.reference_number,
+        pr.entry_mode, pr.wip_tonnes_used, pr.labour_hours,
+        pr.total_run_cost, pr.variance_zone, pr.override_required,
+        pr.notes, pr.created_at,
         STRING_AGG(DISTINCT p.product_name, ', ' ORDER BY p.product_name) AS products_made,
         SUM(prp.tonnes_produced) AS total_tonnes,
-        -- Cost per tonne (same for all products in a run)
         CASE WHEN SUM(prp.tonnes_produced) > 0
           THEN ROUND(pr.total_run_cost / SUM(prp.tonnes_produced), 4)
           ELSE 0
@@ -58,45 +47,29 @@ router.get('/', async (req, res) => {
 
 // ----------------------------------------
 // GET /api/production-runs/:id
-// Full detail for a single run
 // ----------------------------------------
 router.get('/:id', async (req, res) => {
   const { id } = req.params;
   try {
-    // Header
-    const runResult = await pool.query(
-      'SELECT * FROM production_runs WHERE run_id = $1',
-      [id]
-    );
-    if (runResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Production run not found' });
-    }
+    const runResult = await pool.query('SELECT * FROM production_runs WHERE run_id = $1', [id]);
+    if (runResult.rows.length === 0) return res.status(404).json({ error: 'Production run not found' });
 
-    // Machines used
     const machinesResult = await pool.query(`
       SELECT prm.*, m.machine_name, m.machine_type
       FROM production_run_machines prm
       JOIN machines m ON m.machine_id = prm.machine_id
-      WHERE prm.run_id = $1
-      ORDER BY prm.run_machine_id
+      WHERE prm.run_id = $1 ORDER BY prm.run_machine_id
     `, [id]);
 
-    // Products made
     const productsResult = await pool.query(`
-      SELECT prp.*, p.product_name, p.product_code, p.family_group,
-             l.location_name
+      SELECT prp.*, p.product_name, p.product_code, p.family_group, l.location_name
       FROM production_run_products prp
       JOIN products p ON p.product_id = prp.product_id
       LEFT JOIN locations l ON l.location_id = prp.to_location_id
-      WHERE prp.run_id = $1
-      ORDER BY prp.run_product_id
+      WHERE prp.run_id = $1 ORDER BY prp.run_product_id
     `, [id]);
 
-    res.json({
-      run:      runResult.rows[0],
-      machines: machinesResult.rows,
-      products: productsResult.rows
-    });
+    res.json({ run: runResult.rows[0], machines: machinesResult.rows, products: productsResult.rows });
   } catch (error) {
     console.error('Error fetching production run:', error);
     res.status(500).json({ error: 'Failed to fetch production run' });
@@ -106,18 +79,6 @@ router.get('/:id', async (req, res) => {
 // ----------------------------------------
 // POST /api/production-runs
 // Save a complete production run
-//
-// Body: {
-//   run_date, operator, reference_number, entry_mode, notes,
-//   wip_tonnes_used, wip_rate_per_tonne,
-//   labour_hours, labour_rate_per_hour,
-//   variance_zone, amber_check_confirmed,
-//   override_required, override_code, override_notes, override_by,
-//   machines: [{ machine_id, hours_used, rate_per_hour,
-//                maintenance_rate_per_hour, fuel_litres_per_hour,
-//                fuel_rate_per_litre, bom_hours_expected, variance_pct, variance_zone }],
-//   products: [{ product_id, to_location_id, tonnes_produced }]
-// }
 // ----------------------------------------
 router.post('/', async (req, res) => {
   const client = await pool.connect();
@@ -133,7 +94,6 @@ router.post('/', async (req, res) => {
       machines = [], products = []
     } = req.body;
 
-    // Validate
     if (!run_date)        throw new Error('run_date is required');
     if (!products.length) throw new Error('At least one product is required');
     if (!machines.length) throw new Error('At least one machine is required');
@@ -141,52 +101,43 @@ router.post('/', async (req, res) => {
     const totalTonnes = products.reduce((s, p) => s + parseFloat(p.tonnes_produced || 0), 0);
     if (totalTonnes <= 0) throw new Error('Total tonnes produced must be greater than 0');
 
-    // ── Calculate costs ──────────────────────────────────────
-    const wipRate     = parseFloat(wip_rate_per_tonne)    || 0;
-    const wipTonnes   = parseFloat(wip_tonnes_used)       || 0;
-    const wipCost     = Math.round(wipTonnes * wipRate * 100) / 100;
+    // ── Cost calculations ─────────────────────────────────────
+    const wipRate  = parseFloat(wip_rate_per_tonne)   || 0;
+    const wipT     = parseFloat(wip_tonnes_used)      || 0;
+    const wipCost  = Math.round(wipT * wipRate * 100) / 100;
 
-    const labRate     = parseFloat(labour_rate_per_hour)  || 0;
-    const labHours    = parseFloat(labour_hours)          || 0;
-    const labCost     = Math.round(labHours * labRate * 100) / 100;
+    const labRate  = parseFloat(labour_rate_per_hour) || 0;
+    const labHrs   = parseFloat(labour_hours)         || 0;
+    const labCost  = Math.round(labHrs * labRate * 100) / 100;
 
-    // Calculate per-machine costs
     const machineRows = machines.map(m => {
-      const hrs       = parseFloat(m.hours_used)               || 0;
-      const rate      = parseFloat(m.rate_per_hour)            || 0;
-      const maintRate = parseFloat(m.maintenance_rate_per_hour)|| 0;
-      const fuelLph   = parseFloat(m.fuel_litres_per_hour)     || 0;
-      const fuelRate  = parseFloat(m.fuel_rate_per_litre)      || 0;
-
+      const hrs       = parseFloat(m.hours_used)                || 0;
+      const rate      = parseFloat(m.rate_per_hour)             || 0;
+      const maintRate = parseFloat(m.maintenance_rate_per_hour) || 0;
+      const fuelLph   = parseFloat(m.fuel_litres_per_hour)      || 0;
+      const fuelRate  = parseFloat(m.fuel_rate_per_litre)       || 0;
       const machineCost  = Math.round(hrs * rate * 100) / 100;
       const maintCost    = Math.round(hrs * maintRate * 100) / 100;
       const fuelLitres   = Math.round(hrs * fuelLph * 100) / 100;
       const fuelCost     = Math.round(fuelLitres * fuelRate * 100) / 100;
       const totalMachine = Math.round((machineCost + maintCost + fuelCost) * 100) / 100;
-
       return {
-        machine_id:                parseInt(m.machine_id),
-        hours_used:                hrs,
-        rate_per_hour:             rate,
+        machine_id: parseInt(m.machine_id),
+        hours_used: hrs, rate_per_hour: rate,
         maintenance_rate_per_hour: maintRate,
-        fuel_litres_per_hour:      fuelLph,
-        fuel_rate_per_litre:       fuelRate,
-        machine_cost:              machineCost,
-        maintenance_cost:          maintCost,
-        fuel_litres_total:         fuelLitres,
-        fuel_cost:                 fuelCost,
-        total_cost:                totalMachine,
-        bom_hours_expected:        parseFloat(m.bom_hours_expected) || null,
-        variance_pct:              parseFloat(m.variance_pct)       || null,
-        variance_zone:             m.variance_zone                  || null
+        fuel_litres_per_hour: fuelLph, fuel_rate_per_litre: fuelRate,
+        machine_cost: machineCost, maintenance_cost: maintCost,
+        fuel_litres_total: fuelLitres, fuel_cost: fuelCost,
+        total_cost: totalMachine,
+        bom_hours_expected: parseFloat(m.bom_hours_expected) || null,
+        variance_pct:       parseFloat(m.variance_pct)       || null,
+        variance_zone:      m.variance_zone                   || null
       };
     });
 
-    const machinesTotalCost = machineRows.reduce((s, m) => s + m.total_cost, 0);
-    const totalRunCost      = Math.round((wipCost + labCost + machinesTotalCost) * 100) / 100;
-    const costPerTonne      = totalTonnes > 0
-      ? Math.round((totalRunCost / totalTonnes) * 10000) / 10000
-      : 0;
+    const machineTotalCost = machineRows.reduce((s, m) => s + m.total_cost, 0);
+    const totalRunCost     = Math.round((wipCost + labCost + machineTotalCost) * 100) / 100;
+    const costPerTonne     = totalTonnes > 0 ? Math.round((totalRunCost / totalTonnes) * 10000) / 10000 : 0;
 
     // ── Insert production_runs header ─────────────────────────
     const runResult = await client.query(`
@@ -202,8 +153,8 @@ router.post('/', async (req, res) => {
       RETURNING run_id
     `, [
       run_date, operator || null, reference_number || null, entry_mode || 'MANUAL',
-      wipTonnes, wipRate, wipCost,
-      labHours, labRate, labCost,
+      wipT, wipRate, wipCost,
+      labHrs, labRate, labCost,
       totalRunCost,
       variance_zone || null, amber_check_confirmed || false,
       override_required || false, override_code || null, override_notes || null, override_by || null,
@@ -234,31 +185,26 @@ router.post('/', async (req, res) => {
 
     // ── Insert product rows + stock movements ─────────────────
     for (const p of products) {
-      const tonnes       = parseFloat(p.tonnes_produced) || 0;
-      const sharePct     = totalTonnes > 0 ? Math.round((tonnes / totalTonnes) * 1000000) / 10000 : 0;
-      const costAllocated= Math.round(totalRunCost * (sharePct / 100) * 100) / 100;
-      const costPerT     = tonnes > 0 ? Math.round((costAllocated / tonnes) * 10000) / 10000 : 0;
+      const tonnes        = parseFloat(p.tonnes_produced) || 0;
+      const sharePct      = totalTonnes > 0 ? Math.round((tonnes / totalTonnes) * 1000000) / 10000 : 0;
+      const costAllocated = Math.round(totalRunCost * (sharePct / 100) * 100) / 100;
+      const costPerT      = tonnes > 0 ? Math.round((costAllocated / tonnes) * 10000) / 10000 : 0;
 
-      // Get current weighted average for audit trail
-      const currentStock = await client.query(`
-        SELECT quantity, average_cost
-        FROM current_stock
-        WHERE product_id = $1 AND location_id = $2
-      `, [p.product_id, p.to_location_id]);
+      // Get existing stock for weighted average and audit trail
+      const existingStock = await client.query(
+        'SELECT quantity, average_cost FROM current_stock WHERE product_id = $1 AND location_id = $2',
+        [p.product_id, p.to_location_id]
+      );
 
-      const prevAvgCost = currentStock.rows.length > 0
-        ? parseFloat(currentStock.rows[0].average_cost) || 0
-        : 0;
-      const prevQty = currentStock.rows.length > 0
-        ? parseFloat(currentStock.rows[0].quantity) || 0
-        : 0;
+      const prevAvgCost = existingStock.rows.length > 0 ? parseFloat(existingStock.rows[0].average_cost) || 0 : 0;
+      const prevQty     = existingStock.rows.length > 0 ? parseFloat(existingStock.rows[0].quantity)     || 0 : 0;
 
-      // Weighted average cost calculation
+      // Weighted average cost
       const newAvgCost = (prevQty + tonnes) > 0
         ? Math.round(((prevAvgCost * prevQty) + (costPerT * tonnes)) / (prevQty + tonnes) * 10000) / 10000
         : costPerT;
 
-      // Create stock movement
+      // Create stock movement (matching existing schema exactly)
       const movResult = await client.query(`
         INSERT INTO stock_movements (
           movement_date, movement_type, product_id,
@@ -267,8 +213,10 @@ router.post('/', async (req, res) => {
         ) VALUES (NOW(), 'PRODUCTION', $1, $2, $3, $4, $5, $6, $7, $8)
         RETURNING movement_id
       `, [
-        p.product_id, p.to_location_id || null,
-        tonnes, costPerT,
+        p.product_id,
+        p.to_location_id || null,
+        tonnes,
+        costPerT,
         Math.round(costAllocated * 100) / 100,
         reference_number || `RUN-${runId}`,
         `Production run ${runId} — ${sharePct.toFixed(2)}% cost share`,
@@ -276,26 +224,31 @@ router.post('/', async (req, res) => {
       ]);
       const movementId = movResult.rows[0].movement_id;
 
-      // Update current_stock (upsert)
-      await client.query(`
-        INSERT INTO current_stock (product_id, location_id, quantity, average_cost, total_value, last_updated)
-        VALUES ($1, $2, $3, $4, $5, NOW())
-        ON CONFLICT (product_id, location_id)
-        DO UPDATE SET
-          quantity      = current_stock.quantity + $3,
-          average_cost  = $4,
-          total_value   = (current_stock.quantity + $3) * $4,
-          last_updated  = NOW()
-      `, [
-        p.product_id, p.to_location_id || null,
-        tonnes, newAvgCost,
-        Math.round(tonnes * newAvgCost * 100) / 100
-      ]);
+      // Update current_stock — matching existing pattern (SELECT then INSERT or UPDATE)
+      const newQty   = prevQty + tonnes;
+      const newValue = Math.round(newQty * newAvgCost * 100) / 100;
 
-      // Update products table average cost
-      await client.query(`
-        UPDATE products SET standard_cost = $1 WHERE product_id = $2
-      `, [newAvgCost, p.product_id]);
+      if (existingStock.rows.length === 0) {
+        // No existing stock — create new row
+        await client.query(`
+          INSERT INTO current_stock (product_id, location_id, quantity, average_cost, total_value, last_movement_date)
+          VALUES ($1, $2, $3, $4, $5, NOW())
+        `, [p.product_id, p.to_location_id, newQty, newAvgCost, newValue]);
+      } else {
+        // Update existing row
+        await client.query(`
+          UPDATE current_stock
+          SET quantity = $1, average_cost = $2, total_value = $3,
+              last_movement_date = NOW(), updated_at = NOW()
+          WHERE product_id = $4 AND location_id = $5
+        `, [newQty, newAvgCost, newValue, p.product_id, p.to_location_id]);
+      }
+
+      // Update product standard cost
+      await client.query(
+        'UPDATE products SET standard_cost = $1 WHERE product_id = $2',
+        [newAvgCost, p.product_id]
+      );
 
       // Insert production_run_products record
       await client.query(`
@@ -332,13 +285,10 @@ router.post('/', async (req, res) => {
 
 // ----------------------------------------
 // GET /api/production-runs/wip-report?year=2026&month=3
-// Monthly WIP tonnes for Xero journal
 // ----------------------------------------
 router.get('/wip-report', async (req, res) => {
   const { year, month } = req.query;
-  if (!year || !month) {
-    return res.status(400).json({ error: 'year and month required' });
-  }
+  if (!year || !month) return res.status(400).json({ error: 'year and month required' });
   try {
     const result = await pool.query(`
       SELECT
