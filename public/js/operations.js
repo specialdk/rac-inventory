@@ -13,55 +13,52 @@ document.addEventListener("DOMContentLoaded", async function () {
   await loadDropdowns();
   await loadStats();
   await loadRecentMovementsWithFilter();
-  setupSaleProductListener(); // Setup sale product listener
-  setupSalesVehicleListener(); // ADD THIS LINE
+  setupSaleProductListener();
+  setupSalesVehicleListener();
 
-  // ============================================
-  // BUSINESS RULE 1: Auto-suggest stockpile when product selected
-  // ============================================
+  // Only wire up old production modal listeners if the elements exist
+  // (they no longer exist in the updated operations.html — new production run modal is used instead)
   const productionProductSelect = document.getElementById("productionProduct");
   const productionCostInput = document.getElementById("productionCost");
-  const productionLocationSelect =
-    document.getElementById("productionLocation");
+  const productionLocationSelect = document.getElementById("productionLocation");
 
-  productionProductSelect.addEventListener("change", async (e) => {
-    const selectedOption = e.target.options[e.target.selectedIndex];
+  if (productionProductSelect && productionLocationSelect) {
+    productionProductSelect.addEventListener("change", async (e) => {
+      const selectedOption = e.target.options[e.target.selectedIndex];
 
-    // Auto-fill cost (existing functionality)
-    if (selectedOption.dataset.cost) {
-      productionCostInput.value = selectedOption.dataset.cost;
-    }
-
-    // NEW: Auto-suggest stockpile for this product
-    const productId = e.target.value;
-    if (productId) {
-      try {
-        const response = await fetch(`/api/locations/suggest/${productId}`);
-        const data = await response.json();
-
-        if (data.suggested && data.location) {
-          // Set the suggested location
-          productionLocationSelect.value = String(data.location.location_id);
-          console.log(`✓ ${data.message}`);
-        } else {
-          // No suggestion - let user choose
-          console.log(`No stockpile assigned yet for this product`);
-        }
-      } catch (error) {
-        console.error("Error getting suggested location:", error);
+      if (selectedOption.dataset.cost && productionCostInput) {
+        productionCostInput.value = selectedOption.dataset.cost;
       }
-    }
-  });
+
+      const productId = e.target.value;
+      if (productId) {
+        try {
+          const response = await fetch(`/api/locations/suggest/${productId}`);
+          const data = await response.json();
+
+          if (data.suggested && data.location) {
+            productionLocationSelect.value = String(data.location.location_id);
+            console.log(`✓ ${data.message}`);
+          } else {
+            console.log(`No stockpile assigned yet for this product`);
+          }
+        } catch (error) {
+          console.error("Error getting suggested location:", error);
+        }
+      }
+    });
+  }
 });
 
 // Set default dates to today
 function setDefaultDate() {
   const today = new Date().toISOString().split("T")[0];
-  document.getElementById("productionDate").value = today;
-  document.getElementById("saleDate").value = today;
-  if (document.getElementById("demandDate")) {
-    document.getElementById("demandDate").value = today;
-  }
+  const productionDate = document.getElementById("productionDate");
+  const saleDate = document.getElementById("saleDate");
+  const demandDate = document.getElementById("demandDate");
+  if (productionDate) productionDate.value = today;
+  if (saleDate) saleDate.value = today;
+  if (demandDate) demandDate.value = today;
 }
 
 // Load all dropdowns
@@ -83,7 +80,7 @@ async function loadDropdowns() {
         if (select) {
           const option = new Option(product.product_name, product.product_id);
           option.dataset.cost = product.standard_cost;
-option.dataset.price = product.current_price;
+          option.dataset.price = product.current_price;
           select.add(option);
         }
       });
@@ -93,18 +90,17 @@ option.dataset.price = product.current_price;
     const locationsRes = await fetch("/api/locations");
     locationsData = await locationsRes.json();
 
-    // Load production locations
-    const productionLocationSelect =
-      document.getElementById("productionLocation");
-    locationsData.forEach((location) => {
-      if (productionLocationSelect) {
+    // Load production locations (old modal — may not exist)
+    const productionLocationSelect = document.getElementById("productionLocation");
+    if (productionLocationSelect) {
+      locationsData.forEach((location) => {
         productionLocationSelect.add(
           new Option(location.location_name, location.location_id)
         );
-      }
-    });
+      });
+    }
 
-    // Load sale locations using the smart function (will filter by product when selected)
+    // Load sale locations using the smart function
     await loadStockpileDropdown(null, "saleLocation");
 
     // Load customers
@@ -128,14 +124,16 @@ option.dataset.price = product.current_price;
     vehiclesData = await vehiclesRes.json();
     const saleVehicleSelect = document.getElementById("saleVehicle");
 
-    vehiclesData.forEach((vehicle) => {
-      saleVehicleSelect.add(
-        new Option(
-          `${vehicle.registration} - ${vehicle.vehicle_type}`,
-          vehicle.vehicle_id
-        )
-      );
-    });
+    if (saleVehicleSelect) {
+      vehiclesData.forEach((vehicle) => {
+        saleVehicleSelect.add(
+          new Option(
+            `${vehicle.registration} - ${vehicle.vehicle_type}`,
+            vehicle.vehicle_id
+          )
+        );
+      });
+    }
 
     // Load drivers
     const driversRes = await fetch("/api/drivers");
@@ -143,61 +141,68 @@ option.dataset.price = product.current_price;
     const prodOperatorSelect = document.getElementById("productionOperator");
     const saleDriverSelect = document.getElementById("saleDriver");
 
-    // Production Operator - hardcoded codes (RIA, RM, RE)
-    const productionOperators = [
-      { code: "RIA", name: "RIA" },
-      { code: "RM", name: "RM" },
-      { code: "RE", name: "RE" },
-    ];
+    if (prodOperatorSelect) {
+      const productionOperators = [
+        { code: "RIA", name: "RIA" },
+        { code: "RM", name: "RM" },
+        { code: "RE", name: "RE" },
+      ];
+      productionOperators.forEach((operator) => {
+        prodOperatorSelect.add(new Option(operator.name, operator.code));
+      });
+    }
 
-    productionOperators.forEach((operator) => {
-      prodOperatorSelect.add(new Option(operator.name, operator.code));
-    });
-
-    // Sales Driver - load all drivers from database
-    driversData.forEach((driver) => {
-      saleDriverSelect.add(new Option(driver.driver_name, driver.driver_id));
-    });
+    if (saleDriverSelect) {
+      driversData.forEach((driver) => {
+        saleDriverSelect.add(new Option(driver.driver_name, driver.driver_id));
+      });
+    }
 
     // Load carriers
     const carriersResponse = await fetch("/api/carriers");
     const carriers = await carriersResponse.json();
     const carrierSelect = document.getElementById("saleCarrier");
-    carriers.forEach((carrier) => {
-      const option = document.createElement("option");
-      option.value = carrier.carrier_id;
-      option.textContent = carrier.carrier_name;
-      carrierSelect.appendChild(option);
-    });
+    if (carrierSelect) {
+      carriers.forEach((carrier) => {
+        const option = document.createElement("option");
+        option.value = carrier.carrier_id;
+        option.textContent = carrier.carrier_name;
+        carrierSelect.appendChild(option);
+      });
+    }
 
-    // Load deliveries (NEW)
+    // Load deliveries
     const deliveriesRes = await fetch("/api/deliveries/active");
     const deliveriesData = await deliveriesRes.json();
     const saleDeliverySelect = document.getElementById("saleDelivery");
-
-    deliveriesData
-      .filter((d) => d.is_active)
-      .forEach((delivery) => {
-        saleDeliverySelect.add(
-          new Option(delivery.delivery_name, delivery.delivery_id)
-        );
-      });
+    if (saleDeliverySelect) {
+      deliveriesData
+        .filter((d) => d.is_active)
+        .forEach((delivery) => {
+          saleDeliverySelect.add(
+            new Option(delivery.delivery_name, delivery.delivery_id)
+          );
+        });
+    }
 
     // Set active counts
-    document.getElementById("activeVehicles").textContent = vehiclesData.length;
-    document.getElementById("activeOperators").textContent = driversData.length;
+    const activeVehiclesEl = document.getElementById("activeVehicles");
+    const activeOperatorsEl = document.getElementById("activeOperators");
+    if (activeVehiclesEl) activeVehiclesEl.textContent = vehiclesData.length;
+    if (activeOperatorsEl) activeOperatorsEl.textContent = driversData.length;
 
     // Load price lists
     const priceListsRes = await fetch("/api/price-lists/active");
     const priceListsData = await priceListsRes.json();
     const salePriceListSelect = document.getElementById("salePriceList");
-    salePriceListSelect.innerHTML = "";
-
-    priceListsData.forEach((pl) => {
-      const option = new Option(pl.price_list_name, pl.price_list_id);
-      if (pl.is_default) option.selected = true;
-      salePriceListSelect.add(option);
-    });
+    if (salePriceListSelect) {
+      salePriceListSelect.innerHTML = "";
+      priceListsData.forEach((pl) => {
+        const option = new Option(pl.price_list_name, pl.price_list_id);
+        if (pl.is_default) option.selected = true;
+        salePriceListSelect.add(option);
+      });
+    }
   } catch (error) {
     console.error("Error loading dropdowns:", error);
   }
@@ -208,24 +213,16 @@ async function loadStockpileDropdown(
   productId = null,
   targetSelectId = "saleLocation"
 ) {
-  console.log("🎯 loadStockpileDropdown called with:", {
-    productId,
-    targetSelectId,
-  });
-
   const saleFromSelect = document.getElementById(targetSelectId);
 
   if (!saleFromSelect) {
-    console.error("❌ Could not find element:", targetSelectId);
     return;
   }
 
-  console.log("✅ Found dropdown element");
   saleFromSelect.innerHTML = '<option value="">Select From Stockpile</option>';
 
   try {
     if (productId) {
-      // Filter by product stock - using correct endpoint
       const stockRes = await fetch(`/api/stock/by-product/${productId}`);
       const stockData = await stockRes.json();
 
@@ -242,7 +239,6 @@ async function loadStockpileDropdown(
           );
         });
 
-        // Auto-select if only one option
         if (locationsWithStock.length === 1) {
           saleFromSelect.value = locationsWithStock[0].location_id;
         }
@@ -250,7 +246,6 @@ async function loadStockpileDropdown(
       }
     }
 
-    // Default: load all stockpiles
     const locationsRes = await fetch(
       "/api/locations?location_type=STOCKPILE&is_active=true"
     );
@@ -271,31 +266,21 @@ function setupSaleProductListener() {
   const saleProductSelect = document.getElementById("saleProduct");
 
   if (saleProductSelect) {
-    console.log("✅ Found saleProduct element, adding listener");
-
     saleProductSelect.addEventListener("change", async (e) => {
       const productId = e.target.value;
-      console.log("🔍 Product changed to:", productId);
-
       if (productId) {
-        console.log("📞 Calling loadStockpileDropdown...");
         await loadStockpileDropdown(productId, "saleLocation");
         updateSalePrice();
-        console.log("✅ loadStockpileDropdown completed");
       }
     });
-  } else {
-    console.error("❌ saleProduct element not found!");
   }
 }
 
 // Load today's stats
-// FIXED: Use correct API parameters
 async function loadStats() {
   try {
     const today = new Date().toISOString().split("T")[0];
 
-    // Production stats - FIXED PARAMETERS
     const prodRes = await fetch(
       `/api/movements?movement_type=PRODUCTION&date_from=${today}&date_to=${today}`
     );
@@ -305,7 +290,6 @@ async function loadStats() {
       0
     );
 
-    // Sales stats - FIXED PARAMETERS
     const salesRes = await fetch(
       `/api/movements?movement_type=SALES&date_from=${today}&date_to=${today}`
     );
@@ -315,21 +299,11 @@ async function loadStats() {
       0
     );
 
-    // Update UI
     const todayProdElement = document.getElementById("todayProduction");
     const todaySalesElement = document.getElementById("todaySales");
 
-    if (todayProdElement) {
-      todayProdElement.textContent = prodTotal.toFixed(1);
-    }
-    if (todaySalesElement) {
-      todaySalesElement.textContent = salesTotal.toFixed(1);
-    }
-
-    console.log("✅ Stats loaded:", {
-      production: prodTotal.toFixed(1),
-      sales: salesTotal.toFixed(1),
-    });
+    if (todayProdElement) todayProdElement.textContent = prodTotal.toFixed(1);
+    if (todaySalesElement) todaySalesElement.textContent = salesTotal.toFixed(1);
   } catch (error) {
     console.error("Error loading stats:", error);
   }
@@ -342,29 +316,17 @@ async function loadRecentMovements() {
     const movements = await response.json();
 
     const container = document.getElementById("movementsTableContainer");
+    if (!container) return;
 
-    // Some pages don't have movements table container - skip silently
-    if (!container) {
-      return;
-    }
-
-    // Create table structure if it doesn't exist
     let table = container.querySelector("table");
     if (!table) {
       container.innerHTML = `
         <table class="movements-table">
           <thead>
             <tr>
-              <th>Date</th>
-              <th>Type</th>
-              <th>Product</th>
-              <th>Customer</th>
-              <th>Docket #</th>
-              <th>Location</th>
-            <th class="text-right">Quantity</th>
-              <th>Reference</th>
-              <th></th>
-              <th></th>
+              <th>Date</th><th>Type</th><th>Product</th><th>Customer</th>
+              <th>Docket #</th><th>Location</th><th class="text-right">Quantity</th>
+              <th>Reference</th><th></th><th></th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -378,42 +340,29 @@ async function loadRecentMovements() {
 
     movements.forEach((movement) => {
       const row = document.createElement("tr");
-
-      // Use movement_date for BOTH date and time
       const movementDateTime = new Date(movement.movement_date);
-      const dateStr = movementDateTime.toLocaleDateString("en-AU", {
-        day: "2-digit",
-        month: "short",
-      });
-      const timeStr = movementDateTime.toLocaleTimeString("en-AU", {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
+      const dateStr = movementDateTime.toLocaleDateString("en-AU", { day: "2-digit", month: "short" });
+      const timeStr = movementDateTime.toLocaleTimeString("en-AU", { hour: "2-digit", minute: "2-digit" });
 
-      // Movement type badge
       let badgeClass = "badge-primary";
       if (movement.movement_type === "PRODUCTION") badgeClass = "badge-success";
       if (movement.movement_type === "SALES") badgeClass = "badge-info";
       if (movement.movement_type === "ADJUSTMENT") badgeClass = "badge-warning";
       if (movement.movement_type === "DEMAND") badgeClass = "badge-secondary";
-      if (movement.movement_type === "EDIT") badgeClass = "badge-purple"; // Changed to purple
-      if (movement.movement_type === "CANCEL") badgeClass = "badge-danger"; // Red for cancel
+      if (movement.movement_type === "EDIT") badgeClass = "badge-purple";
+      if (movement.movement_type === "CANCEL") badgeClass = "badge-danger";
       if (movement.movement_type === "TRANSFER") badgeClass = "badge-info-dark";
 
       row.innerHTML = `
-  <td>${dateStr} <small class="text-muted">${timeStr}</small></td>
-  <td><span class="badge ${badgeClass}">${movement.movement_type}</span></td>
-  <td>${movement.product_name || "-"}</td>
-  <td>${movement.customer_name || "-"}</td>
-  <td>${
-    movement.docket_number
-      ? `<a href="/weighbridge-delivery-docket.html?docket=${movement.docket_number}" target="_blank" style="color: #007bff; text-decoration: none;">${movement.docket_number}</a>`
-      : "-"
-  }</td>
-  <td>${movement.to_location_name || movement.from_location_name || "-"}</td>
-  <td class="text-right">${parseFloat(movement.quantity).toFixed(1)}t</td>
-  <td class="text-muted">${movement.reference_number || "-"}</td>
-`;
+        <td>${dateStr} <small class="text-muted">${timeStr}</small></td>
+        <td><span class="badge ${badgeClass}">${movement.movement_type}</span></td>
+        <td>${movement.product_name || "-"}</td>
+        <td>${movement.customer_name || "-"}</td>
+        <td>${movement.docket_number ? `<a href="/weighbridge-delivery-docket.html?docket=${movement.docket_number}" target="_blank" style="color: #007bff; text-decoration: none;">${movement.docket_number}</a>` : "-"}</td>
+        <td>${movement.to_location_name || movement.from_location_name || "-"}</td>
+        <td class="text-right">${parseFloat(movement.quantity).toFixed(1)}t</td>
+        <td class="text-muted">${movement.reference_number || "-"}</td>
+      `;
 
       tbody.appendChild(row);
     });
@@ -423,21 +372,22 @@ async function loadRecentMovements() {
 }
 
 // ============================================
-// PRODUCTION MODAL
+// PRODUCTION MODAL (legacy — kept for compatibility)
 // ============================================
 function openProductionModal() {
-  document.getElementById("productionModal").style.display = "flex";
-  document.getElementById("productionForm").reset();
-  setDefaultDate();
+  const modal = document.getElementById("productionModal");
+  if (modal) {
+    modal.style.display = "flex";
+    document.getElementById("productionForm").reset();
+    setDefaultDate();
+  }
 }
 
 function closeProductionModal() {
-  document.getElementById("productionModal").style.display = "none";
+  const modal = document.getElementById("productionModal");
+  if (modal) modal.style.display = "none";
 }
 
-// ============================================
-// BUSINESS RULE 2: Prevent mixing products in same location
-// ============================================
 async function saveProduction() {
   const formData = {
     movement_date: new Date().toISOString(),
@@ -450,14 +400,7 @@ async function saveProduction() {
     created_by: document.getElementById("productionOperator").value || "system",
   };
 
-  // Validate
-  if (
-    !formData.movement_date ||
-    !formData.product_id ||
-    !formData.to_location_id ||
-    !formData.quantity ||
-    !formData.unit_cost
-  ) {
+  if (!formData.movement_date || !formData.product_id || !formData.to_location_id || !formData.quantity || !formData.unit_cost) {
     alert("Please fill in all required fields");
     return;
   }
@@ -474,8 +417,6 @@ async function saveProduction() {
       alert(data.error || "Failed to save production");
       return;
     }
-
-    const data = await response.json();
 
     alert("Production saved successfully!");
     closeProductionModal();
@@ -509,11 +450,7 @@ function closeDemandModal() {
 async function saveDemand() {
   const futureSaleDate = document.getElementById("demandDate").value;
   const userNotes = document.getElementById("demandNotes").value;
-
-  // Add future date to notes
-  const combinedNotes = `Requested delivery: ${futureSaleDate}${
-    userNotes ? "\n" + userNotes : ""
-  }`;
+  const combinedNotes = `Requested delivery: ${futureSaleDate}${userNotes ? "\n" + userNotes : ""}`;
 
   const formData = {
     movement_date: new Date().toISOString(),
@@ -522,17 +459,10 @@ async function saveDemand() {
     customer_id: document.getElementById("demandCustomer").value,
     po_number: document.getElementById("demandPO").value,
     reference_number: document.getElementById("demandReference").value,
-    notes: combinedNotes, // Include the requested delivery date
+    notes: combinedNotes,
   };
 
-  // Validate
-  if (
-    !formData.movement_date ||
-    !formData.product_id ||
-    !formData.quantity ||
-    !formData.customer_id ||
-    !formData.po_number
-  ) {
+  if (!formData.movement_date || !formData.product_id || !formData.quantity || !formData.customer_id || !formData.po_number) {
     alert("Please fill in all required fields");
     return;
   }
@@ -592,7 +522,6 @@ async function updateSalePrice() {
     }
   }
 
-  // Fallback to product default price
   const selectedOption = document.getElementById("saleProduct").selectedOptions[0];
   if (selectedOption && selectedOption.dataset.price) {
     priceInput.value = selectedOption.dataset.price;
@@ -601,29 +530,22 @@ async function updateSalePrice() {
   }
 }
 
-// Called when price list dropdown changes
 async function updateSalePriceFromList() {
   await updateSalePrice();
 }
 
-// ============================================
-// AUTO-CALCULATE NET WEIGHT FOR SALES
-// ============================================
 function calculateNetWeight() {
-  const grossWeight =
-    parseFloat(document.getElementById("saleGrossWeight").value) || 0;
-  const tareWeight =
-    parseFloat(document.getElementById("saleTareWeight").value) || 0;
+  const grossWeight = parseFloat(document.getElementById("saleGrossWeight").value) || 0;
+  const tareWeight = parseFloat(document.getElementById("saleTareWeight").value) || 0;
   const netWeight = grossWeight - tareWeight;
-
   const netWeightInput = document.getElementById("saleNetWeight");
 
   if (netWeight > 0) {
     netWeightInput.value = netWeight.toFixed(2);
-    netWeightInput.style.color = "#28a745"; // Green for valid
+    netWeightInput.style.color = "#28a745";
   } else if (grossWeight > 0 || tareWeight > 0) {
     netWeightInput.value = netWeight.toFixed(2);
-    netWeightInput.style.color = "#dc3545"; // Red for negative
+    netWeightInput.style.color = "#dc3545";
   } else {
     netWeightInput.value = "";
     netWeightInput.style.color = "#000";
@@ -631,10 +553,8 @@ function calculateNetWeight() {
 }
 
 async function saveSales() {
-  const grossWeight =
-    parseFloat(document.getElementById("saleGrossWeight").value) || 0;
-  const tareWeight =
-    parseFloat(document.getElementById("saleTareWeight").value) || 0;
+  const grossWeight = parseFloat(document.getElementById("saleGrossWeight").value) || 0;
+  const tareWeight = parseFloat(document.getElementById("saleTareWeight").value) || 0;
   const netWeight = grossWeight - tareWeight;
 
   const formData = {
@@ -643,7 +563,7 @@ async function saveSales() {
     from_location_id: document.getElementById("saleLocation").value,
     gross_weight: grossWeight,
     tare_weight: tareWeight,
-    quantity: netWeight, // NET weight goes into quantity field
+    quantity: netWeight,
     unit_price: parseFloat(document.getElementById("salePrice").value),
     customer_id: document.getElementById("saleCustomer").value,
     vehicle_id: document.getElementById("saleVehicle").value || null,
@@ -652,33 +572,22 @@ async function saveSales() {
     trailer_count: document.getElementById("saleTrailerCount").value,
     del_ct: document.getElementById("saleDelCT").value || "TONNES",
     del_hours: document.getElementById("saleDelHours").value ? parseFloat(document.getElementById("saleDelHours").value) : null,
-   carrier_id: document.getElementById("saleCarrier").value || null,
+    carrier_id: document.getElementById("saleCarrier").value || null,
     price_list_id: document.getElementById("salePriceList").value || null,
     reference_number: document.getElementById("saleReference").value,
     demand_order_id: document.getElementById("saleDemandOrder").value || null,
     notes: document.getElementById("saleNotes").value,
   };
 
-  // Validate net weight is positive
   if (netWeight <= 0) {
     alert("Net Weight must be positive. Check Gross and Tare weights.");
     return;
   }
 
-  // Validate required fields
-  if (
-    !formData.movement_date ||
-    !formData.product_id ||
-    !formData.from_location_id ||
-    !formData.quantity ||
-    !formData.unit_price ||
-    !formData.customer_id
-  ) {
+  if (!formData.movement_date || !formData.product_id || !formData.from_location_id || !formData.quantity || !formData.unit_price || !formData.customer_id) {
     alert("Please fill in all required fields");
     return;
   }
-
-  // Note: Docket number is now AUTO-ASSIGNED by backend
 
   try {
     const response = await fetch("/api/movements/sales", {
@@ -696,19 +605,13 @@ async function saveSales() {
     const result = await response.json();
     const docketNumber = result.movement.docket_number;
 
-    // NEW: Mark tare as used if it was auto-populated
     const tareWeightInput = document.getElementById("saleTareWeight");
     if (tareWeightInput.dataset.tareId) {
       await markTareAsUsed(tareWeightInput.dataset.tareId, docketNumber);
     }
 
-    // Close the sales modal first
     closeSalesModal();
-
-    // Show docket action modal with auto-assigned docket number
     showDocketModal(docketNumber);
-
-    // Refresh data
     await loadRecentMovementsWithFilter();
     await loadStats();
   } catch (error) {
@@ -717,46 +620,24 @@ async function saveSales() {
   }
 }
 
-// Close modals when clicking outside
 window.onclick = function (event) {
   if (event.target.classList.contains("modal")) {
     event.target.style.display = "none";
   }
 };
 
-// ============================================================
-// OPERATIONS PAGE - ADD MOVEMENT TYPE FILTER FUNCTION
-// Add this to the END of your operations.js file
-// ============================================================
-
-// Filter movements by type
 function filterMovementsByType() {
-  const filterValue = document
-    .getElementById("movementTypeFilter")
-    .value.toUpperCase();
+  const filterValue = document.getElementById("movementTypeFilter")?.value.toUpperCase();
   const tbody = document.querySelector("#movementsTableContainer tbody");
-
   if (!tbody) return;
-
   const rows = tbody.querySelectorAll("tr");
-
   rows.forEach((row) => {
-    if (filterValue === "" || filterValue === "ALL") {
-      // Show all rows
+    if (!filterValue || filterValue === "ALL") {
       row.style.display = "";
     } else {
-      // Get the movement type badge from the second column
       const badge = row.querySelector("td:nth-child(2) .badge");
-
       if (badge) {
-        const movementType = badge.textContent.trim().toUpperCase();
-
-        // Show row if it matches the filter
-        if (movementType === filterValue) {
-          row.style.display = "";
-        } else {
-          row.style.display = "none";
-        }
+        row.style.display = badge.textContent.trim().toUpperCase() === filterValue ? "" : "none";
       }
     }
   });
@@ -766,101 +647,64 @@ function filterMovementsByType() {
 // DOCKET ACTION MODAL
 // ============================================
 function showDocketModal(docketNumber) {
-  // Create modal HTML
   const modalHTML = `
     <div id="docketActionModal" class="modal" style="display: flex;">
       <div class="modal-content" style="max-width: 500px;">
         <h2 style="margin-bottom: 20px;">✅ Sale Saved Successfully!</h2>
-        
         <p style="font-size: 16px; margin-bottom: 30px;">
           Docket <strong>${docketNumber}</strong> has been created.
         </p>
-        
         <div style="display: flex; gap: 15px; justify-content: center;">
-          <button class="btn-primary" onclick="printDocket('${docketNumber}')">
-            🖨️ Print Now
-          </button>
-          <button class="btn-secondary" onclick="viewDocket('${docketNumber}')">
-            📄 View Docket
-          </button>
-          <button class="btn-secondary" onclick="closeDocketModal()">
-            ✕ Close
-          </button>
+          <button class="btn-primary" onclick="printDocket('${docketNumber}')">🖨️ Print Now</button>
+          <button class="btn-secondary" onclick="viewDocket('${docketNumber}')">📄 View Docket</button>
+          <button class="btn-secondary" onclick="closeDocketModal()">✕ Close</button>
         </div>
       </div>
     </div>
   `;
-
-  // Add to body
   document.body.insertAdjacentHTML("beforeend", modalHTML);
 }
 
 function printDocket(docketNumber) {
-  // Open docket in new window and trigger print
-  const printWindow = window.open(
-    `/weighbridge-delivery-docket.html?docket=${docketNumber}&autoprint=true`,
-    "_blank",
-    "width=900,height=800"
-  );
+  window.open(`/weighbridge-delivery-docket.html?docket=${docketNumber}&autoprint=true`, "_blank", "width=900,height=800");
   closeDocketModal();
 }
 
 function viewDocket(docketNumber) {
-  // Open docket in new tab
-  window.open(
-    `/weighbridge-delivery-docket.html?docket=${docketNumber}`,
-    "_blank"
-  );
+  window.open(`/weighbridge-delivery-docket.html?docket=${docketNumber}`, "_blank");
   closeDocketModal();
 }
 
 function closeDocketModal() {
   const modal = document.getElementById("docketActionModal");
-  if (modal) {
-    modal.remove();
-  }
+  if (modal) modal.remove();
 }
 
 // ============================================
 // FILTER MOVEMENTS
 // ============================================
-
-// Store all movements for filtering
 let allMovements = [];
 
-// Modified loadRecentMovements to store data
 async function loadRecentMovementsWithFilter() {
   try {
-    const response = await fetch("/api/movements?limit=50"); // Get more for filtering
+    const response = await fetch("/api/movements?limit=50");
     allMovements = await response.json();
-
-    // Populate customer filter dropdown
     populateCustomerFilter();
-
-    // Display filtered movements
     filterMovements();
   } catch (error) {
     console.error("Error loading recent movements:", error);
   }
 }
 
-// Populate customer filter dropdown
 function populateCustomerFilter() {
   const customerFilter = document.getElementById("customerFilter");
-
   if (!customerFilter) return;
 
-  // Get unique customers from movements
   const customers = [
-    ...new Set(
-      allMovements.filter((m) => m.customer_name).map((m) => m.customer_name)
-    ),
+    ...new Set(allMovements.filter((m) => m.customer_name).map((m) => m.customer_name)),
   ].sort();
 
-  // Clear existing options (except "All Customers")
   customerFilter.innerHTML = '<option value="">All Customers</option>';
-
-  // Add customer options
   customers.forEach((customer) => {
     const option = document.createElement("option");
     option.value = customer;
@@ -869,78 +713,37 @@ function populateCustomerFilter() {
   });
 }
 
-// Filter movements based on selected filters
 function filterMovements() {
-  const customerFilter = document
-    .getElementById("customerFilter")
-    ?.value.toLowerCase();
+  const customerFilter = document.getElementById("customerFilter")?.value.toLowerCase();
   const typeFilter = document.getElementById("typeFilter")?.value.toUpperCase();
-  const searchText = document
-    .getElementById("searchMovements")
-    ?.value.toLowerCase();
+  const searchText = document.getElementById("searchMovements")?.value.toLowerCase();
 
-  // Filter movements
   let filtered = allMovements.filter((movement) => {
-    // Customer filter
-    if (
-      customerFilter &&
-      (!movement.customer_name ||
-        !movement.customer_name.toLowerCase().includes(customerFilter))
-    ) {
-      return false;
-    }
-
-    // Type filter
-    if (typeFilter && movement.movement_type !== typeFilter) {
-      return false;
-    }
-
-    // Search filter (searches across multiple fields)
+    if (customerFilter && (!movement.customer_name || !movement.customer_name.toLowerCase().includes(customerFilter))) return false;
+    if (typeFilter && movement.movement_type !== typeFilter) return false;
     if (searchText) {
-      const searchableText = [
-        movement.product_name,
-        movement.customer_name,
-        movement.docket_number,
-        movement.reference_number,
-        movement.to_location_name,
-        movement.from_location_name,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-
-      if (!searchableText.includes(searchText)) {
-        return false;
-      }
+      const searchableText = [movement.product_name, movement.customer_name, movement.docket_number, movement.reference_number, movement.to_location_name, movement.from_location_name]
+        .filter(Boolean).join(" ").toLowerCase();
+      if (!searchableText.includes(searchText)) return false;
     }
-
     return true;
   });
 
-  // Display filtered movements
   displayMovements(filtered);
 }
 
-// Display movements in table
 function displayMovements(movements) {
   const container = document.getElementById("movementsTableContainer");
-
   if (!container) return;
 
-  // Create table structure if it doesn't exist
   let table = container.querySelector("table");
   if (!table) {
     container.innerHTML = `
       <table class="movements-table">
         <thead>
           <tr>
-            <th>Date</th>
-            <th>Type</th>
-            <th>Product</th>
-            <th>Customer</th>
-            <th>Docket #</th>
-            <th>Location</th>
-            <th class="text-right">Quantity</th>
+            <th>Date</th><th>Type</th><th>Product</th><th>Customer</th>
+            <th>Docket #</th><th>Location</th><th class="text-right">Quantity</th>
             <th>Reference</th>
           </tr>
         </thead>
@@ -954,65 +757,46 @@ function displayMovements(movements) {
   tbody.innerHTML = "";
 
   if (movements.length === 0) {
-    tbody.innerHTML =
-      '<tr><td colspan="9" style="text-align: center; padding: 20px; color: #999;">No movements found</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 20px; color: #999;">No movements found</td></tr>';
     return;
   }
 
   movements.forEach((movement) => {
     const row = document.createElement("tr");
-
-    // Use movement_date for BOTH date and time
     const movementDateTime = new Date(movement.movement_date);
-    const dateStr = movementDateTime.toLocaleDateString("en-AU", {
-      day: "2-digit",
-      month: "short",
-    });
-    const timeStr = movementDateTime.toLocaleTimeString("en-AU", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    const dateStr = movementDateTime.toLocaleDateString("en-AU", { day: "2-digit", month: "short" });
+    const timeStr = movementDateTime.toLocaleTimeString("en-AU", { hour: "2-digit", minute: "2-digit" });
 
-    // Movement type badge
     let badgeClass = "badge-primary";
     if (movement.movement_type === "PRODUCTION") badgeClass = "badge-success";
     if (movement.movement_type === "SALES") badgeClass = "badge-info";
     if (movement.movement_type === "ADJUSTMENT") badgeClass = "badge-warning";
     if (movement.movement_type === "DEMAND") badgeClass = "badge-secondary";
-    if (movement.movement_type === "EDIT") badgeClass = "badge-purple"; // Changed to purple
-    if (movement.movement_type === "CANCEL") badgeClass = "badge-danger"; // Red for cancel
+    if (movement.movement_type === "EDIT") badgeClass = "badge-purple";
+    if (movement.movement_type === "CANCEL") badgeClass = "badge-danger";
     if (movement.movement_type === "TRANSFER") badgeClass = "badge-info-dark";
+
     row.innerHTML = `
       <td>${dateStr} <small class="text-muted">${timeStr}</small></td>
-      <td><span class="badge ${badgeClass}">${
-      movement.movement_type
-    }</span></td>
+      <td><span class="badge ${badgeClass}">${movement.movement_type}</span></td>
       <td>${movement.product_name || "-"}</td>
       <td>${movement.customer_name || "-"}</td>
-      <td>${
-        movement.docket_number
-          ? `<a href="/weighbridge-delivery-docket.html?docket=${movement.docket_number}" target="_blank" style="color: #007bff; text-decoration: none;">${movement.docket_number}</a>`
-          : "-"
-      }</td>
-      <td>${
-        movement.to_location_name || movement.from_location_name || "-"
-      }</td>
+      <td>${movement.docket_number ? `<a href="/weighbridge-delivery-docket.html?docket=${movement.docket_number}" target="_blank" style="color: #007bff; text-decoration: none;">${movement.docket_number}</a>` : "-"}</td>
+      <td>${movement.to_location_name || movement.from_location_name || "-"}</td>
       <td class="text-right">${parseFloat(movement.quantity).toFixed(1)}t</td>
       <td class="text-muted">${movement.reference_number || "-"}</td>
-     <td>${movement.movement_type === 'SALES' && movement.del_ct === 'HOURS' && !movement.del_hours 
+      <td>${movement.movement_type === 'SALES' && movement.del_ct === 'HOURS' && !movement.del_hours
         ? `<button class="btn-sm" style="background:#ff9800;color:#fff;border:none;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:11px;" onclick="openHoursModal(${movement.movement_id}, '${movement.docket_number || ""}')">⏱️ Hours</button>`
-        : movement.del_ct === 'HOURS' && movement.del_hours 
-          ? `<span style="color:#28a745;font-size:11px;">⏱️ ${movement.del_hours}h</span>` 
+        : movement.del_ct === 'HOURS' && movement.del_hours
+          ? `<span style="color:#28a745;font-size:11px;">⏱️ ${movement.del_hours}h</span>`
           : movement.del_ct === 'SET' && movement.del_hours
             ? `<span style="color:#2196F3;font-size:11px;">💲 $${parseFloat(movement.del_hours).toFixed(0)}</span>`
             : ''}</td>
     `;
-
     tbody.appendChild(row);
   });
 }
 
-// Refresh movements (reload from API)
 async function refreshMovements() {
   await loadRecentMovementsWithFilter();
 }
@@ -1023,12 +807,8 @@ async function refreshMovements() {
 function openAdjustmentModal() {
   document.getElementById("adjustmentModal").style.display = "flex";
   document.getElementById("adjustmentForm").reset();
-
-  // Set today's date
   const today = new Date().toISOString().split("T")[0];
   document.getElementById("adjustmentDate").value = today;
-
-  // Load products
   loadAdjustmentProducts();
   loadAdjustmentLocations();
 }
@@ -1058,18 +838,12 @@ async function loadAdjustmentProducts() {
   try {
     const response = await fetch("/api/products");
     const products = await response.json();
-
-    const adjustmentProductSelect =
-      document.getElementById("adjustmentProduct");
+    const adjustmentProductSelect = document.getElementById("adjustmentProduct");
     const transferProductSelect = document.getElementById("transferProduct");
 
     products.forEach((product) => {
-      adjustmentProductSelect.add(
-        new Option(product.product_name, product.product_id)
-      );
-      transferProductSelect.add(
-        new Option(product.product_name, product.product_id)
-      );
+      if (adjustmentProductSelect) adjustmentProductSelect.add(new Option(product.product_name, product.product_id));
+      if (transferProductSelect) transferProductSelect.add(new Option(product.product_name, product.product_id));
     });
   } catch (error) {
     console.error("Error loading products:", error);
@@ -1080,15 +854,12 @@ async function loadAdjustmentLocations() {
   try {
     const response = await fetch("/api/locations?is_active=true");
     const locations = await response.json();
-
-    const adjustmentLocationSelect =
-      document.getElementById("adjustmentLocation");
-
-    locations.forEach((location) => {
-      adjustmentLocationSelect.add(
-        new Option(location.location_name, location.location_id)
-      );
-    });
+    const adjustmentLocationSelect = document.getElementById("adjustmentLocation");
+    if (adjustmentLocationSelect) {
+      locations.forEach((location) => {
+        adjustmentLocationSelect.add(new Option(location.location_name, location.location_id));
+      });
+    }
   } catch (error) {
     console.error("Error loading locations:", error);
   }
@@ -1096,53 +867,31 @@ async function loadAdjustmentLocations() {
 
 async function loadTransferLocations() {
   const productId = document.getElementById("transferProduct").value;
-
   if (!productId) return;
 
   try {
-    // Load locations with stock for this product
     const stockRes = await fetch(`/api/stock/by-product/${productId}`);
     const stockData = await stockRes.json();
-
     const fromSelect = document.getElementById("transferFromLocation");
     const toSelect = document.getElementById("transferToLocation");
 
-    // Clear existing
     fromSelect.innerHTML = '<option value="">Select From Location</option>';
     toSelect.innerHTML = '<option value="">Select To Location</option>';
 
-    // Get all locations
     const locationsRes = await fetch("/api/locations?is_active=true");
     const allLocations = await locationsRes.json();
-
     const locationsWithStock = stockData.stock_locations || [];
 
-    // FROM: ALL active locations (not just those with stock)
-    // This allows transferring from Production even if stock was added temporarily
     allLocations.forEach((location) => {
-      // Find stock quantity for this location if it exists
-      const stock = locationsWithStock.find(
-        (s) => s.location_id === location.location_id
-      );
+      const stock = locationsWithStock.find((s) => s.location_id === location.location_id);
       const qty = stock ? parseFloat(stock.quantity) || 0 : 0;
-
       if (qty > 0) {
-        // Show with quantity
-        fromSelect.add(
-          new Option(
-            `${location.location_name} (${qty.toFixed(1)}t available)`,
-            location.location_id
-          )
-        );
+        fromSelect.add(new Option(`${location.location_name} (${qty.toFixed(1)}t available)`, location.location_id));
       } else {
-        // Show without quantity (for locations like Production with no stock)
-        fromSelect.add(
-          new Option(location.location_name, location.location_id)
-        );
+        fromSelect.add(new Option(location.location_name, location.location_id));
       }
     });
 
-    // TO: All active locations
     allLocations.forEach((location) => {
       toSelect.add(new Option(location.location_name, location.location_id));
     });
@@ -1153,17 +902,9 @@ async function loadTransferLocations() {
 
 async function saveAdjustment() {
   const type = document.getElementById("adjustmentType").value;
-
-  if (!type) {
-    alert("Please select Adjustment or Transfer");
-    return;
-  }
-
-  if (type === "ADJUSTMENT") {
-    await saveStockAdjustment();
-  } else if (type === "TRANSFER") {
-    await saveStockTransfer();
-  }
+  if (!type) { alert("Please select Adjustment or Transfer"); return; }
+  if (type === "ADJUSTMENT") await saveStockAdjustment();
+  else if (type === "TRANSFER") await saveStockTransfer();
 }
 
 async function saveStockAdjustment() {
@@ -1177,22 +918,11 @@ async function saveStockAdjustment() {
     notes: document.getElementById("adjustmentNotes").value,
   };
 
-  // Validate
-  if (
-    !formData.movement_date ||
-    !formData.product_id ||
-    !formData.location_id ||
-    !formData.quantity ||
-    !formData.reason
-  ) {
+  if (!formData.movement_date || !formData.product_id || !formData.location_id || !formData.quantity || !formData.reason) {
     alert("Please fill in all required fields");
     return;
   }
-
-  if (formData.quantity === 0) {
-    alert("Adjustment quantity cannot be zero");
-    return;
-  }
+  if (formData.quantity === 0) { alert("Adjustment quantity cannot be zero"); return; }
 
   try {
     const response = await fetch("/api/movements/adjustment", {
@@ -1200,13 +930,7 @@ async function saveStockAdjustment() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(formData),
     });
-
-    if (!response.ok) {
-      const error = await response.json();
-      alert(error.error || "Failed to save adjustment");
-      return;
-    }
-
+    if (!response.ok) { const error = await response.json(); alert(error.error || "Failed to save adjustment"); return; }
     alert("Stock adjustment saved successfully!");
     closeAdjustmentModal();
     await loadRecentMovementsWithFilter();
@@ -1227,27 +951,12 @@ async function saveStockTransfer() {
     notes: document.getElementById("adjustmentNotes").value,
   };
 
-  // Validate
-  if (
-    !formData.movement_date ||
-    !formData.product_id ||
-    !formData.from_location_id ||
-    !formData.to_location_id ||
-    !formData.quantity
-  ) {
+  if (!formData.movement_date || !formData.product_id || !formData.from_location_id || !formData.to_location_id || !formData.quantity) {
     alert("Please fill in all required fields");
     return;
   }
-
-  if (formData.from_location_id === formData.to_location_id) {
-    alert("Cannot transfer to the same location");
-    return;
-  }
-
-  if (formData.quantity <= 0) {
-    alert("Transfer quantity must be positive");
-    return;
-  }
+  if (formData.from_location_id === formData.to_location_id) { alert("Cannot transfer to the same location"); return; }
+  if (formData.quantity <= 0) { alert("Transfer quantity must be positive"); return; }
 
   try {
     const response = await fetch("/api/movements/transfer", {
@@ -1255,13 +964,7 @@ async function saveStockTransfer() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(formData),
     });
-
-    if (!response.ok) {
-      const error = await response.json();
-      alert(error.error || "Failed to save transfer");
-      return;
-    }
-
+    if (!response.ok) { const error = await response.json(); alert(error.error || "Failed to save transfer"); return; }
     alert("Stock transfer saved successfully!");
     closeAdjustmentModal();
     await loadRecentMovementsWithFilter();
@@ -1274,7 +977,6 @@ async function saveStockTransfer() {
 // ============================================
 // TARE WEIGHT FUNCTIONS
 // ============================================
-
 function openTareWeightModal() {
   document.getElementById("tareWeightModal").style.display = "flex";
   document.getElementById("tareWeightForm").reset();
@@ -1290,24 +992,17 @@ async function loadTareWeightDropdowns() {
     const vehiclesRes = await fetch("/api/vehicles");
     const vehicles = await vehiclesRes.json();
     const tareVehicleSelect = document.getElementById("tareVehicle");
-
     tareVehicleSelect.innerHTML = '<option value="">Select Vehicle</option>';
     vehicles.forEach((vehicle) => {
-      const option = new Option(
-        `${vehicle.registration} - ${vehicle.vehicle_type}`,
-        vehicle.vehicle_id
-      );
-      tareVehicleSelect.add(option);
+      tareVehicleSelect.add(new Option(`${vehicle.registration} - ${vehicle.vehicle_type}`, vehicle.vehicle_id));
     });
 
     const carriersRes = await fetch("/api/carriers");
     const carriers = await carriersRes.json();
     const tareCarrierSelect = document.getElementById("tareCarrier");
-
     tareCarrierSelect.innerHTML = '<option value="">Select Carrier</option>';
     carriers.forEach((carrier) => {
-      const option = new Option(carrier.carrier_name, carrier.carrier_id);
-      tareCarrierSelect.add(option);
+      tareCarrierSelect.add(new Option(carrier.carrier_name, carrier.carrier_id));
     });
   } catch (error) {
     console.error("Error loading tare weight dropdowns:", error);
@@ -1318,22 +1013,13 @@ async function saveTareWeight() {
   const formData = {
     vehicle_id: parseInt(document.getElementById("tareVehicle").value),
     tare_weight: parseFloat(document.getElementById("tareWeight").value),
-    carrier_id: document.getElementById("tareCarrier").value
-      ? parseInt(document.getElementById("tareCarrier").value)
-      : null,
+    carrier_id: document.getElementById("tareCarrier").value ? parseInt(document.getElementById("tareCarrier").value) : null,
     recorded_by: document.getElementById("tareOperator").value || "OPERATOR",
     notes: document.getElementById("tareNotes").value,
   };
 
-  if (!formData.vehicle_id || !formData.tare_weight) {
-    alert("Please fill in all required fields");
-    return;
-  }
-
-  if (formData.tare_weight <= 0) {
-    alert("Tare weight must be positive");
-    return;
-  }
+  if (!formData.vehicle_id || !formData.tare_weight) { alert("Please fill in all required fields"); return; }
+  if (formData.tare_weight <= 0) { alert("Tare weight must be positive"); return; }
 
   try {
     const response = await fetch("/api/tare-weights", {
@@ -1341,17 +1027,9 @@ async function saveTareWeight() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(formData),
     });
-
     const result = await response.json();
-
     if (response.ok && result.success) {
-      alert(
-        `✅ Tare weight recorded successfully!\n\nVehicle: ${
-          document.getElementById("tareVehicle").selectedOptions[0].textContent
-        }\nTare Weight: ${formData.tare_weight.toFixed(
-          2
-        )} tonnes\n\nThis will be auto-suggested for sales within the next 12 hours.`
-      );
+      alert(`✅ Tare weight recorded successfully!\n\nVehicle: ${document.getElementById("tareVehicle").selectedOptions[0].textContent}\nTare Weight: ${formData.tare_weight.toFixed(2)} tonnes\n\nThis will be auto-suggested for sales within the next 12 hours.`);
       closeTareWeightModal();
     } else {
       alert("❌ Error: " + (result.error || "Failed to record tare weight"));
@@ -1364,58 +1042,40 @@ async function saveTareWeight() {
 
 function setupSalesVehicleListener() {
   const saleVehicleSelect = document.getElementById("saleVehicle");
-
   if (saleVehicleSelect) {
     saleVehicleSelect.addEventListener("change", async (e) => {
       const vehicleId = e.target.value;
-      if (vehicleId) {
-        await loadRecentTareWeight(vehicleId);
-      }
+      if (vehicleId) await loadRecentTareWeight(vehicleId);
     });
   }
 }
 
 async function loadRecentTareWeight(vehicleId) {
   try {
-    const response = await fetch(
-      `/api/tare-weights/recent/${vehicleId}?hours=12`
-    );
+    const response = await fetch(`/api/tare-weights/recent/${vehicleId}?hours=12`);
     const data = await response.json();
-
     const tareWeightInput = document.getElementById("saleTareWeight");
     const carrierSelect = document.getElementById("saleCarrier");
 
     if (data.success && data.tare) {
-      // Auto-populate tare weight
       tareWeightInput.value = parseFloat(data.tare.tare_weight).toFixed(2);
-
-      // Auto-populate carrier if available
-      if (data.tare.carrier_id && carrierSelect) {
-        carrierSelect.value = data.tare.carrier_id;
-      }
+      if (data.tare.carrier_id && carrierSelect) carrierSelect.value = data.tare.carrier_id;
 
       const existingIndicator = document.getElementById("tareIndicator");
-      if (existingIndicator) {
-        existingIndicator.remove();
-      }
+      if (existingIndicator) existingIndicator.remove();
 
       const indicator = document.createElement("small");
       indicator.id = "tareIndicator";
       indicator.style.color = "#28a745";
       indicator.style.display = "block";
       indicator.style.marginTop = "4px";
-      indicator.textContent = `✓ Auto-loaded from registry (${parseFloat(
-        data.tare.hours_ago
-      ).toFixed(1)} hours ago)`;
-
+      indicator.textContent = `✓ Auto-loaded from registry (${parseFloat(data.tare.hours_ago).toFixed(1)} hours ago)`;
       tareWeightInput.parentElement.appendChild(indicator);
       tareWeightInput.dataset.tareId = data.tare.tare_id;
       calculateNetWeight();
     } else {
       const existingIndicator = document.getElementById("tareIndicator");
-      if (existingIndicator) {
-        existingIndicator.remove();
-      }
+      if (existingIndicator) existingIndicator.remove();
       delete tareWeightInput.dataset.tareId;
     }
   } catch (error) {
@@ -1423,28 +1083,25 @@ async function loadRecentTareWeight(vehicleId) {
   }
 }
 
-// ============================================
-// DELIVERY CHARGE TYPE TOGGLE
-// ============================================
 function toggleHoursField() {
   const chargeType = document.getElementById("saleDelCT").value;
   const hoursGroup = document.getElementById("hoursFieldGroup");
   const hoursLabel = hoursGroup.querySelector("label");
   const hoursInput = document.getElementById("saleDelHours");
   const hoursSmall = hoursGroup.querySelector("small");
-  
+
   if (chargeType === "HOURS") {
     hoursGroup.style.display = "block";
     hoursLabel.textContent = "Hours Taken";
     hoursInput.placeholder = "e.g., 4";
     hoursInput.step = "0.5";
-    hoursSmall.textContent = "Enter after truck returns";
+    if (hoursSmall) hoursSmall.textContent = "Enter after truck returns";
   } else if (chargeType === "SET") {
     hoursGroup.style.display = "block";
     hoursLabel.textContent = "Set Value ($)";
     hoursInput.placeholder = "e.g., 40";
     hoursInput.step = "0.01";
-    hoursSmall.textContent = "Fixed delivery charge amount";
+    if (hoursSmall) hoursSmall.textContent = "Fixed delivery charge amount";
   } else {
     hoursGroup.style.display = "none";
     hoursInput.value = "";
@@ -1453,14 +1110,12 @@ function toggleHoursField() {
 
 async function markTareAsUsed(tareId, docketNumber) {
   if (!tareId) return;
-
   try {
     await fetch(`/api/tare-weights/${tareId}/mark-used`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ docket_number: docketNumber }),
     });
-    console.log("✓ Tare weight marked as used");
   } catch (error) {
     console.error("Error marking tare as used:", error);
   }
@@ -1500,11 +1155,7 @@ function closeHoursModal() {
 
 async function saveDeliveryHours(movementId) {
   const hours = parseFloat(document.getElementById("modalDelHours").value);
-  
-  if (!hours || hours <= 0) {
-    alert("Please enter a valid number of hours");
-    return;
-  }
+  if (!hours || hours <= 0) { alert("Please enter a valid number of hours"); return; }
 
   try {
     const response = await fetch(`/api/movements/${movementId}/delivery-hours`, {
@@ -1512,9 +1163,7 @@ async function saveDeliveryHours(movementId) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ del_hours: hours })
     });
-
     const result = await response.json();
-
     if (response.ok) {
       alert(`✅ Delivery hours saved: ${hours} hours`);
       closeHoursModal();
@@ -1535,16 +1184,13 @@ async function loadDemandOrdersForSale() {
   try {
     const response = await fetch("/api/demand-orders?status=CONFIRMED");
     const orders = await response.json();
-    
-    // Also get PENDING orders
     const pendingRes = await fetch("/api/demand-orders?status=PENDING");
     const pendingOrders = await pendingRes.json();
-    
     const allOrders = [...orders, ...pendingOrders];
-    
+
     const select = document.getElementById("saleDemandOrder");
     select.innerHTML = '<option value="">No — Manual PO Entry</option>';
-    
+
     allOrders.forEach(order => {
       const remaining = parseFloat(order.quantity) - parseFloat(order.fulfilled_quantity || 0);
       if (remaining > 0) {
@@ -1570,27 +1216,19 @@ function onDemandOrderSelected() {
   const selectedOption = select.selectedOptions[0];
   const refInput = document.getElementById("saleReference");
   const refLabel = document.getElementById("saleReferenceLabel");
-  
+
   if (select.value && selectedOption.dataset) {
-    // Auto-fill fields from demand order
     const customerId = selectedOption.dataset.customerId;
     const productId = selectedOption.dataset.productId;
     const poNumber = selectedOption.dataset.poNumber;
     const preferredLocationId = selectedOption.dataset.preferredLocationId;
-    
-    // Set customer
-    if (customerId) {
-      document.getElementById("saleCustomer").value = customerId;
-    }
-    
-    // Set product and trigger stockpile reload
+
+    if (customerId) document.getElementById("saleCustomer").value = customerId;
     if (productId) {
       document.getElementById("saleProduct").value = productId;
       loadStockpileDropdown(productId, "saleLocation");
       updateSalePrice();
     }
-    
-    // Set preferred location after a short delay (let stockpiles load)
     if (preferredLocationId) {
       setTimeout(() => {
         const locationSelect = document.getElementById("saleLocation");
@@ -1599,15 +1237,12 @@ function onDemandOrderSelected() {
         }
       }, 500);
     }
-    
-    // Set PO number
+
     refInput.value = poNumber;
     refInput.style.backgroundColor = "#e8f5e9";
     refLabel.textContent = "PO Number (from Demand)";
   } else {
-    // Clear auto-fill styling
     refInput.style.backgroundColor = "";
     refLabel.textContent = "Sale Reference / PO";
   }
 }
-
