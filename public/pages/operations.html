@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="/css/styles.css" />
   </head>
   <body>
-    <!-- Header -->
     <header class="header">
       <div class="header-content">
         <div class="logo-section">
@@ -22,15 +21,11 @@
             <div class="stat-label">Total Inventory Value</div>
             <div class="stat-value" id="totalValue">$0</div>
           </div>
-          <div class="user-info">
-            <span>👤</span>
-            <span>Admin User</span>
-          </div>
+          <div class="user-info"><span>👤</span><span>Admin User</span></div>
         </div>
       </div>
     </header>
 
-    <!-- Navigation -->
     <nav class="nav">
       <div class="nav-content">
         <a href="dashboard.html" class="nav-item">📊 Dashboard</a>
@@ -40,129 +35,77 @@
       </div>
     </nav>
 
-    <!-- Main Content -->
     <div class="container">
       <div class="page-header">
         <h1 class="page-title">Quarry Operations</h1>
-        <p class="page-subtitle">
-          Record daily production and sales activities
-        </p>
+        <p class="page-subtitle">Record daily production and sales activities</p>
       </div>
 
-      <!-- Action Cards -->
       <div class="action-cards">
-        <div class="action-card primary" onclick="openProductionModal()">
+        <div class="action-card primary" onclick="openProductionRunModal()">
           <div class="action-card-icon">📦</div>
           <div class="action-card-title">Production Entry</div>
-          <div class="action-card-description">
-            Record daily production from extraction to stockpiles
-          </div>
+          <div class="action-card-description">Record a production run — multiple products, machines and costs</div>
         </div>
 
         <div class="action-card demand" onclick="openDemandManagement()">
           <div class="action-card-icon">📋</div>
           <div class="action-card-title">Manage Demands</div>
-          <div class="action-card-description">
-            Create, edit, and cancel forward orders
-          </div>
+          <div class="action-card-description">Create, edit, and cancel forward orders</div>
         </div>
 
         <div class="action-card success" onclick="openSalesModal()">
           <div class="action-card-icon">💰</div>
           <div class="action-card-title">Sales Entry</div>
-          <div class="action-card-description">
-            Record customer sales and deliveries
-          </div>
+          <div class="action-card-description">Record customer sales and deliveries</div>
         </div>
 
-        <div
-          class="action-card info"
-          onclick="window.location.href='stocktake.html'"
-        >
+        <div class="action-card info" onclick="window.location.href='stocktake.html'">
           <div class="action-card-icon">📊</div>
           <div class="action-card-title">Stocktake</div>
-          <div class="action-card-description">
-            Adjust inventory to match physical stocktake
-          </div>
+          <div class="action-card-description">Adjust inventory to match physical stocktake</div>
         </div>
 
         <div class="action-card warning" onclick="openAdjustmentModal()">
           <div class="action-card-icon">⚖️</div>
           <div class="action-card-title">Stock Adjustment</div>
-          <div class="action-card-description">
-            Adjust stock levels or transfer between locations
-          </div>
+          <div class="action-card-description">Adjust stock levels or transfer between locations</div>
         </div>
 
         <div class="action-card info" onclick="openTareWeightModal()">
           <div class="action-card-icon">🚛</div>
           <div class="action-card-title">Record Tare Weight</div>
-          <div class="action-card-description">
-            Register incoming truck tare weights at weighbridge
-          </div>
+          <div class="action-card-description">Register incoming truck tare weights at weighbridge</div>
         </div>
       </div>
 
-      <!-- Stats Row -->
       <div class="stats-grid">
         <div class="stat-card primary">
-          <div class="stat-card-header">
-            <div class="stat-card-title">Today's Production</div>
-            <div class="stat-card-icon">📈</div>
-          </div>
+          <div class="stat-card-header"><div class="stat-card-title">Today's Production</div><div class="stat-card-icon">📈</div></div>
           <div class="stat-card-value" id="todayProduction">0.0 tonnes</div>
         </div>
-
         <div class="stat-card info">
-          <div class="stat-card-header">
-            <div class="stat-card-title">Today's Sales</div>
-            <div class="stat-card-icon">💰</div>
-          </div>
+          <div class="stat-card-header"><div class="stat-card-title">Today's Sales</div><div class="stat-card-icon">💰</div></div>
           <div class="stat-card-value" id="todaySales">0.0 tonnes</div>
         </div>
-
         <div class="stat-card success">
-          <div class="stat-card-header">
-            <div class="stat-card-title">Active Vehicles</div>
-            <div class="stat-card-icon">🚛</div>
-          </div>
+          <div class="stat-card-header"><div class="stat-card-title">Active Vehicles</div><div class="stat-card-icon">🚛</div></div>
           <div class="stat-card-value" id="activeVehicles">-</div>
         </div>
-
         <div class="stat-card warning">
-          <div class="stat-card-header">
-            <div class="stat-card-title">Active Operators</div>
-            <div class="stat-card-icon">👷</div>
-          </div>
+          <div class="stat-card-header"><div class="stat-card-title">Active Operators</div><div class="stat-card-icon">👷</div></div>
           <div class="stat-card-value" id="activeOperators">-</div>
         </div>
       </div>
 
-      <!-- Recent Movements -->
       <div class="data-table">
         <div class="table-header">
           <h2 class="table-title">Recent Movements</h2>
-          <div
-            class="table-actions"
-            style="display: flex; gap: 10px; align-items: center"
-          >
-            <!-- Customer Filter -->
-            <select
-              class="form-control"
-              id="customerFilter"
-              onchange="filterMovements()"
-              style="width: 200px; padding: 8px"
-            >
+          <div class="table-actions" style="display:flex;gap:10px;align-items:center">
+            <select class="form-control" id="customerFilter" onchange="filterMovements()" style="width:200px;padding:8px">
               <option value="">All Customers</option>
             </select>
-
-            <!-- Type Filter -->
-            <select
-              class="form-control"
-              id="typeFilter"
-              onchange="filterMovements()"
-              style="width: 150px; padding: 8px"
-            >
+            <select class="form-control" id="typeFilter" onchange="filterMovements()" style="width:150px;padding:8px">
               <option value="">All Types</option>
               <option value="PRODUCTION">Production</option>
               <option value="SALES">Sales</option>
@@ -170,172 +113,220 @@
               <option value="EDIT">Edit</option>
               <option value="CANCEL">Cancel</option>
             </select>
-
-            <!-- Search Box -->
-            <input
-              type="text"
-              class="search-box"
-              id="searchMovements"
-              placeholder="Search..."
-              onkeyup="filterMovements()"
-              style="width: 180px; padding: 8px"
-            />
-
-            <!-- Refresh Button -->
-            <button
-              class="btn btn-secondary btn-sm"
-              onclick="refreshMovements()"
-            >
-              🔄 Refresh
-            </button>
+            <input type="text" class="search-box" id="searchMovements" placeholder="Search..." onkeyup="filterMovements()" style="width:180px;padding:8px" />
+            <button class="btn btn-secondary btn-sm" onclick="refreshMovements()">🔄 Refresh</button>
           </div>
         </div>
-
         <div id="movementsTableContainer">
-          <div class="loading">
-            <div class="spinner"></div>
-            <p>Loading movements...</p>
-          </div>
+          <div class="loading"><div class="spinner"></div><p>Loading movements...</p></div>
         </div>
       </div>
     </div>
 
-    <!-- Production Modal -->
-    <div id="productionModal" class="modal">
-      <div class="modal-content">
+    <!-- ============================================================ -->
+    <!-- PRODUCTION RUN MODAL                                          -->
+    <!-- ============================================================ -->
+    <div id="productionRunModal" class="modal">
+      <div class="modal-content" style="max-width:860px;max-height:92vh;overflow-y:auto">
         <div class="modal-header">
-          <h2>Production Entry</h2>
-          <button class="modal-close" onclick="closeProductionModal()">
-            ×
-          </button>
+          <h2>📦 Production Run Entry</h2>
+          <button class="modal-close" onclick="closeProductionRunModal()">×</button>
         </div>
-        <form
-          id="productionForm"
-          onsubmit="event.preventDefault(); saveProduction();"
-        >
-          <!-- Production form fields -->
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label required">Production Date</label>
-              <input
-                type="date"
-                class="form-control"
-                id="productionDate"
-                required
-              />
-            </div>
-            <div class="form-group">
-              <label class="form-label required">Product</label>
-              <select class="form-control" id="productionProduct" required>
-                <option value="">Select Product</option>
-              </select>
-            </div>
-          </div>
 
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label required">To Stockpile</label>
-              <select class="form-control" id="productionLocation" required>
-                <option value="">Select Stockpile</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label required">Quantity (tonnes)</label>
-              <input
-                type="number"
-                class="form-control"
-                id="productionQuantity"
-                step="0.01"
-                required
-              />
-            </div>
-          </div>
-
+        <!-- Header row -->
+        <div class="form-row" style="margin-bottom:0.5rem">
           <div class="form-group">
-            <label class="form-label required">Cost per Tonne ($)</label>
-            <input
-              type="number"
-              class="form-control"
-              id="productionCost"
-              step="0.01"
-              required
-            />
+            <label class="form-label required">Production Date</label>
+            <input type="date" class="form-control" id="runDate" required />
           </div>
-
-          <div class="form-group">
-            <label class="form-label">Operator</label>
-            <select class="form-control" id="productionOperator">
-              <option value="">Select Operator</option>
-            </select>
-          </div>
-
           <div class="form-group">
             <label class="form-label">Reference</label>
-            <input
-              type="text"
-              class="form-control"
-              id="productionReference"
-              placeholder="e.g., PROD_001"
-            />
+            <input type="text" class="form-control" id="runReference" placeholder="e.g., PROD-001" />
           </div>
-
           <div class="form-group">
-            <label class="form-label">Notes</label>
-            <textarea
-              class="form-control"
-              id="productionNotes"
-              rows="3"
-              placeholder="Production notes..."
-            ></textarea>
+            <label class="form-label">Operator</label>
+            <select class="form-control" id="runOperator">
+              <option value="">Select Operator</option>
+              <option value="RIA">RIA</option>
+              <option value="RM">RM</option>
+              <option value="RE">RE</option>
+            </select>
           </div>
+        </div>
 
-          <div class="modal-footer">
-            <button
-              type="button"
-              class="btn-secondary"
-              onclick="closeProductionModal()"
-            >
-              Cancel
-            </button>
-            <button type="submit" class="btn-primary">
-              💾 Save Production
-            </button>
+        <!-- Entry mode -->
+        <div style="background:#f0f7ff;border:1px solid #bee3f8;border-radius:6px;padding:10px 14px;margin-bottom:1rem;display:flex;align-items:center;gap:20px;">
+          <span style="font-size:13px;font-weight:600;color:#2c5282">Entry Mode:</span>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px">
+            <input type="radio" name="runEntryMode" value="BOM" id="modeBoM" onchange="onEntryModeChange()" /> BOM defaults (pre-fill from templates)
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px">
+            <input type="radio" name="runEntryMode" value="MANUAL" id="modeManual" checked onchange="onEntryModeChange()" /> Manual (enter all values)
+          </label>
+        </div>
+
+        <!-- ── PRODUCTS PRODUCED ──────────────────────────────── -->
+        <div style="background:#f8f9fa;border-radius:6px;padding:14px;margin-bottom:1rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div style="font-size:12px;color:#6c757d;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Products Produced</div>
+            <div style="font-size:13px;color:#495057">Total: <strong id="runTotalTonnes">0.0 t</strong></div>
           </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Demand Modal -->
-    <!-- Demand Management Modal -->
-    <div id="demandManagementModal" class="modal">
-      <div class="modal-content" style="max-width: 1200px">
-        <div class="modal-header">
-          <h2>📋 Demand Orders Management</h2>
-          <button class="modal-close" onclick="closeDemandManagement()">
-            ×
+          <table style="width:100%;border-collapse:collapse" id="productsTable">
+            <thead>
+              <tr style="font-size:11px;color:#6c757d;text-transform:uppercase">
+                <th style="text-align:left;padding:4px 6px;font-weight:600">Product</th>
+                <th style="text-align:left;padding:4px 6px;font-weight:600">Location</th>
+                <th style="text-align:right;padding:4px 6px;font-weight:600">Tonnes</th>
+                <th style="width:32px"></th>
+              </tr>
+            </thead>
+            <tbody id="productsTableBody">
+              <!-- rows added by JS -->
+            </tbody>
+          </table>
+          <button type="button" onclick="addProductRow()" style="margin-top:8px;background:none;border:1px dashed #adb5bd;border-radius:4px;padding:4px 12px;font-size:12px;color:#6c757d;cursor:pointer;width:100%">
+            ➕ Add Product
           </button>
         </div>
 
+        <!-- ── RESOURCES ─────────────────────────────────────── -->
+        <div style="background:#f8f9fa;border-radius:6px;padding:14px;margin-bottom:1rem">
+          <div style="font-size:12px;color:#6c757d;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">
+            Resources — hours used in THIS run only (not full day)
+          </div>
+
+          <!-- WIP -->
+          <div style="display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:8px;align-items:end;margin-bottom:10px">
+            <div class="form-group" style="margin:0">
+              <label class="form-label">Blast WIP Tonnes Used</label>
+              <input type="number" class="form-control" id="runWipTonnes" step="0.1" min="0" placeholder="Auto from total tonnes" oninput="updateCostSummary()" />
+              <small style="color:#666">Usually = total tonnes produced</small>
+            </div>
+            <div style="text-align:center;padding-bottom:8px;color:#6c757d">×</div>
+            <div class="form-group" style="margin:0">
+              <label class="form-label">WIP Rate ($/t)</label>
+              <input type="number" class="form-control" id="runWipRate" step="0.01" min="0" placeholder="0.00" oninput="updateCostSummary()" />
+            </div>
+            <div style="text-align:center;padding-bottom:8px;color:#6c757d">=</div>
+            <div class="form-group" style="margin:0">
+              <label class="form-label">WIP Cost</label>
+              <input type="text" class="form-control" id="runWipCost" readonly style="background:#e9ecef;font-weight:600;color:#155724" value="$0.00" />
+            </div>
+          </div>
+
+          <!-- Labour -->
+          <div style="display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:8px;align-items:end;margin-bottom:10px">
+            <div class="form-group" style="margin:0">
+              <label class="form-label">Labour Hours</label>
+              <input type="number" class="form-control" id="runLabourHours" step="0.5" min="0" placeholder="0" oninput="updateCostSummary()" />
+            </div>
+            <div style="text-align:center;padding-bottom:8px;color:#6c757d">×</div>
+            <div class="form-group" style="margin:0">
+              <label class="form-label">Labour Rate ($/hr)</label>
+              <input type="number" class="form-control" id="runLabourRate" step="0.01" min="0" placeholder="0.00" oninput="updateCostSummary()" />
+            </div>
+            <div style="text-align:center;padding-bottom:8px;color:#6c757d">=</div>
+            <div class="form-group" style="margin:0">
+              <label class="form-label">Labour Cost</label>
+              <input type="text" class="form-control" id="runLabourCost" readonly style="background:#e9ecef;font-weight:600;color:#155724" value="$0.00" />
+            </div>
+          </div>
+
+          <!-- Machines -->
+          <div style="font-size:11px;color:#6c757d;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;margin-top:4px">
+            Machines
+          </div>
+          <table style="width:100%;border-collapse:collapse" id="machinesRunTable">
+            <thead>
+              <tr style="font-size:11px;color:#6c757d;text-transform:uppercase">
+                <th style="text-align:left;padding:4px 6px;font-weight:600">Machine</th>
+                <th style="text-align:right;padding:4px 6px;font-weight:600">Hours</th>
+                <th style="text-align:right;padding:4px 6px;font-weight:600">Rate/hr</th>
+                <th style="text-align:right;padding:4px 6px;font-weight:600">Maint/hr</th>
+                <th style="text-align:right;padding:4px 6px;font-weight:600">Fuel L/hr</th>
+                <th style="text-align:right;padding:4px 6px;font-weight:600">Total Cost</th>
+                <th style="width:32px"></th>
+              </tr>
+            </thead>
+            <tbody id="machinesRunTableBody">
+              <!-- rows added by JS -->
+            </tbody>
+          </table>
+          <button type="button" onclick="addMachineRow()" style="margin-top:8px;background:none;border:1px dashed #adb5bd;border-radius:4px;padding:4px 12px;font-size:12px;color:#6c757d;cursor:pointer;width:100%">
+            ➕ Add Machine
+          </button>
+        </div>
+
+        <!-- ── COST SUMMARY ───────────────────────────────────── -->
+        <div id="costSummaryPanel" style="background:#e8f4e8;border:1px solid #c3e6cb;border-radius:6px;padding:14px;margin-bottom:1rem">
+          <div style="font-size:12px;color:#155724;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">
+            📊 Cost Summary
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px">
+            <div style="text-align:center">
+              <div style="font-size:12px;color:#6c757d;margin-bottom:4px">Total Run Cost</div>
+              <div id="summTotalCost" style="font-size:1.4rem;font-weight:700;color:#212529">$0.00</div>
+            </div>
+            <div style="text-align:center">
+              <div style="font-size:12px;color:#6c757d;margin-bottom:4px">Total Tonnes</div>
+              <div id="summTotalTonnes" style="font-size:1.4rem;font-weight:700;color:#212529">0.0 t</div>
+            </div>
+            <div style="text-align:center">
+              <div style="font-size:12px;color:#6c757d;margin-bottom:4px">Cost Per Tonne</div>
+              <div id="summCostPerTonne" style="font-size:1.4rem;font-weight:700;color:#155724">$0.00</div>
+            </div>
+          </div>
+          <!-- Product cost split -->
+          <div id="productSplitRows" style="border-top:1px solid #c3e6cb;padding-top:10px;font-size:13px"></div>
+        </div>
+
+        <!-- Variance warning banner (hidden until needed) -->
+        <div id="varianceBanner" style="display:none;border-radius:6px;padding:12px 14px;margin-bottom:1rem;font-size:13px"></div>
+
+        <!-- Notes -->
+        <div class="form-group">
+          <label class="form-label">Notes</label>
+          <textarea class="form-control" id="runNotes" rows="2" placeholder="Production notes, conditions, issues..."></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeProductionRunModal()">Cancel</button>
+          <button type="button" class="btn-primary" onclick="saveProductionRun()">💾 Save Production Run</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Variance confirmation modal -->
+    <div id="varianceModal" class="modal">
+      <div class="modal-content" style="max-width:480px">
+        <div class="modal-header">
+          <h2 id="varianceModalTitle">⚠️ Variance Check</h2>
+          <button class="modal-close" onclick="closeVarianceModal()">×</button>
+        </div>
+        <div id="varianceModalBody" style="padding:0 0 1rem 0;font-size:14px;color:#374151"></div>
+        <div class="form-group">
+          <label class="form-label required" id="varianceActionLabel">Confirmation</label>
+          <div id="varianceActionInput"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeVarianceModal()">Go Back &amp; Check</button>
+          <button type="button" id="varianceProceedBtn" class="btn-primary" onclick="proceedAfterVariance()">Proceed</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Demand Management Modal -->
+    <div id="demandManagementModal" class="modal">
+      <div class="modal-content" style="max-width:1200px">
+        <div class="modal-header">
+          <h2>📋 Demand Orders Management</h2>
+          <button class="modal-close" onclick="closeDemandManagement()">×</button>
+        </div>
         <div class="modal-body">
-          <!-- Action Buttons -->
-          <div
-            style="
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              margin-bottom: 20px;
-            "
-          >
-            <div style="display: flex; gap: 10px">
-              <button class="btn-demand" onclick="openDemandOrderForm()">
-                ➕ New Demand Order
-              </button>
-              <select
-                class="form-control"
-                id="demandStatusFilter"
-                onchange="loadDemandOrders()"
-                style="width: 150px"
-              >
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+            <div style="display:flex;gap:10px">
+              <button class="btn-demand" onclick="openDemandOrderForm()">➕ New Demand Order</button>
+              <select class="form-control" id="demandStatusFilter" onchange="loadDemandOrders()" style="width:150px">
                 <option value="">All Status</option>
                 <option value="PENDING">Pending</option>
                 <option value="CONFIRMED" selected>Confirmed</option>
@@ -343,33 +334,15 @@
                 <option value="CANCELLED">Cancelled</option>
               </select>
             </div>
-            <button class="btn-secondary btn-sm" onclick="loadDemandOrders()">
-              🔄 Refresh
-            </button>
+            <button class="btn-secondary btn-sm" onclick="loadDemandOrders()">🔄 Refresh</button>
           </div>
-
-          <!-- Demand Orders Table -->
           <div class="data-table">
             <table class="movements-table">
               <thead>
-                <tr>
-                  <th>Order #</th>
-                  <th>Date</th>
-                  <th>Required</th>
-                  <th>Customer</th>
-                  <th>Product</th>
-                  <th style="text-align: right">Quantity</th>
-                  <th>PO Number</th>
-                  <th>Status</th>
-                  <th style="width: 120px">Actions</th>
-                </tr>
+                <tr><th>Order #</th><th>Date</th><th>Required</th><th>Customer</th><th>Product</th><th style="text-align:right">Quantity</th><th>PO Number</th><th>Status</th><th style="width:120px">Actions</th></tr>
               </thead>
               <tbody id="demandOrdersTableBody">
-                <tr>
-                  <td colspan="9" style="text-align: center; padding: 20px">
-                    Loading demand orders...
-                  </td>
-                </tr>
+                <tr><td colspan="9" style="text-align:center;padding:20px">Loading demand orders...</td></tr>
               </tbody>
             </table>
           </div>
@@ -382,25 +355,14 @@
       <div class="modal-content">
         <div class="modal-header">
           <h2 id="demandFormTitle">New Demand Order</h2>
-          <button class="modal-close" onclick="closeDemandOrderForm()">
-            ×
-          </button>
+          <button class="modal-close" onclick="closeDemandOrderForm()">×</button>
         </div>
-        <form
-          id="demandOrderForm"
-          onsubmit="event.preventDefault(); saveDemandOrder();"
-        >
+        <form id="demandOrderForm" onsubmit="event.preventDefault(); saveDemandOrder();">
           <input type="hidden" id="demandOrderId" />
-
           <div class="form-row">
             <div class="form-group">
               <label class="form-label required">Required Date</label>
-              <input
-                type="date"
-                class="form-control"
-                id="demandRequiredDate"
-                required
-              />
+              <input type="date" class="form-control" id="demandRequiredDate" required />
             </div>
             <div class="form-group">
               <label class="form-label required">Status</label>
@@ -410,73 +372,37 @@
               </select>
             </div>
           </div>
-
           <div class="form-row">
             <div class="form-group">
               <label class="form-label required">Product</label>
-              <select class="form-control" id="demandFormProduct" required>
-                <option value="">Select Product</option>
-              </select>
+              <select class="form-control" id="demandFormProduct" required><option value="">Select Product</option></select>
             </div>
             <div class="form-group">
               <label class="form-label required">Quantity (tonnes)</label>
-              <input
-                type="number"
-                class="form-control"
-                id="demandFormQuantity"
-                step="0.01"
-                required
-              />
+              <input type="number" class="form-control" id="demandFormQuantity" step="0.01" required />
             </div>
           </div>
-
           <div class="form-group">
             <label class="form-label">PO Number</label>
-            <input
-              type="text"
-              class="form-control"
-              id="demandFormPO"
-              placeholder="e.g., PO-2026-001"
-            />
-            <small style="color: #666">Customer purchase order reference (required for Confirmed status)</small>
+            <input type="text" class="form-control" id="demandFormPO" placeholder="e.g., PO-2026-001" />
           </div>
-
           <div class="form-row">
             <div class="form-group">
               <label class="form-label required">Customer</label>
-              <select class="form-control" id="demandFormCustomer" required>
-                <option value="">Select Customer</option>
-              </select>
+              <select class="form-control" id="demandFormCustomer" required><option value="">Select Customer</option></select>
             </div>
             <div class="form-group">
               <label class="form-label">Preferred Location</label>
-              <select class="form-control" id="demandFormLocation">
-                <option value="">Any Location</option>
-              </select>
+              <select class="form-control" id="demandFormLocation"><option value="">Any Location</option></select>
             </div>
           </div>
-
           <div class="form-group">
             <label class="form-label">Notes</label>
-            <textarea
-              class="form-control"
-              id="demandFormNotes"
-              rows="3"
-              placeholder="Delivery instructions, special requirements, etc."
-            ></textarea>
+            <textarea class="form-control" id="demandFormNotes" rows="3" placeholder="Delivery instructions, special requirements, etc."></textarea>
           </div>
-
           <div class="modal-footer">
-            <button
-              type="button"
-              class="btn-secondary"
-              onclick="closeDemandOrderForm()"
-            >
-              Cancel
-            </button>
-            <button type="submit" class="btn-demand">
-              💾 Save Demand Order
-            </button>
+            <button type="button" class="btn-secondary" onclick="closeDemandOrderForm()">Cancel</button>
+            <button type="submit" class="btn-demand">💾 Save Demand Order</button>
           </div>
         </form>
       </div>
@@ -490,7 +416,6 @@
           <button class="modal-close" onclick="closeSalesModal()">×</button>
         </div>
         <form id="salesForm" onsubmit="event.preventDefault(); saveSales();">
-          <!-- Row 1: Date and Product -->
           <div class="form-row">
             <div class="form-group">
               <label class="form-label required">Sale Date</label>
@@ -498,232 +423,109 @@
             </div>
             <div class="form-group">
               <label class="form-label required">Product Sold</label>
-              <select
-                class="form-control"
-                id="saleProduct"
-                required
-                onchange="updateSalePrice()"
-              >
-                <option value="">Select Product Sold</option>
-              </select>
+              <select class="form-control" id="saleProduct" required onchange="updateSalePrice()"><option value="">Select Product Sold</option></select>
             </div>
           </div>
-
-          <!-- Row 2: Stockpile and Vehicle -->
           <div class="form-row">
             <div class="form-group">
               <label class="form-label required">From Stockpile</label>
-              <select class="form-control" id="saleLocation" required>
-                <option value="">Select From Stockpile</option>
-              </select>
+              <select class="form-control" id="saleLocation" required><option value="">Select From Stockpile</option></select>
             </div>
             <div class="form-group">
               <label class="form-label">Delivery Vehicle</label>
-              <select class="form-control" id="saleVehicle">
-                <option value="">Select Vehicle</option>
-              </select>
-              <small style="color: #666"
-                >Selecting vehicle will auto-load tare weight</small
-              >
+              <select class="form-control" id="saleVehicle"><option value="">Select Vehicle</option></select>
+              <small style="color:#666">Selecting vehicle will auto-load tare weight</small>
             </div>
           </div>
-
-          <!-- Row 3: Tare Weight and Carrier (auto-populated) -->
           <div class="form-row">
             <div class="form-group">
               <label class="form-label required">Tare Weight (tonnes)</label>
-              <input
-                type="number"
-                class="form-control"
-                id="saleTareWeight"
-                step="0.01"
-                required
-                oninput="calculateNetWeight()"
-                placeholder="e.g., 20.0"
-              />
-              <small style="color: #666">Empty truck weight</small>
+              <input type="number" class="form-control" id="saleTareWeight" step="0.01" required oninput="calculateNetWeight()" placeholder="e.g., 20.0" />
+              <small style="color:#666">Empty truck weight</small>
             </div>
             <div class="form-group">
               <label class="form-label">Carrier</label>
-              <select class="form-control" id="saleCarrier">
-                <option value="">Select Carrier</option>
-              </select>
+              <select class="form-control" id="saleCarrier"><option value="">Select Carrier</option></select>
             </div>
           </div>
-
-          <!-- Row 4: Gross and Net Weight -->
           <div class="form-row">
             <div class="form-group">
               <label class="form-label required">Gross Weight (tonnes)</label>
-              <input
-                type="number"
-                class="form-control"
-                id="saleGrossWeight"
-                step="0.01"
-                required
-                oninput="calculateNetWeight()"
-                placeholder="e.g., 100.0"
-              />
-              <small style="color: #666"
-                >Total weight on weighbridge (loaded truck)</small
-              >
+              <input type="number" class="form-control" id="saleGrossWeight" step="0.01" required oninput="calculateNetWeight()" placeholder="e.g., 100.0" />
+              <small style="color:#666">Total weight on weighbridge (loaded truck)</small>
             </div>
             <div class="form-group">
               <label class="form-label">Net Weight (tonnes)</label>
-              <input
-                type="number"
-                class="form-control"
-                id="saleNetWeight"
-                step="0.01"
-                readonly
-                style="
-                  background-color: #f0f0f0;
-                  font-weight: bold;
-                  color: #28a745;
-                "
-                placeholder="Auto-calculated"
-              />
-              <small style="color: #666"
-                >Gross - Tare = Net (actual product sold)</small
-              >
+              <input type="number" class="form-control" id="saleNetWeight" step="0.01" readonly style="background-color:#f0f0f0;font-weight:bold;color:#28a745" placeholder="Auto-calculated" />
+              <small style="color:#666">Gross - Tare = Net (actual product sold)</small>
             </div>
           </div>
-
-         <!-- Row 5: Price List, Price and Customer -->
-          <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 1rem; margin-bottom: 1rem;">
-            <div class="form-group" style="margin-bottom: 0;">
+          <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:1rem;margin-bottom:1rem">
+            <div class="form-group" style="margin-bottom:0">
               <label class="form-label required">Price List</label>
-              <select class="form-control" id="salePriceList" onchange="updateSalePriceFromList()">
-                <option value="">Loading...</option>
-              </select>
+              <select class="form-control" id="salePriceList" onchange="updateSalePriceFromList()"><option value="">Loading...</option></select>
             </div>
-            <div class="form-group" style="margin-bottom: 0;">
+            <div class="form-group" style="margin-bottom:0">
               <label class="form-label required">Price ($/t)</label>
-              <input
-                type="number"
-                class="form-control"
-                id="salePrice"
-                step="0.01"
-                required
-                placeholder="Auto-filled"
-                style="width: 100px; text-align: center;"
-              />
+              <input type="number" class="form-control" id="salePrice" step="0.01" required placeholder="Auto-filled" style="width:100px;text-align:center" />
             </div>
-            <div class="form-group" style="margin-bottom: 0;">
+            <div class="form-group" style="margin-bottom:0">
               <label class="form-label required">Customer</label>
-              <select class="form-control" id="saleCustomer" required>
-                <option value="">Select Customer</option>
-              </select>
+              <select class="form-control" id="saleCustomer" required><option value="">Select Customer</option></select>
             </div>
           </div>
-
-         <!-- Row 6: Driver, Trailer Count, and Delivery Type -->
-          <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 1rem; margin-bottom: 1rem;">
-            <div class="form-group" style="margin-bottom: 0;">
+          <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:1rem;margin-bottom:1rem">
+            <div class="form-group" style="margin-bottom:0">
               <label class="form-label">Driver</label>
-              <select class="form-control" id="saleDriver">
-                <option value="">Select Driver</option>
-              </select>
+              <select class="form-control" id="saleDriver"><option value="">Select Driver</option></select>
             </div>
-            <div class="form-group" style="margin-bottom: 0;">
+            <div class="form-group" style="margin-bottom:0">
               <label class="form-label">Trailers</label>
-              <select class="form-control" id="saleTrailerCount" style="width: 70px; text-align: center;">
-                <option value="1" selected>1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="HR">HR</option>
+              <select class="form-control" id="saleTrailerCount" style="width:70px;text-align:center">
+                <option value="1" selected>1</option><option value="2">2</option><option value="3">3</option><option value="HR">HR</option>
               </select>
             </div>
-            <div class="form-group" style="margin-bottom: 0;">
+            <div class="form-group" style="margin-bottom:0">
               <label class="form-label">Destination</label>
-              <select class="form-control" id="saleDelivery">
-                <option value="">Select Delivery Type</option>
-              </select>
+              <select class="form-control" id="saleDelivery"><option value="">Select Delivery Type</option></select>
             </div>
           </div>
-
-          <!-- Row 6b: Delivery Charge Type and Hours -->
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-            <div class="form-group" style="margin-bottom: 0;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+            <div class="form-group" style="margin-bottom:0">
               <label class="form-label">Delivery Charge</label>
-             <select class="form-control" id="saleDelCT" onchange="toggleHoursField()">
+              <select class="form-control" id="saleDelCT" onchange="toggleHoursField()">
                 <option value="TONNES" selected>Tonnes × Rate</option>
                 <option value="HOURS">Hourly Rate</option>
                 <option value="SET">Set Charge</option>
               </select>
-              <small style="color: #666">How delivery fee is calculated</small>
             </div>
-            <div class="form-group" style="margin-bottom: 0; display: none;" id="hoursFieldGroup">
+            <div class="form-group" style="margin-bottom:0;display:none" id="hoursFieldGroup">
               <label class="form-label">Hours Taken</label>
-              <input
-                type="number"
-                class="form-control"
-                id="saleDelHours"
-                step="0.5"
-                min="0"
-                placeholder="e.g., 4"
-                style="width: 100px;"
-              />
-              <small style="color: #666">Enter after truck returns</small>
+              <input type="number" class="form-control" id="saleDelHours" step="0.5" min="0" placeholder="e.g., 4" style="width:100px" />
             </div>
           </div>
-
-          <!-- Row 7: Demand Link and PO/Reference -->
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">Linked Demand Order</label>
-              <select class="form-control" id="saleDemandOrder" onchange="onDemandOrderSelected()">
-                <option value="">No — Manual PO Entry</option>
-              </select>
-              <small style="color: #666">Link this sale to a confirmed demand order</small>
+              <select class="form-control" id="saleDemandOrder" onchange="onDemandOrderSelected()"><option value="">No — Manual PO Entry</option></select>
             </div>
             <div class="form-group">
               <label class="form-label" id="saleReferenceLabel">Sale Reference / PO</label>
-              <input
-                type="text"
-                class="form-control"
-                id="saleReference"
-                placeholder="e.g., PO444555888"
-              />
+              <input type="text" class="form-control" id="saleReference" placeholder="e.g., PO444555888" />
             </div>
           </div>
-
-          <!-- Row 7b: Docket Number -->
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label"
-                >Docket Number
-                <span style="color: #28a745">(Auto-assigned)</span></label
-              >
-              <input
-                type="text"
-                class="form-control"
-                value="Will be auto-assigned as DN00001, DN00002, etc."
-                readonly
-                style="background-color: #f0f0f0; color: #666"
-              />
+              <label class="form-label">Docket Number <span style="color:#28a745">(Auto-assigned)</span></label>
+              <input type="text" class="form-control" value="Will be auto-assigned as DN00001, DN00002, etc." readonly style="background-color:#f0f0f0;color:#666" />
             </div>
           </div>
-
-          <!-- Notes -->
           <div class="form-group">
             <label class="form-label">Notes</label>
-            <textarea
-              class="form-control"
-              id="saleNotes"
-              rows="3"
-              placeholder="Delivery instructions, special requirements, etc."
-            ></textarea>
+            <textarea class="form-control" id="saleNotes" rows="3" placeholder="Delivery instructions, special requirements, etc."></textarea>
           </div>
-
           <div class="modal-footer">
-            <button
-              type="button"
-              class="btn-secondary"
-              onclick="closeSalesModal()"
-            >
-              Cancel
-            </button>
+            <button type="button" class="btn-secondary" onclick="closeSalesModal()">Cancel</button>
             <button type="submit" class="btn-success">💰 Save Sales</button>
           </div>
         </form>
@@ -735,80 +537,46 @@
       <div class="modal-content">
         <div class="modal-header">
           <h2>Stock Adjustment / Transfer</h2>
-          <button class="modal-close" onclick="closeAdjustmentModal()">
-            ×
-          </button>
+          <button class="modal-close" onclick="closeAdjustmentModal()">×</button>
         </div>
-        <form
-          id="adjustmentForm"
-          onsubmit="event.preventDefault(); saveAdjustment();"
-        >
+        <form id="adjustmentForm" onsubmit="event.preventDefault(); saveAdjustment();">
           <div class="form-row">
             <div class="form-group">
               <label class="form-label required">Date</label>
-              <input
-                type="date"
-                class="form-control"
-                id="adjustmentDate"
-                required
-              />
+              <input type="date" class="form-control" id="adjustmentDate" required />
             </div>
             <div class="form-group">
               <label class="form-label required">Type</label>
-              <select
-                class="form-control"
-                id="adjustmentType"
-                required
-                onchange="toggleAdjustmentType()"
-              >
+              <select class="form-control" id="adjustmentType" required onchange="toggleAdjustmentType()">
                 <option value="">Select Type</option>
                 <option value="ADJUSTMENT">Adjustment</option>
                 <option value="TRANSFER">Transfer</option>
               </select>
             </div>
           </div>
-
-          <!-- ADJUSTMENT FIELDS -->
-          <div id="adjustmentFields" style="display: none">
+          <div id="adjustmentFields" style="display:none">
             <div class="form-row">
               <div class="form-group">
                 <label class="form-label required">Product</label>
-                <select class="form-control" id="adjustmentProduct">
-                  <option value="">Select Product</option>
-                </select>
+                <select class="form-control" id="adjustmentProduct"><option value="">Select Product</option></select>
               </div>
               <div class="form-group">
                 <label class="form-label required">Location</label>
-                <select class="form-control" id="adjustmentLocation">
-                  <option value="">Select Location</option>
-                </select>
+                <select class="form-control" id="adjustmentLocation"><option value="">Select Location</option></select>
               </div>
             </div>
-
             <div class="form-row">
               <div class="form-group">
-                <label class="form-label required"
-                  >Adjustment Quantity (tonnes)</label
-                >
-                <input
-                  type="number"
-                  class="form-control"
-                  id="adjustmentQuantity"
-                  step="0.01"
-                  placeholder="Use + or - (e.g., -50 or +100)"
-                />
-                <small style="color: #666"
-                  >Negative to reduce stock, positive to increase</small
-                >
+                <label class="form-label required">Adjustment Quantity (tonnes)</label>
+                <input type="number" class="form-control" id="adjustmentQuantity" step="0.01" placeholder="Use + or - (e.g., -50 or +100)" />
+                <small style="color:#666">Negative to reduce stock, positive to increase</small>
               </div>
               <div class="form-group">
                 <label class="form-label required">Reason</label>
                 <select class="form-control" id="adjustmentReason">
                   <option value="">Select Reason</option>
                   <option value="Sales Overage">Sales Overage</option>
-                  <option value="Stocktake Correction">
-                    Stocktake Correction
-                  </option>
+                  <option value="Stocktake Correction">Stocktake Correction</option>
                   <option value="Shrinkage">Shrinkage</option>
                   <option value="Damage">Damage</option>
                   <option value="Other">Other</option>
@@ -816,85 +584,37 @@
               </div>
             </div>
           </div>
-
-          <!-- TRANSFER FIELDS -->
-          <div id="transferFields" style="display: none">
+          <div id="transferFields" style="display:none">
             <div class="form-group">
               <label class="form-label required">Product</label>
-              <select
-                class="form-control"
-                id="transferProduct"
-                onchange="loadTransferLocations()"
-              >
-                <option value="">Select Product</option>
-              </select>
+              <select class="form-control" id="transferProduct" onchange="loadTransferLocations()"><option value="">Select Product</option></select>
             </div>
-
             <div class="form-row">
               <div class="form-group">
                 <label class="form-label required">From Location</label>
-                <select class="form-control" id="transferFromLocation">
-                  <option value="">Select From Location</option>
-                </select>
+                <select class="form-control" id="transferFromLocation"><option value="">Select From Location</option></select>
               </div>
               <div class="form-group">
                 <label class="form-label required">To Location</label>
-                <select class="form-control" id="transferToLocation">
-                  <option value="">Select To Location</option>
-                </select>
+                <select class="form-control" id="transferToLocation"><option value="">Select To Location</option></select>
               </div>
             </div>
-
             <div class="form-group">
-              <label class="form-label required"
-                >Transfer Quantity (tonnes)</label
-              >
-              <input
-                type="number"
-                class="form-control"
-                id="transferQuantity"
-                step="0.01"
-                min="0.01"
-                placeholder="e.g., 50.5"
-              />
-              <small style="color: #666"
-                >Always positive - moving from one location to another</small
-              >
+              <label class="form-label required">Transfer Quantity (tonnes)</label>
+              <input type="number" class="form-control" id="transferQuantity" step="0.01" min="0.01" placeholder="e.g., 50.5" />
             </div>
           </div>
-
-          <!-- COMMON FIELDS -->
           <div class="form-group">
             <label class="form-label">Reference</label>
-            <input
-              type="text"
-              class="form-control"
-              id="adjustmentReference"
-              placeholder="e.g., ADJ-001 or TRF-001"
-            />
+            <input type="text" class="form-control" id="adjustmentReference" placeholder="e.g., ADJ-001 or TRF-001" />
           </div>
-
           <div class="form-group">
             <label class="form-label">Notes</label>
-            <textarea
-              class="form-control"
-              id="adjustmentNotes"
-              rows="3"
-              placeholder="Reason for adjustment or transfer details..."
-            ></textarea>
+            <textarea class="form-control" id="adjustmentNotes" rows="3" placeholder="Reason for adjustment or transfer details..."></textarea>
           </div>
-
           <div class="modal-footer">
-            <button
-              type="button"
-              class="btn-secondary"
-              onclick="closeAdjustmentModal()"
-            >
-              Cancel
-            </button>
-            <button type="submit" class="btn-warning">
-              ⚖️ Save Adjustment
-            </button>
+            <button type="button" class="btn-secondary" onclick="closeAdjustmentModal()">Cancel</button>
+            <button type="submit" class="btn-warning">⚖️ Save Adjustment</button>
           </div>
         </form>
       </div>
@@ -905,89 +625,38 @@
       <div class="modal-content">
         <div class="modal-header">
           <h2>Record Tare Weight</h2>
-          <button class="modal-close" onclick="closeTareWeightModal()">
-            ×
-          </button>
+          <button class="modal-close" onclick="closeTareWeightModal()">×</button>
         </div>
-        <form
-          id="tareWeightForm"
-          onsubmit="event.preventDefault(); saveTareWeight();"
-        >
+        <form id="tareWeightForm" onsubmit="event.preventDefault(); saveTareWeight();">
           <div class="form-group">
             <label class="form-label required">Vehicle</label>
-            <select class="form-control" id="tareVehicle" required>
-              <option value="">Select Vehicle</option>
-            </select>
+            <select class="form-control" id="tareVehicle" required><option value="">Select Vehicle</option></select>
           </div>
-
           <div class="form-row">
             <div class="form-group">
               <label class="form-label required">Tare Weight (tonnes)</label>
-              <input
-                type="number"
-                class="form-control"
-                id="tareWeight"
-                step="0.01"
-                min="0.01"
-                required
-                placeholder="e.g., 18.50"
-              />
-              <small style="color: #666">Empty truck weight</small>
+              <input type="number" class="form-control" id="tareWeight" step="0.01" min="0.01" required placeholder="e.g., 18.50" />
+              <small style="color:#666">Empty truck weight</small>
             </div>
             <div class="form-group">
               <label class="form-label">Carrier</label>
-              <select class="form-control" id="tareCarrier">
-                <option value="">Select Carrier</option>
-              </select>
+              <select class="form-control" id="tareCarrier"><option value="">Select Carrier</option></select>
             </div>
           </div>
-
           <div class="form-group">
             <label class="form-label">Operator</label>
-            <input
-              type="text"
-              class="form-control"
-              id="tareOperator"
-              placeholder="Your name (optional)"
-            />
+            <input type="text" class="form-control" id="tareOperator" placeholder="Your name (optional)" />
           </div>
-
           <div class="form-group">
             <label class="form-label">Notes</label>
-            <textarea
-              class="form-control"
-              id="tareNotes"
-              rows="2"
-              placeholder="e.g., New tires fitted, driver mentioned issue, etc."
-            ></textarea>
+            <textarea class="form-control" id="tareNotes" rows="2" placeholder="e.g., New tires fitted, driver mentioned issue, etc."></textarea>
           </div>
-
-          <div
-            style="
-              background: #e3f2fd;
-              padding: 12px;
-              border-radius: 6px;
-              margin-bottom: 20px;
-              font-size: 13px;
-              color: #1565c0;
-            "
-          >
-            <strong>ℹ️ Note:</strong> This tare weight will be automatically
-            suggested when recording a sale for this vehicle within the next 10
-            hours.
+          <div style="background:#e3f2fd;padding:12px;border-radius:6px;margin-bottom:20px;font-size:13px;color:#1565c0">
+            <strong>ℹ️ Note:</strong> This tare weight will be automatically suggested when recording a sale for this vehicle within the next 12 hours.
           </div>
-
           <div class="modal-footer">
-            <button
-              type="button"
-              class="btn-secondary"
-              onclick="closeTareWeightModal()"
-            >
-              Cancel
-            </button>
-            <button type="submit" class="btn-info">
-              🚛 Record Tare Weight
-            </button>
+            <button type="button" class="btn-secondary" onclick="closeTareWeightModal()">Cancel</button>
+            <button type="submit" class="btn-info">🚛 Record Tare Weight</button>
           </div>
         </form>
       </div>
@@ -996,24 +665,394 @@
     <script src="/js/demand.js"></script>
     <script src="/js/operations.js"></script>
     <script src="/js/quick-add.js"></script>
+
     <script>
-      // Update header inventory value
+      // ── Header value ────────────────────────────────────────────────
       async function updateHeaderValue() {
         try {
-          const response = await fetch("/api/stock/summary");
-          const data = await response.json();
-          const totalValue = data.total_inventory_value || 0;
+          const r = await fetch("/api/stock/summary");
+          const d = await r.json();
           document.getElementById("totalValue").textContent =
-            new Intl.NumberFormat("en-AU", {
-              style: "currency",
-              currency: "AUD",
-              minimumFractionDigits: 0,
-            }).format(totalValue);
-        } catch (error) {
-          console.error("Error loading header value:", error);
-        }
+            new Intl.NumberFormat("en-AU", { style:"currency", currency:"AUD", minimumFractionDigits:0 })
+              .format(d.total_inventory_value || 0);
+        } catch(e) { console.error("Header error:", e); }
       }
       updateHeaderValue();
+
+      // ── Override the old openProductionModal ─────────────────────────
+      // (operations.js may define openProductionModal — this overrides it)
+      function openProductionModal() { openProductionRunModal(); }
+
+      // ── Production Run state ─────────────────────────────────────────
+      let _runProducts  = [];   // { id, productId, locationId, tonnes }
+      let _runMachines  = [];   // { id, machineId, hours }
+      let _allProducts  = [];
+      let _allLocations = [];
+      let _allMachines  = [];
+      let _currentRates = {};   // { BLAST_WIP, LABOUR, FUEL }
+      let _runRowCounter = 0;
+      let _pendingSave = null;  // holds data when waiting for variance confirmation
+
+      async function openProductionRunModal() {
+        // Load data in parallel
+        const [prodRes, locRes, machRes, ratesRes] = await Promise.all([
+          fetch("/api/products"),
+          fetch("/api/locations?is_active=true"),
+          fetch("/api/production-rates/machines"),
+          fetch("/api/production-rates/current")
+        ]);
+        _allProducts  = await prodRes.json();
+        _allLocations = await locRes.json();
+        _allMachines  = await machRes.json();
+        _currentRates = await ratesRes.json();
+
+        // Reset state
+        _runProducts  = [];
+        _runMachines  = [];
+        _runRowCounter = 0;
+        document.getElementById("runDate").value      = new Date().toISOString().split("T")[0];
+        document.getElementById("runReference").value = "";
+        document.getElementById("runOperator").value  = "";
+        document.getElementById("runNotes").value     = "";
+        document.getElementById("modeManual").checked = true;
+        document.getElementById("runWipTonnes").value = "";
+        document.getElementById("runWipRate").value   = (_currentRates.BLAST_WIP||{}).rate || 0;
+        document.getElementById("runLabourHours").value = "";
+        document.getElementById("runLabourRate").value  = (_currentRates.LABOUR||{}).rate || 0;
+        document.getElementById("productsTableBody").innerHTML = "";
+        document.getElementById("machinesRunTableBody").innerHTML = "";
+        document.getElementById("varianceBanner").style.display = "none";
+
+        // Add one product row and one machine row to start
+        addProductRow();
+        addMachineRow();
+        updateCostSummary();
+
+        document.getElementById("productionRunModal").style.display = "flex";
+      }
+
+      function closeProductionRunModal() {
+        document.getElementById("productionRunModal").style.display = "none";
+      }
+
+      function onEntryModeChange() {
+        // BOM mode — could pre-fill from BOM templates in future
+        // For now, both modes use same form
+      }
+
+      // ── Product rows ─────────────────────────────────────────────────
+      function addProductRow() {
+        const rowId = ++_runRowCounter;
+        _runProducts.push({ id: rowId, productId: null, locationId: null, tonnes: 0 });
+
+        // Build product options
+        const prodOpts = _allProducts.map(p =>
+          `<option value="${p.product_id}">${p.product_name}</option>`
+        ).join('');
+
+        // Build location options — ALL locations, Production Area first
+        const prodAreaOpts = _allLocations
+          .filter(l => l.location_type === 'PRODUCTION')
+          .map(l => `<option value="${l.location_id}">${l.location_name} (Production Area)</option>`)
+          .join('');
+        const otherOpts = _allLocations
+          .filter(l => l.location_type !== 'PRODUCTION')
+          .map(l => `<option value="${l.location_id}">${l.location_name}</option>`)
+          .join('');
+
+        const tr = document.createElement('tr');
+        tr.id = `prod-row-${rowId}`;
+        tr.innerHTML = `
+          <td style="padding:4px 4px">
+            <select class="form-control" id="prodProduct-${rowId}" style="font-size:13px"
+              onchange="onProductRowChange(${rowId})">
+              <option value="">Select Product</option>
+              ${prodOpts}
+            </select>
+          </td>
+          <td style="padding:4px 4px">
+            <select class="form-control" id="prodLocation-${rowId}" style="font-size:13px"
+              onchange="onProductRowChange(${rowId})">
+              <option value="">Select Location</option>
+              <optgroup label="Production Area">${prodAreaOpts}</optgroup>
+              <optgroup label="Stockpiles &amp; Other">${otherOpts}</optgroup>
+            </select>
+          </td>
+          <td style="padding:4px 4px;text-align:right">
+            <input type="number" class="form-control" id="prodTonnes-${rowId}"
+              step="0.1" min="0" placeholder="0.0" style="text-align:right;font-size:13px;width:90px"
+              oninput="onProductRowChange(${rowId})" />
+          </td>
+          <td style="padding:4px 4px;text-align:center">
+            <button type="button" onclick="removeProductRow(${rowId})"
+              style="background:none;border:none;color:#dc3545;cursor:pointer;font-size:16px;line-height:1">×</button>
+          </td>
+        `;
+        document.getElementById("productsTableBody").appendChild(tr);
+      }
+
+      function removeProductRow(rowId) {
+        _runProducts = _runProducts.filter(p => p.id !== rowId);
+        const row = document.getElementById(`prod-row-${rowId}`);
+        if (row) row.remove();
+        updateCostSummary();
+      }
+
+      function onProductRowChange(rowId) {
+        const p = _runProducts.find(x => x.id === rowId);
+        if (!p) return;
+        p.productId  = parseInt(document.getElementById(`prodProduct-${rowId}`).value)  || null;
+        p.locationId = parseInt(document.getElementById(`prodLocation-${rowId}`).value) || null;
+        p.tonnes     = parseFloat(document.getElementById(`prodTonnes-${rowId}`).value)  || 0;
+        updateCostSummary();
+      }
+
+      // ── Machine rows ──────────────────────────────────────────────────
+      function addMachineRow() {
+        const rowId = ++_runRowCounter;
+        _runMachines.push({ id: rowId, machineId: null, hours: 0 });
+
+        const machOpts = _allMachines.map(m =>
+          `<option value="${m.machine_id}" data-rate="${m.rate_per_hour}" data-maint="${m.maintenance_rate_per_hour}" data-fuel="${m.fuel_litres_per_hour}">${m.machine_name}</option>`
+        ).join('');
+
+        const fuelRate = (_currentRates.FUEL || {}).rate || 0;
+
+        const tr = document.createElement('tr');
+        tr.id = `mach-row-${rowId}`;
+        tr.innerHTML = `
+          <td style="padding:4px 4px">
+            <select class="form-control" id="machMachine-${rowId}" style="font-size:13px"
+              onchange="onMachineRowChange(${rowId})">
+              <option value="">Select Machine</option>
+              ${machOpts}
+            </select>
+          </td>
+          <td style="padding:4px 4px;text-align:right">
+            <input type="number" class="form-control" id="machHours-${rowId}"
+              step="0.5" min="0" placeholder="0" style="text-align:right;font-size:13px;width:70px"
+              oninput="onMachineRowChange(${rowId})" />
+          </td>
+          <td style="padding:4px 4px;text-align:right;font-size:12px;color:#6c757d" id="machRate-${rowId}">—</td>
+          <td style="padding:4px 4px;text-align:right;font-size:12px;color:#6c757d" id="machMaint-${rowId}">—</td>
+          <td style="padding:4px 4px;text-align:right;font-size:12px;color:#6c757d" id="machFuel-${rowId}">—</td>
+          <td style="padding:4px 4px;text-align:right;font-weight:600;font-size:13px;color:#155724" id="machTotal-${rowId}">$0.00</td>
+          <td style="padding:4px 4px;text-align:center">
+            <button type="button" onclick="removeMachineRow(${rowId})"
+              style="background:none;border:none;color:#dc3545;cursor:pointer;font-size:16px;line-height:1">×</button>
+          </td>
+        `;
+        document.getElementById("machinesRunTableBody").appendChild(tr);
+      }
+
+      function removeMachineRow(rowId) {
+        _runMachines = _runMachines.filter(m => m.id !== rowId);
+        const row = document.getElementById(`mach-row-${rowId}`);
+        if (row) row.remove();
+        updateCostSummary();
+      }
+
+      function onMachineRowChange(rowId) {
+        const m = _runMachines.find(x => x.id === rowId);
+        if (!m) return;
+
+        const sel   = document.getElementById(`machMachine-${rowId}`);
+        const opt   = sel.selectedOptions[0];
+        m.machineId = parseInt(sel.value) || null;
+        m.hours     = parseFloat(document.getElementById(`machHours-${rowId}`).value) || 0;
+
+        const fuelRate = (_currentRates.FUEL || {}).rate || 0;
+
+        if (opt && m.machineId) {
+          const rate  = parseFloat(opt.dataset.rate)  || 0;
+          const maint = parseFloat(opt.dataset.maint) || 0;
+          const fuel  = parseFloat(opt.dataset.fuel)  || 0;
+          const fuelCost = m.hours * fuel * fuelRate;
+          const total = m.hours * (rate + maint) + fuelCost;
+
+          document.getElementById(`machRate-${rowId}`).textContent  = `$${rate.toFixed(2)}`;
+          document.getElementById(`machMaint-${rowId}`).textContent = `$${maint.toFixed(2)}`;
+          document.getElementById(`machFuel-${rowId}`).textContent  = `${fuel.toFixed(1)} L`;
+          document.getElementById(`machTotal-${rowId}`).textContent = `$${total.toFixed(2)}`;
+
+          m.ratePerHour            = rate;
+          m.maintenanceRatePerHour = maint;
+          m.fuelLitresPerHour      = fuel;
+          m.fuelRatePerLitre       = fuelRate;
+          m.totalCost              = total;
+        } else {
+          document.getElementById(`machRate-${rowId}`).textContent  = '—';
+          document.getElementById(`machMaint-${rowId}`).textContent = '—';
+          document.getElementById(`machFuel-${rowId}`).textContent  = '—';
+          document.getElementById(`machTotal-${rowId}`).textContent = '$0.00';
+          m.ratePerHour = m.maintenanceRatePerHour = m.fuelLitresPerHour = m.fuelRatePerLitre = m.totalCost = 0;
+        }
+        updateCostSummary();
+      }
+
+      // ── Live cost summary ─────────────────────────────────────────────
+      function updateCostSummary() {
+        // Sync product row state
+        _runProducts.forEach(p => {
+          const el = document.getElementById(`prodTonnes-${p.id}`);
+          if (el) p.tonnes = parseFloat(el.value) || 0;
+        });
+
+        const totalTonnes = _runProducts.reduce((s, p) => s + p.tonnes, 0);
+        document.getElementById("runTotalTonnes").textContent = totalTonnes.toFixed(1) + ' t';
+
+        // Auto-fill WIP tonnes if empty
+        const wipInput = document.getElementById("runWipTonnes");
+        if (!wipInput.dataset.manuallySet) {
+          wipInput.value = totalTonnes > 0 ? totalTonnes.toFixed(1) : '';
+        }
+
+        const wipTonnes  = parseFloat(document.getElementById("runWipTonnes").value)  || 0;
+        const wipRate    = parseFloat(document.getElementById("runWipRate").value)     || 0;
+        const labHours   = parseFloat(document.getElementById("runLabourHours").value) || 0;
+        const labRate    = parseFloat(document.getElementById("runLabourRate").value)  || 0;
+
+        const wipCost = Math.round(wipTonnes * wipRate * 100) / 100;
+        const labCost = Math.round(labHours  * labRate  * 100) / 100;
+
+        document.getElementById("runWipCost").value    = `$${wipCost.toFixed(2)}`;
+        document.getElementById("runLabourCost").value = `$${labCost.toFixed(2)}`;
+
+        const machineCostTotal = _runMachines.reduce((s, m) => s + (m.totalCost || 0), 0);
+        const totalRunCost     = Math.round((wipCost + labCost + machineCostTotal) * 100) / 100;
+        const costPerTonne     = totalTonnes > 0 ? Math.round((totalRunCost / totalTonnes) * 100) / 100 : 0;
+
+        document.getElementById("summTotalCost").textContent    = `$${totalRunCost.toFixed(2)}`;
+        document.getElementById("summTotalTonnes").textContent  = `${totalTonnes.toFixed(1)} t`;
+        document.getElementById("summCostPerTonne").textContent = `$${costPerTonne.toFixed(2)}`;
+
+        // Product split rows
+        const splitDiv = document.getElementById("productSplitRows");
+        if (totalTonnes > 0 && _runProducts.some(p => p.tonnes > 0)) {
+          splitDiv.innerHTML = _runProducts
+            .filter(p => p.tonnes > 0)
+            .map(p => {
+              const pct  = (p.tonnes / totalTonnes) * 100;
+              const cost = Math.round(totalRunCost * (pct / 100) * 100) / 100;
+              const prod = _allProducts.find(x => x.product_id === p.productId);
+              const name = prod ? prod.product_name : `Product ${p.productId || '?'}`;
+              return `<div style="display:flex;justify-content:space-between;padding:2px 0;color:#374151">
+                <span>${name} (${p.tonnes.toFixed(1)}t — ${pct.toFixed(1)}%)</span>
+                <span style="font-weight:600">$${cost.toFixed(2)} = $${costPerTonne.toFixed(2)}/t</span>
+              </div>`;
+            }).join('');
+        } else {
+          splitDiv.innerHTML = '';
+        }
+      }
+
+      // Track manual WIP override
+      document.getElementById("runWipTonnes").addEventListener("input", function() {
+        this.dataset.manuallySet = this.value ? "1" : "";
+        updateCostSummary();
+      });
+
+      // ── Save ──────────────────────────────────────────────────────────
+      async function saveProductionRun() {
+        // Collect current state
+        _runProducts.forEach(p => {
+          p.productId  = parseInt(document.getElementById(`prodProduct-${p.id}`)?.value)  || null;
+          p.locationId = parseInt(document.getElementById(`prodLocation-${p.id}`)?.value) || null;
+          p.tonnes     = parseFloat(document.getElementById(`prodTonnes-${p.id}`)?.value)  || 0;
+        });
+        _runMachines.forEach(m => {
+          m.machineId = parseInt(document.getElementById(`machMachine-${m.id}`)?.value) || null;
+          m.hours     = parseFloat(document.getElementById(`machHours-${m.id}`)?.value)  || 0;
+        });
+
+        const validProducts = _runProducts.filter(p => p.productId && p.tonnes > 0);
+        const validMachines = _runMachines.filter(m => m.machineId && m.hours > 0);
+
+        if (!document.getElementById("runDate").value) { alert("Production date is required."); return; }
+        if (!validProducts.length)  { alert("At least one product with tonnes is required."); return; }
+        if (!validMachines.length)  { alert("At least one machine with hours is required."); return; }
+
+        const wipTonnes  = parseFloat(document.getElementById("runWipTonnes").value)  || 0;
+        const wipRate    = parseFloat(document.getElementById("runWipRate").value)     || 0;
+        const labHours   = parseFloat(document.getElementById("runLabourHours").value) || 0;
+        const labRate    = parseFloat(document.getElementById("runLabourRate").value)  || 0;
+
+        const fuelRate = (_currentRates.FUEL || {}).rate || 0;
+
+        const payload = {
+          run_date:            document.getElementById("runDate").value,
+          reference_number:    document.getElementById("runReference").value,
+          operator:            document.getElementById("runOperator").value,
+          entry_mode:          document.querySelector('input[name="runEntryMode"]:checked')?.value || 'MANUAL',
+          notes:               document.getElementById("runNotes").value,
+          wip_tonnes_used:     wipTonnes,
+          wip_rate_per_tonne:  wipRate,
+          labour_hours:        labHours,
+          labour_rate_per_hour: labRate,
+          machines: validMachines.map(m => ({
+            machine_id:                m.machineId,
+            hours_used:                m.hours,
+            rate_per_hour:             m.ratePerHour            || 0,
+            maintenance_rate_per_hour: m.maintenanceRatePerHour || 0,
+            fuel_litres_per_hour:      m.fuelLitresPerHour      || 0,
+            fuel_rate_per_litre:       fuelRate,
+            bom_hours_expected:        null,
+            variance_pct:              null,
+            variance_zone:             null
+          })),
+          products: validProducts.map(p => ({
+            product_id:     p.productId,
+            to_location_id: p.locationId,
+            tonnes_produced: p.tonnes
+          }))
+        };
+
+        _pendingSave = payload;
+        await submitProductionRun(payload);
+      }
+
+      async function submitProductionRun(payload) {
+        try {
+          const res    = await fetch("/api/production-runs", {
+            method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(payload)
+          });
+          const result = await res.json();
+
+          if (!res.ok) {
+            alert("Error: " + (result.error || "Failed to save production run"));
+            return;
+          }
+
+          closeProductionRunModal();
+          alert(`✅ Production run saved!\n\nTotal: $${result.total_run_cost.toFixed(2)}\nCost per tonne: $${parseFloat(result.cost_per_tonne).toFixed(2)}\n${result.total_tonnes.toFixed(1)} tonnes produced`);
+          await loadRecentMovementsWithFilter();
+          await loadStats();
+        } catch(e) {
+          console.error("Save error:", e);
+          alert("Failed to save production run. Please try again.");
+        }
+      }
+
+      function closeVarianceModal() { document.getElementById("varianceModal").style.display = "none"; }
+
+      async function proceedAfterVariance() {
+        // Amber: just needs confirmation checkbox
+        const cb = document.getElementById("amberConfirmCheck");
+        if (cb) {
+          if (!cb.checked) { alert("Please confirm you have checked the data entry."); return; }
+          _pendingSave.amber_check_confirmed = true;
+        }
+        // Red: needs override code
+        const codeInput = document.getElementById("redOverrideCode");
+        if (codeInput) {
+          if (!codeInput.value.trim()) { alert("Please enter the manager override code."); return; }
+          _pendingSave.override_required = true;
+          _pendingSave.override_code     = codeInput.value.trim();
+          _pendingSave.override_notes    = document.getElementById("redOverrideNotes")?.value || "";
+        }
+        closeVarianceModal();
+        await submitProductionRun(_pendingSave);
+      }
     </script>
   </body>
 </html>
