@@ -243,7 +243,7 @@ function editProduct(productId) {
 }
 
 async function deleteProduct(productId) {
-  if (!confirm("Are you sure you want to delete this product?")) return;
+  if (!confirm("This will deactivate the product (it won't appear in dropdowns).\n\nThe product and its history will be preserved.\n\nContinue?")) return;
 
   try {
     const response = await fetch(`/api/products/${productId}`, {
@@ -252,13 +252,13 @@ async function deleteProduct(productId) {
 
     if (response.ok) {
       loadProducts();
-      alert("Product deleted successfully!");
+      alert("✅ Product deactivated. Use the Active/Inactive toggle to view or reactivate it.");
     } else {
-      alert("Failed to delete product");
+      alert("Failed to deactivate product");
     }
   } catch (error) {
-    console.error("Error deleting product:", error);
-    alert("Failed to delete product");
+    console.error("Error deactivating product:", error);
+    alert("Failed to deactivate product");
   }
 }
 
