@@ -242,7 +242,6 @@
                 <th style="text-align:left;padding:4px 6px;font-weight:600">Machine</th>
                 <th style="text-align:right;padding:4px 6px;font-weight:600">Hours</th>
                 <th style="text-align:right;padding:4px 6px;font-weight:600">Rate/hr</th>
-                <th style="text-align:right;padding:4px 6px;font-weight:600">Maint/hr</th>
                 <th style="text-align:right;padding:4px 6px;font-weight:600">Fuel L/hr</th>
                 <th style="text-align:right;padding:4px 6px;font-weight:600">Total Cost</th>
                 <th style="width:32px"></th>
@@ -255,6 +254,7 @@
           <button type="button" onclick="addMachineRow()" style="margin-top:8px;background:none;border:1px dashed #adb5bd;border-radius:4px;padding:4px 12px;font-size:12px;color:#6c757d;cursor:pointer;width:100%">
             ➕ Add Machine
           </button>
+          <div style="font-size:11px;color:#6c757d;margin-top:6px;font-style:italic">* Maintenance provision is included in each machine's hourly rate</div>
         </div>
 
         <!-- ── COST SUMMARY ───────────────────────────────────── -->
@@ -680,21 +680,19 @@
       updateHeaderValue();
 
       // ── Override the old openProductionModal ─────────────────────────
-      // (operations.js may define openProductionModal — this overrides it)
       function openProductionModal() { openProductionRunModal(); }
 
       // ── Production Run state ─────────────────────────────────────────
-      let _runProducts  = [];   // { id, productId, locationId, tonnes }
-      let _runMachines  = [];   // { id, machineId, hours }
+      let _runProducts  = [];
+      let _runMachines  = [];
       let _allProducts  = [];
       let _allLocations = [];
       let _allMachines  = [];
-      let _currentRates = {};   // { BLAST_WIP, LABOUR, FUEL }
+      let _currentRates = {};
       let _runRowCounter = 0;
-      let _pendingSave = null;  // holds data when waiting for variance confirmation
+      let _pendingSave = null;
 
       async function openProductionRunModal() {
-        // Load data in parallel
         const [prodRes, locRes, machRes, ratesRes] = await Promise.all([
           fetch("/api/products"),
           fetch("/api/locations?is_active=true"),
@@ -706,7 +704,6 @@
         _allMachines  = await machRes.json();
         _currentRates = await ratesRes.json();
 
-        // Reset state
         _runProducts  = [];
         _runMachines  = [];
         _runRowCounter = 0;
@@ -723,7 +720,6 @@
         document.getElementById("machinesRunTableBody").innerHTML = "";
         document.getElementById("varianceBanner").style.display = "none";
 
-        // Add one product row and one machine row to start
         addProductRow();
         addMachineRow();
         updateCostSummary();
@@ -735,22 +731,17 @@
         document.getElementById("productionRunModal").style.display = "none";
       }
 
-      function onEntryModeChange() {
-        // BOM mode — could pre-fill from BOM templates in future
-        // For now, both modes use same form
-      }
+      function onEntryModeChange() {}
 
       // ── Product rows ─────────────────────────────────────────────────
       function addProductRow() {
         const rowId = ++_runRowCounter;
         _runProducts.push({ id: rowId, productId: null, locationId: null, tonnes: 0 });
 
-        // Build product options
         const prodOpts = _allProducts.map(p =>
           `<option value="${p.product_id}">${p.product_name}</option>`
         ).join('');
 
-        // Build location options — ALL locations, Production Area first
         const prodAreaOpts = _allLocations
           .filter(l => l.location_type === 'PRODUCTION')
           .map(l => `<option value="${l.location_id}">${l.location_name} (Production Area)</option>`)
@@ -816,8 +807,6 @@
           `<option value="${m.machine_id}" data-rate="${m.rate_per_hour}" data-maint="${m.maintenance_rate_per_hour}" data-fuel="${m.fuel_litres_per_hour}">${m.machine_name}</option>`
         ).join('');
 
-        const fuelRate = (_currentRates.FUEL || {}).rate || 0;
-
         const tr = document.createElement('tr');
         tr.id = `mach-row-${rowId}`;
         tr.innerHTML = `
@@ -834,7 +823,6 @@
               oninput="onMachineRowChange(${rowId})" />
           </td>
           <td style="padding:4px 4px;text-align:right;font-size:12px;color:#6c757d" id="machRate-${rowId}">—</td>
-          <td style="padding:4px 4px;text-align:right;font-size:12px;color:#6c757d" id="machMaint-${rowId}">—</td>
           <td style="padding:4px 4px;text-align:right;font-size:12px;color:#6c757d" id="machFuel-${rowId}">—</td>
           <td style="padding:4px 4px;text-align:right;font-weight:600;font-size:13px;color:#155724" id="machTotal-${rowId}">$0.00</td>
           <td style="padding:4px 4px;text-align:center">
@@ -871,7 +859,6 @@
           const total = m.hours * (rate + maint) + fuelCost;
 
           document.getElementById(`machRate-${rowId}`).textContent  = `$${rate.toFixed(2)}`;
-          document.getElementById(`machMaint-${rowId}`).textContent = `$${maint.toFixed(2)}`;
           document.getElementById(`machFuel-${rowId}`).textContent  = `${fuel.toFixed(1)} L`;
           document.getElementById(`machTotal-${rowId}`).textContent = `$${total.toFixed(2)}`;
 
@@ -882,7 +869,6 @@
           m.totalCost              = total;
         } else {
           document.getElementById(`machRate-${rowId}`).textContent  = '—';
-          document.getElementById(`machMaint-${rowId}`).textContent = '—';
           document.getElementById(`machFuel-${rowId}`).textContent  = '—';
           document.getElementById(`machTotal-${rowId}`).textContent = '$0.00';
           m.ratePerHour = m.maintenanceRatePerHour = m.fuelLitresPerHour = m.fuelRatePerLitre = m.totalCost = 0;
@@ -892,7 +878,6 @@
 
       // ── Live cost summary ─────────────────────────────────────────────
       function updateCostSummary() {
-        // Sync product row state
         _runProducts.forEach(p => {
           const el = document.getElementById(`prodTonnes-${p.id}`);
           if (el) p.tonnes = parseFloat(el.value) || 0;
@@ -901,7 +886,6 @@
         const totalTonnes = _runProducts.reduce((s, p) => s + p.tonnes, 0);
         document.getElementById("runTotalTonnes").textContent = totalTonnes.toFixed(1) + ' t';
 
-        // Auto-fill WIP tonnes if empty
         const wipInput = document.getElementById("runWipTonnes");
         if (!wipInput.dataset.manuallySet) {
           wipInput.value = totalTonnes > 0 ? totalTonnes.toFixed(1) : '';
@@ -926,7 +910,6 @@
         document.getElementById("summTotalTonnes").textContent  = `${totalTonnes.toFixed(1)} t`;
         document.getElementById("summCostPerTonne").textContent = `$${costPerTonne.toFixed(2)}`;
 
-        // Product split rows
         const splitDiv = document.getElementById("productSplitRows");
         if (totalTonnes > 0 && _runProducts.some(p => p.tonnes > 0)) {
           splitDiv.innerHTML = _runProducts
@@ -946,7 +929,6 @@
         }
       }
 
-      // Track manual WIP override
       document.getElementById("runWipTonnes").addEventListener("input", function() {
         this.dataset.manuallySet = this.value ? "1" : "";
         updateCostSummary();
@@ -954,7 +936,6 @@
 
       // ── Save ──────────────────────────────────────────────────────────
       async function saveProductionRun() {
-        // Collect current state
         _runProducts.forEach(p => {
           p.productId  = parseInt(document.getElementById(`prodProduct-${p.id}`)?.value)  || null;
           p.locationId = parseInt(document.getElementById(`prodLocation-${p.id}`)?.value) || null;
@@ -976,18 +957,17 @@
         const wipRate    = parseFloat(document.getElementById("runWipRate").value)     || 0;
         const labHours   = parseFloat(document.getElementById("runLabourHours").value) || 0;
         const labRate    = parseFloat(document.getElementById("runLabourRate").value)  || 0;
-
-        const fuelRate = (_currentRates.FUEL || {}).rate || 0;
+        const fuelRate   = (_currentRates.FUEL || {}).rate || 0;
 
         const payload = {
-          run_date:            document.getElementById("runDate").value,
-          reference_number:    document.getElementById("runReference").value,
-          operator:            document.getElementById("runOperator").value,
-          entry_mode:          document.querySelector('input[name="runEntryMode"]:checked')?.value || 'MANUAL',
-          notes:               document.getElementById("runNotes").value,
-          wip_tonnes_used:     wipTonnes,
-          wip_rate_per_tonne:  wipRate,
-          labour_hours:        labHours,
+          run_date:             document.getElementById("runDate").value,
+          reference_number:     document.getElementById("runReference").value,
+          operator:             document.getElementById("runOperator").value,
+          entry_mode:           document.querySelector('input[name="runEntryMode"]:checked')?.value || 'MANUAL',
+          notes:                document.getElementById("runNotes").value,
+          wip_tonnes_used:      wipTonnes,
+          wip_rate_per_tonne:   wipRate,
+          labour_hours:         labHours,
           labour_rate_per_hour: labRate,
           machines: validMachines.map(m => ({
             machine_id:                m.machineId,
@@ -1001,8 +981,8 @@
             variance_zone:             null
           })),
           products: validProducts.map(p => ({
-            product_id:     p.productId,
-            to_location_id: p.locationId,
+            product_id:      p.productId,
+            to_location_id:  p.locationId,
             tonnes_produced: p.tonnes
           }))
         };
@@ -1036,13 +1016,11 @@
       function closeVarianceModal() { document.getElementById("varianceModal").style.display = "none"; }
 
       async function proceedAfterVariance() {
-        // Amber: just needs confirmation checkbox
         const cb = document.getElementById("amberConfirmCheck");
         if (cb) {
           if (!cb.checked) { alert("Please confirm you have checked the data entry."); return; }
           _pendingSave.amber_check_confirmed = true;
         }
-        // Red: needs override code
         const codeInput = document.getElementById("redOverrideCode");
         if (codeInput) {
           if (!codeInput.value.trim()) { alert("Please enter the manager override code."); return; }
