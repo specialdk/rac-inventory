@@ -325,9 +325,7 @@
         </div>
       </div>
 
-      <!-- ============================================================ -->
-      <!-- BOM TEMPLATES SECTION                                         -->
-      <!-- ============================================================ -->
+      <!-- BOM TEMPLATES SECTION -->
       <div id="bom-templates-section" class="maintenance-section" style="display:none">
         <div class="section-header">
           <h2>📋 BOM Templates</h2>
@@ -370,20 +368,15 @@
 
     </div><!-- end .container -->
 
-    <!-- ============================================================ -->
-    <!-- BOM MODAL                                                      -->
-    <!-- ============================================================ -->
+    <!-- BOM MODAL -->
     <div id="bomModal" class="modal">
       <div class="modal-content" style="max-width:640px">
         <div class="modal-header">
           <h2 id="bomModalTitle">Configure BOM Template</h2>
           <button class="modal-close" onclick="closeBomModal()">×</button>
         </div>
-
         <input type="hidden" id="bomProductId" />
         <input type="hidden" id="bomId" />
-
-        <!-- Product info (read-only) -->
         <div style="background:#f8f9fa;border-radius:6px;padding:12px 14px;margin-bottom:1.2rem;display:flex;align-items:center;gap:16px;">
           <div>
             <div style="font-size:12px;color:#6c757d;margin-bottom:2px">Product</div>
@@ -397,8 +390,6 @@
             </label>
           </div>
         </div>
-
-        <!-- Machine selection -->
         <div class="form-group">
           <label class="form-label required">Machine (default for this product)</label>
           <select class="form-control" id="bomMachineId" onchange="onBomMachineChange()">
@@ -406,14 +397,8 @@
           </select>
           <small style="color:#666">Sets default machine in production form. Operator can change per-run.</small>
         </div>
-
-        <!-- Hours inputs -->
         <div style="background:#f8f9fa;border-radius:6px;padding:14px;margin-bottom:1rem;">
-          <div style="font-size:12px;color:#6c757d;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">
-            Standard inputs per tonne produced
-          </div>
-
-          <!-- WIP row — hidden for by-products -->
+          <div style="font-size:12px;color:#6c757d;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">Standard inputs per tonne produced</div>
           <div id="bomWipRow" class="form-row">
             <div class="form-group">
               <label class="form-label">Blast WIP (tonnes / tonne produced)</label>
@@ -425,8 +410,6 @@
               <input type="number" class="form-control" id="bomLabourHours" step="0.001" min="0" value="1.000" onchange="updateBomEstimate()" />
             </div>
           </div>
-
-          <!-- By-product labour row (same field, different label context) -->
           <div id="bomByProductRow" class="form-row" style="display:none">
             <div class="form-group">
               <label class="form-label">Labour (hours / tonne)</label>
@@ -434,7 +417,6 @@
               <small style="color:#666">Handling labour — no WIP material for by-products</small>
             </div>
           </div>
-
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">Machine (hours / tonne)</label>
@@ -447,19 +429,14 @@
               <small style="color:#666" id="bomFuelSmall">Auto-filled from machine — override if needed</small>
             </div>
           </div>
-
           <div class="form-group" style="max-width:240px">
             <label class="form-label">Fuel flat $ per run (optional override)</label>
             <input type="number" class="form-control" id="bomFuelFlat" step="0.01" min="0" value="0.00" onchange="updateBomEstimate()" />
             <small style="color:#666">If set, overrides litres × rate calculation</small>
           </div>
         </div>
-
-        <!-- Live cost estimate -->
         <div id="bomEstimate" style="background:#e8f4e8;border:1px solid #c3e6cb;border-radius:6px;padding:14px;margin-bottom:1rem;display:none;">
-          <div style="font-size:12px;color:#155724;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">
-            📊 Estimated cost per tonne at current rates
-          </div>
+          <div style="font-size:12px;color:#155724;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">📊 Estimated cost per tonne at current rates</div>
           <table style="width:100%;font-size:13px;border-collapse:collapse;">
             <tbody id="bomEstimateRows"></tbody>
             <tr style="border-top:2px solid #c3e6cb;margin-top:6px;">
@@ -467,16 +444,12 @@
               <td style="text-align:right;font-weight:700;font-size:1.15rem;color:#155724;padding:6px 4px 2px" id="bomEstimateTotal">$0.00</td>
             </tr>
           </table>
-          <div style="font-size:11px;color:#6c757d;margin-top:8px;">
-            * Estimate uses current rates. Actual cost is calculated at time of production entry.
-          </div>
+          <div style="font-size:11px;color:#6c757d;margin-top:8px;">* Estimate uses current rates. Actual cost is calculated at time of production entry.</div>
         </div>
-
         <div class="form-group">
           <label class="form-label">Notes</label>
           <textarea class="form-control" id="bomNotes" rows="2" placeholder="e.g. Based on crusher trial run Oct 2025 — review after 10 production runs"></textarea>
         </div>
-
         <div class="modal-footer">
           <button type="button" class="btn-secondary" onclick="closeBomModal()">Cancel</button>
           <button type="button" class="btn-primary" onclick="saveBom()">💾 Save BOM Template</button>
@@ -501,26 +474,22 @@
             <label class="form-label required">Type</label>
             <select class="form-control" id="machineType" required>
               <option value="">Select Type</option>
-              <option value="CRUSHER">Crusher</option>
+              <option value="CRUSHER">Jaw Crusher</option>
+              <option value="IMPACTOR">Impact Crusher</option>
               <option value="SCREEN">Screening Plant</option>
               <option value="EXCAVATOR">Excavator</option>
               <option value="DOZER">Bulldozer</option>
               <option value="LOADER">Loader</option>
+              <option value="STACKER">Stacker</option>
               <option value="GRADER">Grader</option>
               <option value="TRUCK">Truck</option>
               <option value="OTHER">Other</option>
             </select>
           </div>
         </div>
-
-        <!-- Cost component breakdown — Rhian's methodology -->
         <div style="background:#f8f9fa;border-radius:6px;padding:14px;margin-bottom:1rem;">
-          <div style="font-size:12px;color:#6c757d;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">
-            Cost Component Breakdown
-          </div>
-          <div style="font-size:12px;color:#6c757d;margin-bottom:12px;">
-            Based on Rhian's methodology. Components sum to the Machine Rate stored in the system.
-          </div>
+          <div style="font-size:12px;color:#6c757d;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Cost Component Breakdown</div>
+          <div style="font-size:12px;color:#6c757d;margin-bottom:12px;">Based on Rhian's methodology. Components sum to the Machine Rate stored in the system.</div>
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">Machine Recovery ($/hr)</label>
@@ -551,8 +520,6 @@
             <small style="color:#666">Avg litres/hr — costed separately at fuel rate</small>
           </div>
         </div>
-
-        <!-- Live component total preview -->
         <div id="machineCostPreview" style="background:#e8f4e8;border:1px solid #c3e6cb;border-radius:6px;padding:12px 14px;margin-bottom:1rem;font-size:13px;display:none;">
           <table style="width:100%;border-collapse:collapse;font-size:13px;">
             <tr><td style="color:#374151;padding:2px 4px">Machine Recovery</td><td style="text-align:right;padding:2px 4px;color:#374151" id="prevRecovery">$0.00</td></tr>
@@ -566,10 +533,9 @@
           </table>
           <div style="font-size:11px;color:#6c757d;margin-top:6px">* Operator labour tracked separately via production run labour rate</div>
         </div>
-
         <div class="form-group">
           <label class="form-label">Notes</label>
-          <textarea class="form-control" id="machineUserNotes" rows="2" placeholder="e.g. Terex Finlay J-1175 — rates from Rhian's cost model April 2026. Confirm CAT fuel L/hr with Gavin."></textarea>
+          <textarea class="form-control" id="machineUserNotes" rows="2" placeholder="e.g. Terex Finlay J-1175 — rates from Rhian's cost model April 2026."></textarea>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn-secondary" onclick="closeMachineModal()">Cancel</button>
@@ -934,7 +900,6 @@
 
     <script src="/js/maintenance.js"></script>
     <script>
-      // ── Header ──────────────────────────────────────────────────────
       async function updateHeaderValue() {
         try {
           const r = await fetch("/api/stock/summary");
@@ -946,7 +911,6 @@
       }
       updateHeaderValue();
 
-      // ── Production Rates ────────────────────────────────────────────
       let _productionRatesCache = [];
 
       async function loadProductionRates() {
@@ -1010,11 +974,9 @@
         } catch(e) { console.error(e); alert("Failed to save rate."); }
       }
 
-      // ── Machines ────────────────────────────────────────────────────
       let _machinesCache = [];
-      const machineTypeLabels = { CRUSHER:'Crusher', SCREEN:'Screening Plant', EXCAVATOR:'Excavator', DOZER:'Bulldozer', LOADER:'Loader', GRADER:'Grader', TRUCK:'Truck', OTHER:'Other' };
+      const machineTypeLabels = { CRUSHER:'Jaw Crusher', IMPACTOR:'Impact Crusher', SCREEN:'Screening Plant', EXCAVATOR:'Excavator', DOZER:'Bulldozer', LOADER:'Loader', STACKER:'Stacker', GRADER:'Grader', TRUCK:'Truck', OTHER:'Other' };
 
-      // Parse component breakdown stored as JSON in notes field
       function parseMachineComponents(notes) {
         if (!notes) return null;
         try {
@@ -1026,24 +988,20 @@
         return null;
       }
 
-      // Get display notes (user notes portion, stripping JSON components)
       function getMachineDisplayNotes(notes) {
         const parsed = parseMachineComponents(notes);
-        if (parsed) return parsed.n || '—';
-        return notes || '—';
+        if (parsed) return parsed.n || '';
+        return notes || '';
       }
 
-      // Build breakdown tooltip string from components
-      function getMachineBreakdownHtml(notes, rate) {
+      function getMachineBreakdownHtml(notes) {
         const parsed = parseMachineComponents(notes);
-        if (!parsed) return `<span style="color:#6c757d;font-size:12px">—</span>`;
+        if (!parsed) return '<span style="color:#6c757d;font-size:12px">—</span>';
         const rc = (parsed.rc || 0).toFixed(2);
         const os = (parsed.os || 0).toFixed(2);
         const sv = (parsed.sv || 0).toFixed(2);
         const ft = (parsed.ft || 0).toFixed(2);
-        return `<span style="font-size:11px;color:#6c757d;line-height:1.6">
-          Recovery $${rc} · OEM $${os}<br>Support $${sv} · Fitter $${ft}
-        </span>`;
+        return `<span style="font-size:11px;color:#6c757d;line-height:1.6">Recovery $${rc} · OEM $${os}<br>Support $${sv} · Fitter $${ft}</span>`;
       }
 
       async function loadMachines() {
@@ -1056,12 +1014,12 @@
           tbody.innerHTML = _machinesCache.map(m => {
             const rate = parseFloat(m.rate_per_hour);
             const fuel = parseFloat(m.fuel_litres_per_hour);
-            const breakdownHtml = getMachineBreakdownHtml(m.notes, rate);
+            const breakdownHtml = getMachineBreakdownHtml(m.notes);
             const displayNotes  = getMachineDisplayNotes(m.notes);
             return `<tr>
               <td>
                 <span style="font-weight:600;color:#495057">${m.machine_name}</span>
-                ${displayNotes !== '—' ? `<div style="font-size:11px;color:#6c757d;margin-top:2px">${displayNotes}</div>` : ''}
+                ${displayNotes ? `<div style="font-size:11px;color:#6c757d;margin-top:2px">${displayNotes}</div>` : ''}
               </td>
               <td><span style="background:#e9ecef;border-radius:3px;padding:2px 7px;font-size:12px;color:#495057">${machineTypeLabels[m.machine_type]||m.machine_type}</span></td>
               <td style="text-align:right;font-weight:700;font-size:1.05rem;color:${rate===0?'#dc3545':'#28a745'}">$${rate.toFixed(2)}</td>
@@ -1100,28 +1058,25 @@
         document.getElementById("machineName").value = machine ? machine.machine_name : "";
         document.getElementById("machineType").value = machine ? machine.machine_type : "";
         document.getElementById("machineFuelLitres").value = machine ? parseFloat(machine.fuel_litres_per_hour).toFixed(1) : "";
-
-        // Parse stored component breakdown from notes JSON
         const parsed = machine ? parseMachineComponents(machine.notes) : null;
         if (parsed) {
-          document.getElementById("machineRecovery").value    = (parsed.rc || 0).toFixed(2);
+          document.getElementById("machineRecovery").value     = (parsed.rc || 0).toFixed(2);
           document.getElementById("machineOemServicing").value = (parsed.os || 0).toFixed(2);
-          document.getElementById("machineSupport").value     = (parsed.sv || 0).toFixed(2);
-          document.getElementById("machineFitterTA").value    = (parsed.ft || 0).toFixed(2);
-          document.getElementById("machineUserNotes").value   = parsed.n || "";
+          document.getElementById("machineSupport").value      = (parsed.sv || 0).toFixed(2);
+          document.getElementById("machineFitterTA").value     = (parsed.ft || 0).toFixed(2);
+          document.getElementById("machineUserNotes").value    = parsed.n || "";
         } else if (machine) {
-          // Legacy machine — show stored total in Recovery, zeros elsewhere
-          document.getElementById("machineRecovery").value    = parseFloat(machine.rate_per_hour).toFixed(2);
+          document.getElementById("machineRecovery").value     = parseFloat(machine.rate_per_hour).toFixed(2);
           document.getElementById("machineOemServicing").value = "0.00";
-          document.getElementById("machineSupport").value     = "0.00";
-          document.getElementById("machineFitterTA").value    = "0.00";
-          document.getElementById("machineUserNotes").value   = machine.notes || "";
+          document.getElementById("machineSupport").value      = "0.00";
+          document.getElementById("machineFitterTA").value     = "0.00";
+          document.getElementById("machineUserNotes").value    = machine.notes || "";
         } else {
-          document.getElementById("machineRecovery").value    = "";
+          document.getElementById("machineRecovery").value     = "";
           document.getElementById("machineOemServicing").value = "";
-          document.getElementById("machineSupport").value     = "";
-          document.getElementById("machineFitterTA").value    = "";
-          document.getElementById("machineUserNotes").value   = "";
+          document.getElementById("machineSupport").value      = "";
+          document.getElementById("machineFitterTA").value     = "";
+          document.getElementById("machineUserNotes").value    = "";
         }
         updateMachineCostPreview();
         document.getElementById("machineModal").style.display = "flex";
@@ -1143,12 +1098,9 @@
           document.getElementById("prevFitter").textContent   = "$" + ft.toFixed(2);
           document.getElementById("machineCostPreviewValue").textContent = "$" + total.toFixed(2);
           preview.style.display = "block";
-        } else {
-          preview.style.display = "none";
-        }
+        } else { preview.style.display = "none"; }
       }
 
-      // Wire up component inputs for live preview
       ["machineRecovery","machineOemServicing","machineSupport","machineFitterTA"].forEach(id => {
         document.getElementById(id).addEventListener("input", updateMachineCostPreview);
       });
@@ -1161,10 +1113,7 @@
         const ft = parseFloat(document.getElementById("machineFitterTA").value)      || 0;
         const total = rc + os + sv + ft;
         const userNotes = document.getElementById("machineUserNotes").value.trim();
-
-        // Store component breakdown as JSON in notes — preserves Rhian's methodology
         const notesData = JSON.stringify({ rc, os, sv, ft, n: userNotes });
-
         const body = {
           machine_name:              document.getElementById("machineName").value.trim(),
           machine_type:              document.getElementById("machineType").value,
@@ -1185,17 +1134,14 @@
         } catch(e) { console.error(e); alert("Failed to save machine."); }
       }
 
-      // ── BOM Templates ───────────────────────────────────────────────
       let _allProductsForBom = [];
       let _bomCache = [];
-      // rates cached from production rates (BLAST_WIP, LABOUR, FUEL)
       let _bomRates = {};
 
       async function loadBomTemplates() {
         const tbody = document.getElementById("bomTableBody");
         tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:2rem;color:#999">Loading...</td></tr>';
         try {
-          // Load all three in parallel
           const [productsRes, bomsRes, ratesRes, machinesRes] = await Promise.all([
             fetch("/api/products"),
             fetch("/api/production-rates/bom"),
@@ -1205,28 +1151,15 @@
           _allProductsForBom = await productsRes.json();
           _bomCache          = await bomsRes.json();
           _bomRates          = await ratesRes.json();
-          _machinesCache     = await machinesRes.json();  // keep machines in sync
-
-          if (!_allProductsForBom.length) {
-            tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:2rem;color:#999">No products found. Add products first.</td></tr>';
-            return;
-          }
-
+          _machinesCache     = await machinesRes.json();
+          if (!_allProductsForBom.length) { tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:2rem;color:#999">No products found.</td></tr>'; return; }
           tbody.innerHTML = _allProductsForBom.map(product => {
             const bom = _bomCache.find(b => b.product_id === product.product_id);
             const hasBom = !!bom;
-
-            // Status badge
             let statusBadge;
-            if (!hasBom) {
-              statusBadge = `<span style="background:#f8d7da;color:#721c24;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">⚠️ Not configured</span>`;
-            } else if (bom.is_by_product) {
-              statusBadge = `<span style="background:#e2d9f3;color:#4a235a;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">🔄 By-product</span>`;
-            } else {
-              statusBadge = `<span style="background:#d4edda;color:#155724;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">✅ Configured</span>`;
-            }
-
-            // Estimated $/t
+            if (!hasBom) statusBadge = `<span style="background:#f8d7da;color:#721c24;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">⚠️ Not configured</span>`;
+            else if (bom.is_by_product) statusBadge = `<span style="background:#e2d9f3;color:#4a235a;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">🔄 By-product</span>`;
+            else statusBadge = `<span style="background:#d4edda;color:#155724;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">✅ Configured</span>`;
             let estCost = '—';
             if (hasBom && bom.machine_id) {
               const machine = _machinesCache.find(m => m.machine_id === bom.machine_id);
@@ -1237,14 +1170,10 @@
                 const machineCost = machHours * parseFloat(machine.rate_per_hour);
                 const maintCost   = machHours * parseFloat(machine.maintenance_rate_per_hour);
                 const fuelL       = machHours * parseFloat(machine.fuel_litres_per_hour);
-                const fuelCost    = parseFloat(bom.fuel_flat_per_run) > 0
-                  ? parseFloat(bom.fuel_flat_per_run)
-                  : fuelL * ((_bomRates.FUEL||{}).rate||0);
-                const total = wipCost + labourCost + machineCost + maintCost + fuelCost;
-                estCost = `<strong style="color:#155724">$${total.toFixed(2)}</strong>`;
+                const fuelCost    = parseFloat(bom.fuel_flat_per_run) > 0 ? parseFloat(bom.fuel_flat_per_run) : fuelL * ((_bomRates.FUEL||{}).rate||0);
+                estCost = `<strong style="color:#155724">$${(wipCost+labourCost+machineCost+maintCost+fuelCost).toFixed(2)}</strong>`;
               }
             }
-
             return `<tr>
               <td><span style="font-weight:600;color:#495057">${product.product_name}</span></td>
               <td style="font-size:12px;color:#6c757d">${product.family_group||'—'}</td>
@@ -1255,18 +1184,9 @@
               <td style="text-align:right;font-size:12px;color:#6c757d">${hasBom ? parseFloat(bom.machine_hours_per_tonne).toFixed(2) : '—'}</td>
               <td style="text-align:right;font-size:12px">${estCost}</td>
               <td>${statusBadge}</td>
-              <td>
-                <button class="btn-primary btn-sm bom-configure-btn"
-                  data-product-id="${product.product_id}"
-                  data-bom-id="${hasBom ? bom.bom_id : ''}"
-                  style="font-size:11px;padding:4px 10px">
-                  ${hasBom ? '✏️ Edit BOM' : '⚙️ Configure'}
-                </button>
-              </td>
+              <td><button class="btn-primary btn-sm bom-configure-btn" data-product-id="${product.product_id}" data-bom-id="${hasBom ? bom.bom_id : ''}" style="font-size:11px;padding:4px 10px">${hasBom ? '✏️ Edit BOM' : '⚙️ Configure'}</button></td>
             </tr>`;
           }).join('');
-
-          // Wire up buttons using data attributes (safe — no inline params)
           tbody.querySelectorAll('.bom-configure-btn').forEach(btn => {
             btn.addEventListener('click', function() {
               const productId = parseInt(this.dataset.productId);
@@ -1276,64 +1196,35 @@
               openBomModal(product, bom);
             });
           });
-
-          // Summary line
           const configured = _allProductsForBom.filter(p => _bomCache.find(b => b.product_id === p.product_id)).length;
           const total      = _allProductsForBom.length;
-          tbody.innerHTML += `<tr style="background:#f8f9fa">
-            <td colspan="10" style="padding:10px 16px;font-size:13px;color:#6c757d;text-align:right">
-              ${configured} of ${total} products configured
-              ${configured < total ? ` — <span style="color:#721c24">${total-configured} still need BOM setup</span>` : ' — <span style="color:#155724">All products configured ✅</span>'}
-            </td>
-          </tr>`;
-
-        } catch(e) {
-          console.error("BOM load error:", e);
-          tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:2rem;color:#dc3545">Failed to load BOM templates.</td></tr>';
-        }
+          tbody.innerHTML += `<tr style="background:#f8f9fa"><td colspan="10" style="padding:10px 16px;font-size:13px;color:#6c757d;text-align:right">${configured} of ${total} products configured${configured < total ? ` — <span style="color:#721c24">${total-configured} still need BOM setup</span>` : ' — <span style="color:#155724">All products configured ✅</span>'}</td></tr>`;
+        } catch(e) { console.error("BOM load error:", e); tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:2rem;color:#dc3545">Failed to load BOM templates.</td></tr>'; }
       }
 
       function openBomModal(product, bom = null) {
-        // Ensure machines are loaded
         if (!_machinesCache.length) fetch("/api/production-rates/machines").then(r => r.json()).then(d => { _machinesCache = d; });
-
-        document.getElementById("bomModalTitle").textContent  = bom ? `Edit BOM — ${product.product_name}` : `Configure BOM — ${product.product_name}`;
-        document.getElementById("bomProductId").value         = product.product_id;
-        document.getElementById("bomId").value                = bom ? bom.bom_id : "";
-        document.getElementById("bomProductName").textContent = product.product_name;
+        document.getElementById("bomModalTitle").textContent    = bom ? `Edit BOM — ${product.product_name}` : `Configure BOM — ${product.product_name}`;
+        document.getElementById("bomProductId").value           = product.product_id;
+        document.getElementById("bomId").value                  = bom ? bom.bom_id : "";
+        document.getElementById("bomProductName").textContent   = product.product_name;
         document.getElementById("bomProductFamily").textContent = product.family_group || "";
-
         const isByProduct = bom ? bom.is_by_product : false;
         document.getElementById("bomIsByProduct").checked = isByProduct;
-
-        // Populate machine dropdown
         const machineSelect = document.getElementById("bomMachineId");
         machineSelect.innerHTML = '<option value="">— Select Machine —</option>';
-        _machinesCache.forEach(m => {
-          const opt = new Option(`${m.machine_name} ($${parseFloat(m.rate_per_hour).toFixed(0)}/hr)`, m.machine_id);
-          machineSelect.add(opt);
-        });
+        _machinesCache.forEach(m => { machineSelect.add(new Option(`${m.machine_name} ($${parseFloat(m.rate_per_hour).toFixed(0)}/hr)`, m.machine_id)); });
         machineSelect.value = bom && bom.machine_id ? bom.machine_id : "";
-
-        // Fill hours
         document.getElementById("bomWipTonnes").value    = bom ? parseFloat(bom.wip_tonnes_per_tonne).toFixed(3) : "1.000";
         document.getElementById("bomLabourHours").value  = bom ? parseFloat(bom.labour_hours_per_tonne).toFixed(3) : "1.000";
         document.getElementById("bomLabourHoursByProduct").value = bom ? parseFloat(bom.labour_hours_per_tonne).toFixed(3) : "0.500";
         document.getElementById("bomMachineHours").value = bom ? parseFloat(bom.machine_hours_per_tonne).toFixed(3) : "1.000";
-
-        // Auto-fill fuel from machine if not set
         const fuelFromBom = bom ? parseFloat(bom.fuel_litres_per_machine_hour) : 0;
-        if (fuelFromBom > 0) {
-          document.getElementById("bomFuelLitres").value = fuelFromBom.toFixed(1);
-        } else if (bom && bom.machine_id) {
-          const machine = _machinesCache.find(m => m.machine_id === bom.machine_id);
-          document.getElementById("bomFuelLitres").value = machine ? parseFloat(machine.fuel_litres_per_hour).toFixed(1) : "0.0";
-        } else {
-          document.getElementById("bomFuelLitres").value = "0.0";
-        }
+        if (fuelFromBom > 0) { document.getElementById("bomFuelLitres").value = fuelFromBom.toFixed(1); }
+        else if (bom && bom.machine_id) { const machine = _machinesCache.find(m => m.machine_id === bom.machine_id); document.getElementById("bomFuelLitres").value = machine ? parseFloat(machine.fuel_litres_per_hour).toFixed(1) : "0.0"; }
+        else { document.getElementById("bomFuelLitres").value = "0.0"; }
         document.getElementById("bomFuelFlat").value = bom ? parseFloat(bom.fuel_flat_per_run).toFixed(2) : "0.00";
         document.getElementById("bomNotes").value    = bom ? (bom.notes || "") : "";
-
         toggleByProduct();
         updateBomEstimate();
         document.getElementById("bomModal").style.display = "flex";
@@ -1343,18 +1234,16 @@
 
       function toggleByProduct() {
         const isByProduct = document.getElementById("bomIsByProduct").checked;
-        document.getElementById("bomWipRow").style.display        = isByProduct ? "none" : "flex";
-        document.getElementById("bomByProductRow").style.display  = isByProduct ? "flex" : "none";
+        document.getElementById("bomWipRow").style.display       = isByProduct ? "none" : "flex";
+        document.getElementById("bomByProductRow").style.display = isByProduct ? "flex" : "none";
         updateBomEstimate();
       }
 
       function syncByProductLabour() {
-        // Keep the two labour fields in sync for by-products
         document.getElementById("bomLabourHours").value = document.getElementById("bomLabourHoursByProduct").value;
       }
 
       function onBomMachineChange() {
-        // Auto-fill fuel from machine selection
         const machineId = parseInt(document.getElementById("bomMachineId").value);
         if (machineId) {
           const machine = _machinesCache.find(m => m.machine_id === machineId);
@@ -1370,72 +1259,58 @@
         const isByProduct = document.getElementById("bomIsByProduct").checked;
         const machineId   = parseInt(document.getElementById("bomMachineId").value) || 0;
         const machine     = machineId ? _machinesCache.find(m => m.machine_id === machineId) : null;
-
         const wipT      = isByProduct ? 0 : (parseFloat(document.getElementById("bomWipTonnes").value)   || 0);
         const labourH   = parseFloat(document.getElementById("bomLabourHours").value)  || 0;
         const machineH  = parseFloat(document.getElementById("bomMachineHours").value) || 0;
         const fuelL     = parseFloat(document.getElementById("bomFuelLitres").value)   || 0;
         const fuelFlat  = parseFloat(document.getElementById("bomFuelFlat").value)     || 0;
-
         const wipRate     = (_bomRates.BLAST_WIP || {}).rate || 0;
         const labourRate  = (_bomRates.LABOUR    || {}).rate || 0;
         const fuelRate    = (_bomRates.FUEL       || {}).rate || 0;
-
         const machRate  = machine ? parseFloat(machine.rate_per_hour)             : 0;
         const maintRate = machine ? parseFloat(machine.maintenance_rate_per_hour) : 0;
-
         const wipCost     = wipT    * wipRate;
         const labourCost  = labourH * labourRate;
         const machineCost = machineH * machRate;
         const maintCost   = machineH * maintRate;
         const fuelCost    = fuelFlat > 0 ? fuelFlat : (machineH * fuelL * fuelRate);
         const total       = wipCost + labourCost + machineCost + maintCost + fuelCost;
-
         const hasData = total > 0 || machineId > 0;
         const estDiv  = document.getElementById("bomEstimate");
         estDiv.style.display = hasData ? "block" : "none";
         if (!hasData) return;
-
         const rows = [
-          { label: `Blast WIP (${wipT.toFixed(2)}t × $${wipRate.toFixed(2)}/t)`,   cost: wipCost,     show: !isByProduct },
+          { label: `Blast WIP (${wipT.toFixed(2)}t × $${wipRate.toFixed(2)}/t)`,    cost: wipCost,     show: !isByProduct },
           { label: `Labour (${labourH.toFixed(2)}h × $${labourRate.toFixed(2)}/hr)`, cost: labourCost,  show: true },
           { label: `Machine${machine?' — '+machine.machine_name:''} (${machineH.toFixed(2)}h × $${machRate.toFixed(2)}/hr)`, cost: machineCost, show: !!machine },
-          { label: `Maintenance (${machineH.toFixed(2)}h × $${maintRate.toFixed(2)}/hr)`, cost: maintCost,  show: !!machine },
+          { label: `Maintenance (${machineH.toFixed(2)}h × $${maintRate.toFixed(2)}/hr)`, cost: maintCost, show: !!machine },
           { label: fuelFlat > 0 ? `Fuel (flat rate per run)` : `Fuel (${machineH.toFixed(2)}h × ${fuelL.toFixed(1)}L/h × $${fuelRate.toFixed(2)}/L)`, cost: fuelCost, show: fuelCost > 0 },
         ];
-
-        document.getElementById("bomEstimateRows").innerHTML = rows
-          .filter(r => r.show)
-          .map(r => `<tr><td style="padding:3px 4px;color:#374151">${r.label}</td><td style="text-align:right;padding:3px 4px;color:#374151">$${r.cost.toFixed(2)}</td></tr>`)
-          .join('');
+        document.getElementById("bomEstimateRows").innerHTML = rows.filter(r => r.show).map(r => `<tr><td style="padding:3px 4px;color:#374151">${r.label}</td><td style="text-align:right;padding:3px 4px;color:#374151">$${r.cost.toFixed(2)}</td></tr>`).join('');
         document.getElementById("bomEstimateTotal").textContent = `$${total.toFixed(2)}`;
       }
 
-      // Wire up BOM form inputs for live estimate
       ["bomWipTonnes","bomLabourHours","bomMachineHours","bomFuelLitres","bomFuelFlat"].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.addEventListener("input", updateBomEstimate);
       });
 
       async function saveBom() {
-        const productId = document.getElementById("bomProductId").value;
-        const bomId     = document.getElementById("bomId").value;
+        const productId   = document.getElementById("bomProductId").value;
+        const bomId       = document.getElementById("bomId").value;
         const isByProduct = document.getElementById("bomIsByProduct").checked;
-
         const body = {
-          product_id:                  parseInt(productId),
-          is_by_product:               isByProduct,
-          machine_id:                  parseInt(document.getElementById("bomMachineId").value) || null,
-          wip_tonnes_per_tonne:        isByProduct ? 0 : (parseFloat(document.getElementById("bomWipTonnes").value)   || 0),
-          labour_hours_per_tonne:      parseFloat(document.getElementById("bomLabourHours").value)  || 0,
-          machine_hours_per_tonne:     parseFloat(document.getElementById("bomMachineHours").value) || 0,
-          fuel_litres_per_machine_hour:parseFloat(document.getElementById("bomFuelLitres").value)   || 0,
-          fuel_flat_per_run:           parseFloat(document.getElementById("bomFuelFlat").value)     || 0,
-          notes:                       document.getElementById("bomNotes").value.trim()
+          product_id:                   parseInt(productId),
+          is_by_product:                isByProduct,
+          machine_id:                   parseInt(document.getElementById("bomMachineId").value) || null,
+          wip_tonnes_per_tonne:         isByProduct ? 0 : (parseFloat(document.getElementById("bomWipTonnes").value)    || 0),
+          labour_hours_per_tonne:       parseFloat(document.getElementById("bomLabourHours").value)   || 0,
+          machine_hours_per_tonne:      parseFloat(document.getElementById("bomMachineHours").value)  || 0,
+          fuel_litres_per_machine_hour: parseFloat(document.getElementById("bomFuelLitres").value)    || 0,
+          fuel_flat_per_run:            parseFloat(document.getElementById("bomFuelFlat").value)      || 0,
+          notes:                        document.getElementById("bomNotes").value.trim()
         };
-
         if (!body.product_id) { alert("Product is required."); return; }
-
         try {
           const url    = bomId ? `/api/production-rates/bom/${bomId}` : "/api/production-rates/bom";
           const method = bomId ? "PUT" : "POST";
