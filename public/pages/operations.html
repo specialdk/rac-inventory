@@ -47,31 +47,26 @@
           <div class="action-card-title">Production Entry</div>
           <div class="action-card-description">Record a production run — multiple products, machines and costs</div>
         </div>
-
         <div class="action-card demand" onclick="openDemandManagement()">
           <div class="action-card-icon">📋</div>
           <div class="action-card-title">Manage Demands</div>
           <div class="action-card-description">Create, edit, and cancel forward orders</div>
         </div>
-
         <div class="action-card success" onclick="openSalesModal()">
           <div class="action-card-icon">💰</div>
           <div class="action-card-title">Sales Entry</div>
           <div class="action-card-description">Record customer sales and deliveries</div>
         </div>
-
         <div class="action-card info" onclick="window.location.href='stocktake.html'">
           <div class="action-card-icon">📊</div>
           <div class="action-card-title">Stocktake</div>
           <div class="action-card-description">Adjust inventory to match physical stocktake</div>
         </div>
-
         <div class="action-card warning" onclick="openAdjustmentModal()">
           <div class="action-card-icon">⚖️</div>
           <div class="action-card-title">Stock Adjustment</div>
           <div class="action-card-description">Adjust stock levels or transfer between locations</div>
         </div>
-
         <div class="action-card info" onclick="openTareWeightModal()">
           <div class="action-card-icon">🚛</div>
           <div class="action-card-title">Record Tare Weight</div>
@@ -123,11 +118,9 @@
       </div>
     </div>
 
-    <!-- ============================================================ -->
-    <!-- PRODUCTION RUN MODAL                                          -->
-    <!-- ============================================================ -->
+    <!-- PRODUCTION RUN MODAL -->
     <div id="productionRunModal" class="modal">
-      <div class="modal-content" style="max-width:860px;max-height:92vh;overflow-y:auto">
+      <div class="modal-content" style="max-width:900px;max-height:92vh;overflow-y:auto">
         <div class="modal-header">
           <h2>📦 Production Run Entry</h2>
           <button class="modal-close" onclick="closeProductionRunModal()">×</button>
@@ -165,7 +158,7 @@
           </label>
         </div>
 
-        <!-- ── PRODUCTS PRODUCED ──────────────────────────────── -->
+        <!-- PRODUCTS PRODUCED -->
         <div style="background:#f8f9fa;border-radius:6px;padding:14px;margin-bottom:1rem">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
             <div style="font-size:12px;color:#6c757d;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Products Produced</div>
@@ -177,24 +170,23 @@
                 <th style="text-align:left;padding:4px 6px;font-weight:600">Product</th>
                 <th style="text-align:left;padding:4px 6px;font-weight:600">Location</th>
                 <th style="text-align:right;padding:4px 6px;font-weight:600">Tonnes</th>
+                <th style="text-align:center;padding:4px 6px;font-weight:600;width:100px">By-Product?</th>
                 <th style="width:32px"></th>
               </tr>
             </thead>
-            <tbody id="productsTableBody">
-              <!-- rows added by JS -->
-            </tbody>
+            <tbody id="productsTableBody"></tbody>
           </table>
           <button type="button" onclick="addProductRow()" style="margin-top:8px;background:none;border:1px dashed #adb5bd;border-radius:4px;padding:4px 12px;font-size:12px;color:#6c757d;cursor:pointer;width:100%">
             ➕ Add Product
           </button>
+          <div style="font-size:11px;color:#6c757d;margin-top:6px;font-style:italic">* By-products receive standard cost as a credit — reducing net cost to primary products</div>
         </div>
 
-        <!-- ── RESOURCES ─────────────────────────────────────── -->
+        <!-- RESOURCES -->
         <div style="background:#f8f9fa;border-radius:6px;padding:14px;margin-bottom:1rem">
           <div style="font-size:12px;color:#6c757d;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">
             Resources — hours used in THIS run only (not full day)
           </div>
-
           <!-- WIP -->
           <div style="display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:8px;align-items:end;margin-bottom:10px">
             <div class="form-group" style="margin:0">
@@ -213,7 +205,6 @@
               <input type="text" class="form-control" id="runWipCost" readonly style="background:#e9ecef;font-weight:600;color:#155724" value="$0.00" />
             </div>
           </div>
-
           <!-- Labour -->
           <div style="display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:8px;align-items:end;margin-bottom:10px">
             <div class="form-group" style="margin:0">
@@ -231,11 +222,8 @@
               <input type="text" class="form-control" id="runLabourCost" readonly style="background:#e9ecef;font-weight:600;color:#155724" value="$0.00" />
             </div>
           </div>
-
           <!-- Machines -->
-          <div style="font-size:11px;color:#6c757d;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;margin-top:4px">
-            Machines
-          </div>
+          <div style="font-size:11px;color:#6c757d;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;margin-top:4px">Machines</div>
           <table style="width:100%;border-collapse:collapse" id="machinesRunTable">
             <thead>
               <tr style="font-size:11px;color:#6c757d;text-transform:uppercase">
@@ -247,9 +235,7 @@
                 <th style="width:32px"></th>
               </tr>
             </thead>
-            <tbody id="machinesRunTableBody">
-              <!-- rows added by JS -->
-            </tbody>
+            <tbody id="machinesRunTableBody"></tbody>
           </table>
           <button type="button" onclick="addMachineRow()" style="margin-top:8px;background:none;border:1px dashed #adb5bd;border-radius:4px;padding:4px 12px;font-size:12px;color:#6c757d;cursor:pointer;width:100%">
             ➕ Add Machine
@@ -257,11 +243,9 @@
           <div style="font-size:11px;color:#6c757d;margin-top:6px;font-style:italic">* Maintenance provision is included in each machine's hourly rate</div>
         </div>
 
-        <!-- ── COST SUMMARY ───────────────────────────────────── -->
+        <!-- COST SUMMARY -->
         <div id="costSummaryPanel" style="background:#e8f4e8;border:1px solid #c3e6cb;border-radius:6px;padding:14px;margin-bottom:1rem">
-          <div style="font-size:12px;color:#155724;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">
-            📊 Cost Summary
-          </div>
+          <div style="font-size:12px;color:#155724;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">📊 Cost Summary</div>
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px">
             <div style="text-align:center">
               <div style="font-size:12px;color:#6c757d;margin-bottom:4px">Total Run Cost</div>
@@ -272,15 +256,26 @@
               <div id="summTotalTonnes" style="font-size:1.4rem;font-weight:700;color:#212529">0.0 t</div>
             </div>
             <div style="text-align:center">
-              <div style="font-size:12px;color:#6c757d;margin-bottom:4px">Cost Per Tonne</div>
+              <div style="font-size:12px;color:#6c757d;margin-bottom:4px">Cost Per Tonne (primaries)</div>
               <div id="summCostPerTonne" style="font-size:1.4rem;font-weight:700;color:#155724">$0.00</div>
+            </div>
+          </div>
+          <!-- By-product credit row — only shown when by-products present -->
+          <div id="summByProductRow" style="display:none;border-top:1px solid #c3e6cb;padding-top:8px;margin-bottom:8px;font-size:13px">
+            <div style="display:flex;justify-content:space-between;color:#856404;background:#fff3cd;border-radius:4px;padding:6px 10px;margin-bottom:4px">
+              <span>Less: By-product credits</span>
+              <span id="summByProductCredit" style="font-weight:600">-$0.00</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;color:#155724;font-weight:600;padding:4px 10px">
+              <span>Net cost to primary products</span>
+              <span id="summNetCost">$0.00</span>
             </div>
           </div>
           <!-- Product cost split -->
           <div id="productSplitRows" style="border-top:1px solid #c3e6cb;padding-top:10px;font-size:13px"></div>
         </div>
 
-        <!-- Variance warning banner (hidden until needed) -->
+        <!-- Variance warning banner -->
         <div id="varianceBanner" style="display:none;border-radius:6px;padding:12px 14px;margin-bottom:1rem;font-size:13px"></div>
 
         <!-- Notes -->
@@ -667,7 +662,6 @@
     <script src="/js/quick-add.js"></script>
 
     <script>
-      // ── Header value ────────────────────────────────────────────────
       async function updateHeaderValue() {
         try {
           const r = await fetch("/api/stock/summary");
@@ -679,10 +673,8 @@
       }
       updateHeaderValue();
 
-      // ── Override the old openProductionModal ─────────────────────────
       function openProductionModal() { openProductionRunModal(); }
 
-      // ── Production Run state ─────────────────────────────────────────
       let _runProducts  = [];
       let _runMachines  = [];
       let _allProducts  = [];
@@ -723,7 +715,6 @@
         addProductRow();
         addMachineRow();
         updateCostSummary();
-
         document.getElementById("productionRunModal").style.display = "flex";
       }
 
@@ -736,10 +727,10 @@
       // ── Product rows ─────────────────────────────────────────────────
       function addProductRow() {
         const rowId = ++_runRowCounter;
-        _runProducts.push({ id: rowId, productId: null, locationId: null, tonnes: 0 });
+        _runProducts.push({ id: rowId, productId: null, locationId: null, tonnes: 0, isByProduct: false, creditRate: 0 });
 
         const prodOpts = _allProducts.map(p =>
-          `<option value="${p.product_id}">${p.product_name}</option>`
+          `<option value="${p.product_id}" data-stdcost="${p.standard_cost || 0}">${p.product_name}</option>`
         ).join('');
 
         const prodAreaOpts = _allLocations
@@ -757,8 +748,7 @@
           <td style="padding:4px 4px">
             <select class="form-control" id="prodProduct-${rowId}" style="font-size:13px"
               onchange="onProductRowChange(${rowId})">
-              <option value="">Select Product</option>
-              ${prodOpts}
+              <option value="">Select Product</option>${prodOpts}
             </select>
           </td>
           <td style="padding:4px 4px">
@@ -773,6 +763,18 @@
             <input type="number" class="form-control" id="prodTonnes-${rowId}"
               step="0.1" min="0" placeholder="0.0" style="text-align:right;font-size:13px;width:90px"
               oninput="onProductRowChange(${rowId})" />
+          </td>
+          <td style="padding:4px 8px;text-align:center;vertical-align:middle">
+            <label style="display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer">
+              <input type="checkbox" id="prodByProduct-${rowId}"
+                onchange="onByProductToggle(${rowId})" style="cursor:pointer;width:16px;height:16px" />
+              <span id="prodCreditRateWrap-${rowId}" style="display:none;margin-top:2px">
+                <input type="number" id="prodCreditRate-${rowId}" step="0.01" min="0"
+                  placeholder="$/t" title="Credit rate (standard cost)"
+                  style="width:64px;font-size:11px;text-align:right;border:1px solid #ffc107;border-radius:3px;padding:2px 4px;background:#fff3cd"
+                  oninput="onProductRowChange(${rowId})" />
+              </span>
+            </label>
           </td>
           <td style="padding:4px 4px;text-align:center">
             <button type="button" onclick="removeProductRow(${rowId})"
@@ -789,12 +791,50 @@
         updateCostSummary();
       }
 
+      function onByProductToggle(rowId) {
+        const cb   = document.getElementById(`prodByProduct-${rowId}`);
+        const wrap = document.getElementById(`prodCreditRateWrap-${rowId}`);
+        const p    = _runProducts.find(x => x.id === rowId);
+        if (!p) return;
+
+        p.isByProduct = cb.checked;
+        wrap.style.display = cb.checked ? 'block' : 'none';
+
+        // Auto-fill credit rate from product's standard cost
+        if (cb.checked && p.productId) {
+          const creditInput = document.getElementById(`prodCreditRate-${rowId}`);
+          if (!creditInput.value) {
+            const sel = document.getElementById(`prodProduct-${rowId}`);
+            const opt = sel.selectedOptions[0];
+            const stdCost = parseFloat(opt?.dataset?.stdcost || 0);
+            if (stdCost > 0) creditInput.value = stdCost.toFixed(2);
+          }
+          p.creditRate = parseFloat(document.getElementById(`prodCreditRate-${rowId}`).value) || 0;
+        } else {
+          p.creditRate = 0;
+        }
+        updateCostSummary();
+      }
+
       function onProductRowChange(rowId) {
         const p = _runProducts.find(x => x.id === rowId);
         if (!p) return;
-        p.productId  = parseInt(document.getElementById(`prodProduct-${rowId}`).value)  || null;
+        const sel = document.getElementById(`prodProduct-${rowId}`);
+        p.productId  = parseInt(sel.value) || null;
         p.locationId = parseInt(document.getElementById(`prodLocation-${rowId}`).value) || null;
         p.tonnes     = parseFloat(document.getElementById(`prodTonnes-${rowId}`).value)  || 0;
+        p.isByProduct = document.getElementById(`prodByProduct-${rowId}`)?.checked || false;
+        p.creditRate  = parseFloat(document.getElementById(`prodCreditRate-${rowId}`)?.value) || 0;
+
+        // If by-product and credit rate is empty, auto-fill from standard cost
+        if (p.isByProduct && p.creditRate === 0 && p.productId) {
+          const opt = sel.selectedOptions[0];
+          const stdCost = parseFloat(opt?.dataset?.stdcost || 0);
+          if (stdCost > 0) {
+            document.getElementById(`prodCreditRate-${rowId}`).value = stdCost.toFixed(2);
+            p.creditRate = stdCost;
+          }
+        }
         updateCostSummary();
       }
 
@@ -813,8 +853,7 @@
           <td style="padding:4px 4px">
             <select class="form-control" id="machMachine-${rowId}" style="font-size:13px"
               onchange="onMachineRowChange(${rowId})">
-              <option value="">Select Machine</option>
-              ${machOpts}
+              <option value="">Select Machine</option>${machOpts}
             </select>
           </td>
           <td style="padding:4px 4px;text-align:right">
@@ -843,12 +882,10 @@
       function onMachineRowChange(rowId) {
         const m = _runMachines.find(x => x.id === rowId);
         if (!m) return;
-
         const sel   = document.getElementById(`machMachine-${rowId}`);
         const opt   = sel.selectedOptions[0];
         m.machineId = parseInt(sel.value) || null;
         m.hours     = parseFloat(document.getElementById(`machHours-${rowId}`).value) || 0;
-
         const fuelRate = (_currentRates.FUEL || {}).rate || 0;
 
         if (opt && m.machineId) {
@@ -857,16 +894,11 @@
           const fuel  = parseFloat(opt.dataset.fuel)  || 0;
           const fuelCost = m.hours * fuel * fuelRate;
           const total = m.hours * (rate + maint) + fuelCost;
-
           document.getElementById(`machRate-${rowId}`).textContent  = `$${rate.toFixed(2)}`;
           document.getElementById(`machFuel-${rowId}`).textContent  = `${fuel.toFixed(1)} L`;
           document.getElementById(`machTotal-${rowId}`).textContent = `$${total.toFixed(2)}`;
-
-          m.ratePerHour            = rate;
-          m.maintenanceRatePerHour = maint;
-          m.fuelLitresPerHour      = fuel;
-          m.fuelRatePerLitre       = fuelRate;
-          m.totalCost              = total;
+          m.ratePerHour = rate; m.maintenanceRatePerHour = maint;
+          m.fuelLitresPerHour = fuel; m.fuelRatePerLitre = fuelRate; m.totalCost = total;
         } else {
           document.getElementById(`machRate-${rowId}`).textContent  = '—';
           document.getElementById(`machFuel-${rowId}`).textContent  = '—';
@@ -883,7 +915,8 @@
           if (el) p.tonnes = parseFloat(el.value) || 0;
         });
 
-        const totalTonnes = _runProducts.reduce((s, p) => s + p.tonnes, 0);
+        const totalTonnes   = _runProducts.reduce((s, p) => s + p.tonnes, 0);
+        const primaryTonnes = _runProducts.filter(p => !p.isByProduct).reduce((s, p) => s + p.tonnes, 0);
         document.getElementById("runTotalTonnes").textContent = totalTonnes.toFixed(1) + ' t';
 
         const wipInput = document.getElementById("runWipTonnes");
@@ -891,10 +924,10 @@
           wipInput.value = totalTonnes > 0 ? totalTonnes.toFixed(1) : '';
         }
 
-        const wipTonnes  = parseFloat(document.getElementById("runWipTonnes").value)  || 0;
-        const wipRate    = parseFloat(document.getElementById("runWipRate").value)     || 0;
-        const labHours   = parseFloat(document.getElementById("runLabourHours").value) || 0;
-        const labRate    = parseFloat(document.getElementById("runLabourRate").value)  || 0;
+        const wipTonnes = parseFloat(document.getElementById("runWipTonnes").value)  || 0;
+        const wipRate   = parseFloat(document.getElementById("runWipRate").value)     || 0;
+        const labHours  = parseFloat(document.getElementById("runLabourHours").value) || 0;
+        const labRate   = parseFloat(document.getElementById("runLabourRate").value)  || 0;
 
         const wipCost = Math.round(wipTonnes * wipRate * 100) / 100;
         const labCost = Math.round(labHours  * labRate  * 100) / 100;
@@ -904,26 +937,51 @@
 
         const machineCostTotal = _runMachines.reduce((s, m) => s + (m.totalCost || 0), 0);
         const totalRunCost     = Math.round((wipCost + labCost + machineCostTotal) * 100) / 100;
-        const costPerTonne     = totalTonnes > 0 ? Math.round((totalRunCost / totalTonnes) * 100) / 100 : 0;
+
+        // By-product credit calculation
+        const byProductCreditTotal = Math.round(
+          _runProducts.filter(p => p.isByProduct).reduce((s, p) => s + (p.tonnes * p.creditRate), 0) * 100
+        ) / 100;
+        const netCostAfterCredits  = Math.round((totalRunCost - byProductCreditTotal) * 100) / 100;
+        const costPerTonne         = primaryTonnes > 0
+          ? Math.round((netCostAfterCredits / primaryTonnes) * 100) / 100
+          : 0;
 
         document.getElementById("summTotalCost").textContent    = `$${totalRunCost.toFixed(2)}`;
         document.getElementById("summTotalTonnes").textContent  = `${totalTonnes.toFixed(1)} t`;
         document.getElementById("summCostPerTonne").textContent = `$${costPerTonne.toFixed(2)}`;
 
+        // Show/hide by-product credit row
+        const byProductRow = document.getElementById("summByProductRow");
+        if (byProductCreditTotal > 0) {
+          byProductRow.style.display = 'block';
+          document.getElementById("summByProductCredit").textContent = `-$${byProductCreditTotal.toFixed(2)}`;
+          document.getElementById("summNetCost").textContent         = `$${netCostAfterCredits.toFixed(2)}`;
+        } else {
+          byProductRow.style.display = 'none';
+        }
+
+        // Product split rows
         const splitDiv = document.getElementById("productSplitRows");
         if (totalTonnes > 0 && _runProducts.some(p => p.tonnes > 0)) {
-          splitDiv.innerHTML = _runProducts
-            .filter(p => p.tonnes > 0)
-            .map(p => {
-              const pct  = (p.tonnes / totalTonnes) * 100;
-              const cost = Math.round(totalRunCost * (pct / 100) * 100) / 100;
-              const prod = _allProducts.find(x => x.product_id === p.productId);
-              const name = prod ? prod.product_name : `Product ${p.productId || '?'}`;
+          splitDiv.innerHTML = _runProducts.filter(p => p.tonnes > 0).map(p => {
+            const prod = _allProducts.find(x => x.product_id === p.productId);
+            const name = prod ? prod.product_name : `Product ${p.productId || '?'}`;
+            if (p.isByProduct) {
+              const credit = Math.round(p.tonnes * p.creditRate * 100) / 100;
+              return `<div style="display:flex;justify-content:space-between;padding:2px 0;color:#856404">
+                <span>🔄 ${name} (${p.tonnes.toFixed(1)}t — by-product)</span>
+                <span style="font-weight:600">credit $${credit.toFixed(2)} @ $${p.creditRate.toFixed(2)}/t</span>
+              </div>`;
+            } else {
+              const pct  = primaryTonnes > 0 ? (p.tonnes / primaryTonnes) * 100 : 0;
+              const cost = Math.round(netCostAfterCredits * (pct / 100) * 100) / 100;
               return `<div style="display:flex;justify-content:space-between;padding:2px 0;color:#374151">
                 <span>${name} (${p.tonnes.toFixed(1)}t — ${pct.toFixed(1)}%)</span>
                 <span style="font-weight:600">$${cost.toFixed(2)} = $${costPerTonne.toFixed(2)}/t</span>
               </div>`;
-            }).join('');
+            }
+          }).join('');
         } else {
           splitDiv.innerHTML = '';
         }
@@ -937,9 +995,11 @@
       // ── Save ──────────────────────────────────────────────────────────
       async function saveProductionRun() {
         _runProducts.forEach(p => {
-          p.productId  = parseInt(document.getElementById(`prodProduct-${p.id}`)?.value)  || null;
-          p.locationId = parseInt(document.getElementById(`prodLocation-${p.id}`)?.value) || null;
-          p.tonnes     = parseFloat(document.getElementById(`prodTonnes-${p.id}`)?.value)  || 0;
+          p.productId    = parseInt(document.getElementById(`prodProduct-${p.id}`)?.value)  || null;
+          p.locationId   = parseInt(document.getElementById(`prodLocation-${p.id}`)?.value) || null;
+          p.tonnes       = parseFloat(document.getElementById(`prodTonnes-${p.id}`)?.value)  || 0;
+          p.isByProduct  = document.getElementById(`prodByProduct-${p.id}`)?.checked || false;
+          p.creditRate   = parseFloat(document.getElementById(`prodCreditRate-${p.id}`)?.value) || 0;
         });
         _runMachines.forEach(m => {
           m.machineId = parseInt(document.getElementById(`machMachine-${m.id}`)?.value) || null;
@@ -953,11 +1013,15 @@
         if (!validProducts.length)  { alert("At least one product with tonnes is required."); return; }
         if (!validMachines.length)  { alert("At least one machine with hours is required."); return; }
 
-        const wipTonnes  = parseFloat(document.getElementById("runWipTonnes").value)  || 0;
-        const wipRate    = parseFloat(document.getElementById("runWipRate").value)     || 0;
-        const labHours   = parseFloat(document.getElementById("runLabourHours").value) || 0;
-        const labRate    = parseFloat(document.getElementById("runLabourRate").value)  || 0;
-        const fuelRate   = (_currentRates.FUEL || {}).rate || 0;
+        // Validate: must have at least one primary product
+        const hasPrimary = validProducts.some(p => !p.isByProduct);
+        if (!hasPrimary) { alert("At least one primary product (non-by-product) is required."); return; }
+
+        const wipTonnes = parseFloat(document.getElementById("runWipTonnes").value)  || 0;
+        const wipRate   = parseFloat(document.getElementById("runWipRate").value)     || 0;
+        const labHours  = parseFloat(document.getElementById("runLabourHours").value) || 0;
+        const labRate   = parseFloat(document.getElementById("runLabourRate").value)  || 0;
+        const fuelRate  = (_currentRates.FUEL || {}).rate || 0;
 
         const payload = {
           run_date:             document.getElementById("runDate").value,
@@ -981,9 +1045,11 @@
             variance_zone:             null
           })),
           products: validProducts.map(p => ({
-            product_id:      p.productId,
-            to_location_id:  p.locationId,
-            tonnes_produced: p.tonnes
+            product_id:              p.productId,
+            to_location_id:          p.locationId,
+            tonnes_produced:         p.tonnes,
+            is_by_product:           p.isByProduct || false,
+            credit_rate_per_tonne:   p.creditRate  || 0
           }))
         };
 
@@ -1004,7 +1070,10 @@
           }
 
           closeProductionRunModal();
-          alert(`✅ Production run saved!\n\nTotal: $${result.total_run_cost.toFixed(2)}\nCost per tonne: $${parseFloat(result.cost_per_tonne).toFixed(2)}\n${result.total_tonnes.toFixed(1)} tonnes produced`);
+          const creditLine = (result.by_product_credit_total || 0) > 0
+            ? `\nBy-product credit: -$${parseFloat(result.by_product_credit_total).toFixed(2)}\nNet cost to primaries: $${parseFloat(result.net_cost_after_credits).toFixed(2)}`
+            : '';
+          alert(`✅ Production run saved!\n\nGross run cost: $${result.total_run_cost.toFixed(2)}${creditLine}\nCost per tonne: $${parseFloat(result.cost_per_tonne).toFixed(2)}\n${result.total_tonnes.toFixed(1)} tonnes produced`);
           await loadRecentMovementsWithFilter();
           await loadStats();
         } catch(e) {
