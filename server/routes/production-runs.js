@@ -23,12 +23,15 @@ router.get('/', async (req, res) => {
       SELECT
         pr.run_id, pr.run_date, pr.operator, pr.reference_number,
         pr.entry_mode, pr.wip_tonnes_used, pr.labour_hours,
-        pr.total_run_cost, pr.variance_zone, pr.override_required,
+        pr.total_run_cost, pr.by_product_credit_total, pr.net_cost_after_credits,
+        pr.variance_zone, pr.override_required,
         pr.notes, pr.created_at,
         STRING_AGG(DISTINCT p.product_name, ', ' ORDER BY p.product_name) AS products_made,
         SUM(prp.tonnes_produced) AS total_tonnes,
-        CASE WHEN SUM(prp.tonnes_produced) > 0
-          THEN ROUND(pr.total_run_cost / SUM(prp.tonnes_produced), 4)
+        SUM(CASE WHEN prp.is_by_product THEN prp.tonnes_produced ELSE 0 END) AS by_product_tonnes,
+        CASE WHEN SUM(CASE WHEN NOT prp.is_by_product THEN prp.tonnes_produced ELSE 0 END) > 0
+          THEN ROUND(COALESCE(pr.net_cost_after_credits, pr.total_run_cost) /
+               SUM(CASE WHEN NOT prp.is_by_product THEN prp.tonnes_produced ELSE 0 END), 4)
           ELSE 0
         END AS cost_per_tonne
       FROM production_runs pr
@@ -137,7 +140,27 @@ router.post('/', async (req, res) => {
 
     const machineTotalCost = machineRows.reduce((s, m) => s + m.total_cost, 0);
     const totalRunCost     = Math.round((wipCost + labCost + machineTotalCost) * 100) / 100;
-    const costPerTonne     = totalTonnes > 0 ? Math.round((totalRunCost / totalTonnes) * 10000) / 10000 : 0;
+
+    // ── By-product credit calculation ────────────────────────
+    // By-products receive their standard cost as a credit, reducing cost to primaries
+    const byProductRows = products.filter(p => p.is_by_product);
+    const primaryRows   = products.filter(p => !p.is_by_product);
+
+    const byProductCreditTotal = Math.round(
+      byProductRows.reduce((s, p) => {
+        const tonnes     = parseFloat(p.tonnes_produced || 0);
+        const creditRate = parseFloat(p.credit_rate_per_tonne || 0);
+        return s + (tonnes * creditRate);
+      }, 0) * 100
+    ) / 100;
+
+    const netCostAfterCredits = Math.round((totalRunCost - byProductCreditTotal) * 100) / 100;
+
+    // Primary products share the net cost; by-products use their credit rate
+    const primaryTonnes   = primaryRows.reduce((s, p) => s + parseFloat(p.tonnes_produced || 0), 0);
+    const costPerTonne    = primaryTonnes > 0
+      ? Math.round((netCostAfterCredits / primaryTonnes) * 10000) / 10000
+      : 0;
 
     // ── Insert production_runs header ─────────────────────────
     const runResult = await client.query(`
@@ -145,17 +168,17 @@ router.post('/', async (req, res) => {
         run_date, operator, reference_number, entry_mode,
         wip_tonnes_used, wip_rate_per_tonne, wip_total_cost,
         labour_hours, labour_rate_per_hour, labour_total_cost,
-        total_run_cost,
+        total_run_cost, by_product_credit_total, net_cost_after_credits,
         variance_zone, amber_check_confirmed,
         override_required, override_code, override_notes, override_by,
         notes
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)
       RETURNING run_id
     `, [
       run_date, operator || null, reference_number || null, entry_mode || 'MANUAL',
       wipT, wipRate, wipCost,
       labHrs, labRate, labCost,
-      totalRunCost,
+      totalRunCost, byProductCreditTotal, netCostAfterCredits,
       variance_zone || null, amber_check_confirmed || false,
       override_required || false, override_code || null, override_notes || null, override_by || null,
       notes || null
@@ -185,12 +208,31 @@ router.post('/', async (req, res) => {
 
     // ── Insert product rows + stock movements ─────────────────
     for (const p of products) {
-      const tonnes        = parseFloat(p.tonnes_produced) || 0;
-      const sharePct      = totalTonnes > 0 ? Math.round((tonnes / totalTonnes) * 1000000) / 10000 : 0;
-      const costAllocated = Math.round(totalRunCost * (sharePct / 100) * 100) / 100;
-      const costPerT      = tonnes > 0 ? Math.round((costAllocated / tonnes) * 10000) / 10000 : 0;
+      const tonnes       = parseFloat(p.tonnes_produced) || 0;
+      const isByProduct  = !!p.is_by_product;
+      const creditRate   = isByProduct ? (parseFloat(p.credit_rate_per_tonne) || 0) : 0;
+      const creditTotal  = isByProduct ? Math.round(tonnes * creditRate * 100) / 100 : 0;
 
-      // Get existing stock for weighted average and audit trail
+      // Cost allocation:
+      //   By-products: valued at their standard cost (credit rate)
+      //   Primaries: share net cost proportionally by weight among primaries only
+      let costPerT, costAllocated, sharePct;
+
+      if (isByProduct) {
+        costPerT      = creditRate;
+        costAllocated = creditTotal;
+        sharePct      = 0; // by-products don't take a share of the run cost
+      } else {
+        sharePct      = primaryTonnes > 0
+          ? Math.round((tonnes / primaryTonnes) * 1000000) / 10000
+          : 0;
+        costAllocated = Math.round(netCostAfterCredits * (sharePct / 100) * 100) / 100;
+        costPerT      = tonnes > 0
+          ? Math.round((costAllocated / tonnes) * 10000) / 10000
+          : 0;
+      }
+
+      // Get existing stock for weighted average
       const existingStock = await client.query(
         'SELECT quantity, average_cost FROM current_stock WHERE product_id = $1 AND location_id = $2',
         [p.product_id, p.to_location_id]
@@ -204,7 +246,7 @@ router.post('/', async (req, res) => {
         ? Math.round(((prevAvgCost * prevQty) + (costPerT * tonnes)) / (prevQty + tonnes) * 10000) / 10000
         : costPerT;
 
-      // Create stock movement (matching existing schema exactly)
+      // Create stock movement
       const movResult = await client.query(`
         INSERT INTO stock_movements (
           movement_date, movement_type, product_id,
@@ -219,23 +261,23 @@ router.post('/', async (req, res) => {
         costPerT,
         Math.round(costAllocated * 100) / 100,
         reference_number || `RUN-${runId}`,
-        `Production run ${runId} — ${sharePct.toFixed(2)}% cost share`,
+        isByProduct
+          ? `Production run ${runId} — by-product @ $${creditRate.toFixed(2)}/t standard cost`
+          : `Production run ${runId} — ${sharePct.toFixed(2)}% of net cost after by-product credits`,
         operator || 'system'
       ]);
       const movementId = movResult.rows[0].movement_id;
 
-      // Update current_stock — matching existing pattern (SELECT then INSERT or UPDATE)
+      // Update current_stock
       const newQty   = prevQty + tonnes;
       const newValue = Math.round(newQty * newAvgCost * 100) / 100;
 
       if (existingStock.rows.length === 0) {
-        // No existing stock — create new row
         await client.query(`
           INSERT INTO current_stock (product_id, location_id, quantity, average_cost, total_value, last_movement_date)
           VALUES ($1, $2, $3, $4, $5, NOW())
         `, [p.product_id, p.to_location_id, newQty, newAvgCost, newValue]);
       } else {
-        // Update existing row
         await client.query(`
           UPDATE current_stock
           SET quantity = $1, average_cost = $2, total_value = $3,
@@ -255,12 +297,14 @@ router.post('/', async (req, res) => {
         INSERT INTO production_run_products (
           run_id, product_id, to_location_id, tonnes_produced,
           cost_share_pct, cost_allocated, cost_per_tonne,
-          movement_id, prev_avg_cost, new_avg_cost
-        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+          movement_id, prev_avg_cost, new_avg_cost,
+          is_by_product, credit_rate_per_tonne, credit_total
+        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
       `, [
         runId, p.product_id, p.to_location_id || null, tonnes,
         sharePct, costAllocated, costPerT,
-        movementId, prevAvgCost, newAvgCost
+        movementId, prevAvgCost, newAvgCost,
+        isByProduct, creditRate, creditTotal
       ]);
     }
 
@@ -270,6 +314,8 @@ router.post('/', async (req, res) => {
       success: true,
       run_id: runId,
       total_run_cost: totalRunCost,
+      by_product_credit_total: byProductCreditTotal,
+      net_cost_after_credits: netCostAfterCredits,
       cost_per_tonne: costPerTonne,
       total_tonnes: totalTonnes
     });
@@ -294,7 +340,7 @@ router.get('/wip-report', async (req, res) => {
       SELECT
         pr.run_date, pr.reference_number,
         pr.wip_tonnes_used, pr.wip_rate_per_tonne, pr.wip_total_cost,
-        pr.total_run_cost,
+        pr.total_run_cost, pr.by_product_credit_total, pr.net_cost_after_credits,
         STRING_AGG(p.product_name || ' (' || prp.tonnes_produced || 't)', ', ') AS products,
         pr.xero_journal_ref
       FROM production_runs pr
