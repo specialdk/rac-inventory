@@ -9,10 +9,10 @@ let manualRowCounter = 0;
 
 // Initialize page
 document.addEventListener("DOMContentLoaded", function () {
-  // Set default date to today
+  // Default to today - operator will change to as-at date
   document.getElementById("stocktakeDate").valueAsDate = new Date();
 
-  // Load data
+  // Load data for today by default
   loadStocktakeData();
 });
 
@@ -46,23 +46,48 @@ function formatFamilyGroup(group) {
 // Load current stock and products
 async function loadStocktakeData() {
   try {
-    // Load products
     const productsResponse = await fetch("/api/products");
     products = await productsResponse.json();
 
-    // Load locations
     const locationsResponse = await fetch("/api/locations");
     locations = await locationsResponse.json();
 
-    // Load current stock (returns one row per product+location)
-    const stockResponse = await fetch("/api/stock/current");
+    // Default to today's stock on page load
+    const today = new Date().toISOString().split("T")[0];
+    const stockResponse = await fetch(`/api/stock/as-at?date=${today}`);
     currentStock = await stockResponse.json();
 
-    // Render table with ALL product+location rows
     renderStocktakeTable();
   } catch (error) {
     console.error("Error loading stocktake data:", error);
     alert("Error loading stocktake data");
+  }
+}
+
+// Reload stock when As-At Date changes
+async function loadStockAsAt() {
+  const date = document.getElementById("stocktakeDate").value;
+  if (!date) return;
+
+  const label = document.getElementById("asAtLabel");
+  label.textContent = "⏳ Loading stock as at " + date + "...";
+
+  try {
+    const stockResponse = await fetch(`/api/stock/as-at?date=${date}`);
+    currentStock = await stockResponse.json();
+
+    // Format date nicely for display
+    const displayDate = new Date(date + "T00:00:00").toLocaleDateString("en-AU", {
+      day: "2-digit", month: "short", year: "numeric"
+    });
+    label.textContent = "✅ Showing stock as at " + displayDate;
+    label.style.color = "#28a745";
+
+    renderStocktakeTable();
+  } catch (error) {
+    console.error("Error loading as-at stock:", error);
+    label.textContent = "❌ Error loading stock for this date";
+    label.style.color = "#dc3545";
   }
 }
 
