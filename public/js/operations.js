@@ -53,6 +53,11 @@ document.addEventListener("DOMContentLoaded", async function () {
 // Set default dates to today
 function setDefaultDate() {
   const today = new Date().toISOString().split("T")[0];
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+  const movDateFrom = document.getElementById("movDateFrom");
+  const movDateTo = document.getElementById("movDateTo");
+  if (movDateFrom && !movDateFrom.value) movDateFrom.value = sevenDaysAgo;
+  if (movDateTo && !movDateTo.value) movDateTo.value = today;
   const productionDate = document.getElementById("productionDate");
   const saleDate = document.getElementById("saleDate");
   const demandDate = document.getElementById("demandDate");
@@ -690,16 +695,31 @@ function closeDocketModal() {
 // FILTER MOVEMENTS
 // ============================================
 let allMovements = [];
+let currentPage = 1;
+const PAGE_SIZE = 25;
 
-async function loadRecentMovementsWithFilter() {
+async function loadRecentMovementsWithFilter(page = 1) {
   try {
-    const response = await fetch("/api/movements?limit=50");
+    currentPage = page;
+    const dateFrom = document.getElementById("movDateFrom")?.value || "";
+    const dateTo = document.getElementById("movDateTo")?.value || "";
+    const offset = (page - 1) * PAGE_SIZE;
+
+    let url = `/api/movements?limit=${PAGE_SIZE}&offset=${offset}`;
+    if (dateFrom) url += `&date_from=${dateFrom}`;
+    if (dateTo) url += `&date_to=${dateTo}`;
+
+    const response = await fetch(url);
     allMovements = await response.json();
     populateCustomerFilter();
     filterMovements();
   } catch (error) {
     console.error("Error loading recent movements:", error);
   }
+}
+
+function resetAndReload() {
+  loadRecentMovementsWithFilter(1);
 }
 
 function populateCustomerFilter() {
@@ -809,6 +829,28 @@ function displayMovements(movements) {
     `;
     tbody.appendChild(row);
   });
+
+  // Pagination controls
+  let paginationDiv = document.getElementById("movementsPagination");
+  if (!paginationDiv) {
+    paginationDiv = document.createElement("div");
+    paginationDiv.id = "movementsPagination";
+    paginationDiv.style.cssText = "display:flex;justify-content:space-between;align-items:center;padding:12px 0;margin-top:8px";
+    container.appendChild(paginationDiv);
+  }
+
+  const hasPrev = currentPage > 1;
+  const hasNext = movements.length === PAGE_SIZE;
+
+  paginationDiv.innerHTML = `
+    <button onclick="loadRecentMovementsWithFilter(${currentPage - 1})"
+      style="padding:6px 16px;border:1px solid #ddd;border-radius:4px;background:${hasPrev ? '#fff' : '#f5f5f5'};color:${hasPrev ? '#333' : '#aaa'};cursor:${hasPrev ? 'pointer' : 'default'}"
+      ${hasPrev ? '' : 'disabled'}>← Previous</button>
+    <span style="color:#666;font-size:13px">Page ${currentPage}</span>
+    <button onclick="loadRecentMovementsWithFilter(${currentPage + 1})"
+      style="padding:6px 16px;border:1px solid #ddd;border-radius:4px;background:${hasNext ? '#fff' : '#f5f5f5'};color:${hasNext ? '#333' : '#aaa'};cursor:${hasNext ? 'pointer' : 'default'}"
+      ${hasNext ? '' : 'disabled'}>Next →</button>
+  `;
 }
 
 async function refreshMovements() {
