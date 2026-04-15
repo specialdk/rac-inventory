@@ -558,7 +558,7 @@ async function saveSales() {
   const netWeight = grossWeight - tareWeight;
 
   const formData = {
-    movement_date: new Date().toISOString(),
+    movement_date: (() => { const d = document.getElementById("saleDate").value; const now = new Date(); return d ? new Date(`${d}T${now.toTimeString().split(' ')[0]}`).toISOString() : now.toISOString(); })(),
     product_id: document.getElementById("saleProduct").value,
     from_location_id: document.getElementById("saleLocation").value,
     gross_weight: grossWeight,
