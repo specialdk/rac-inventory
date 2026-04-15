@@ -748,7 +748,7 @@ function displayMovements(movements) {
       <table class="movements-table">
         <thead>
           <tr>
-            <th>Date</th><th>Type</th><th>Product</th><th>Customer</th>
+            <th>Sale Date</th><th>Entered</th><th>Type</th><th>Product</th><th>Customer</th>
             <th>Docket #</th><th>Location</th><th class="text-right">Quantity</th>
             <th>Reference</th>
           </tr>
