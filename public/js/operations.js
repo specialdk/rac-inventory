@@ -772,6 +772,12 @@ function displayMovements(movements) {
     const movementDateTime = new Date(movement.movement_date);
     const dateStr = movementDateTime.toLocaleDateString("en-AU", { day: "2-digit", month: "short" });
     const timeStr = movementDateTime.toLocaleTimeString("en-AU", { hour: "2-digit", minute: "2-digit" });
+    const enteredDateTime = movement.created_at ? new Date(movement.created_at) : null;
+    const enteredDateStr = enteredDateTime
+      ? enteredDateTime.toLocaleDateString("en-AU", { day: "2-digit", month: "short" })
+      : "-";
+    const isLateEntry = movement.movement_type === "SALES" && enteredDateTime
+      && movementDateTime.toDateString() !== enteredDateTime.toDateString();
 
     let badgeClass = "badge-primary";
     if (movement.movement_type === "PRODUCTION") badgeClass = "badge-success";
@@ -786,7 +792,7 @@ function displayMovements(movements) {
       <td>${dateStr} <small class="text-muted">${timeStr}</small></td>
       <td><small style="${isLateEntry ? 'color:#e67e22;font-weight:600;' : 'color:#999;'}">${movement.movement_type === 'SALES' ? enteredDateStr : '-'}</small></td>
       <td><span class="badge ${badgeClass}">${movement.movement_type}</span></td>
-      
+
       <td>${movement.product_name || "-"}</td>
       <td>${movement.customer_name || "-"}</td>
       <td>${movement.docket_number ? `<a href="/weighbridge-delivery-docket.html?docket=${movement.docket_number}" target="_blank" style="color: #007bff; text-decoration: none;">${movement.docket_number}</a>` : "-"}</td>
