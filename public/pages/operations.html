@@ -96,7 +96,14 @@
       <div class="data-table">
         <div class="table-header">
           <h2 class="table-title">Recent Movements</h2>
-          <div class="table-actions" style="display:flex;gap:10px;align-items:center">
+          <div class="table-actions" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+  <div style="display:flex;align-items:center;gap:6px">
+    <label style="font-size:13px;color:#666;white-space:nowrap">From</label>
+    <input type="date" class="form-control" id="movDateFrom" onchange="resetAndReload()" style="width:145px;padding:8px">
+    <label style="font-size:13px;color:#666;white-space:nowrap">To</label>
+    <input type="date" class="form-control" id="movDateTo" onchange="resetAndReload()" style="width:145px;padding:8px">
+  </div>
+  
             <select class="form-control" id="customerFilter" onchange="filterMovements()" style="width:200px;padding:8px">
               <option value="">All Customers</option>
             </select>
