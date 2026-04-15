@@ -507,8 +507,9 @@ router.get("/", async (req, res) => {
       customer_id,
       date_from,
       date_to,
-      search, // ADD THIS LINE
-      limit = 100,
+      search,
+      limit = 25,
+      offset = 0,
     } = req.query;
 
     let sql = `
@@ -580,8 +581,9 @@ router.get("/", async (req, res) => {
       paramCount++;
     }
 
-    sql += ` ORDER BY sm.movement_date DESC, sm.created_at DESC LIMIT $${paramCount}`;
+    sql += ` ORDER BY sm.movement_date DESC, sm.created_at DESC LIMIT $${paramCount} OFFSET $${paramCount + 1}`;
     params.push(limit);
+    params.push(offset);
 
     const result = await pool.query(sql, params);
 
