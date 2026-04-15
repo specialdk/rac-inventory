@@ -233,4 +233,61 @@ router.get("/alerts", async (req, res) => {
   }
 });
 
+// GET stock as-at a specific date (for stocktake reconciliation)
+// Uses movement_date (actual sale date) not created_at (entry date)
+router.get("/as-at", async (req, res) => {
+  try {
+    const { date } = req.query;
+    if (!date) return res.status(400).json({ error: "date parameter required" });
+
+    const result = await query(`
+      SELECT 
+        p.product_id,
+        p.product_code,
+        p.product_name,
+        p.family_group,
+        p.standard_sales_price,
+        p.min_stock_level,
+        p.max_stock_level,
+        p.unit,
+        movements.location_id,
+        l.location_code,
+        l.location_name,
+        SUM(movements.qty_change) as quantity,
+        COALESCE(cs.average_cost, p.standard_cost) as average_cost,
+        SUM(movements.qty_change) * COALESCE(cs.average_cost, p.standard_cost) as total_value
+      FROM (
+        SELECT product_id, to_location_id as location_id, quantity as qty_change
+        FROM stock_movements
+        WHERE movement_date::date <= $1
+          AND movement_type NOT IN ('DEMAND', 'EDIT', 'CANCEL')
+          AND to_location_id IS NOT NULL
+        UNION ALL
+        SELECT product_id, from_location_id as location_id, -quantity as qty_change
+        FROM stock_movements
+        WHERE movement_date::date <= $1
+          AND movement_type NOT IN ('DEMAND', 'EDIT', 'CANCEL')
+          AND from_location_id IS NOT NULL
+      ) movements
+      JOIN products p ON p.product_id = movements.product_id
+      JOIN locations l ON l.location_id = movements.location_id
+      LEFT JOIN current_stock cs 
+        ON cs.product_id = p.product_id AND cs.location_id = movements.location_id
+      WHERE p.is_active = true
+      GROUP BY 
+        p.product_id, p.product_code, p.product_name, p.family_group,
+        p.standard_sales_price, p.min_stock_level, p.max_stock_level, p.unit,
+        movements.location_id, l.location_code, l.location_name,
+        cs.average_cost, p.standard_cost
+      HAVING SUM(movements.qty_change) > 0.1
+      ORDER BY p.family_group, p.product_name, l.location_name
+    `, [date]);
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error("Error fetching as-at stock:", error);
+    res.status(500).json({ error: "Failed to fetch as-at stock" });
+  }
+});
+
 module.exports = router;
