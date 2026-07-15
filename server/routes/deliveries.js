@@ -59,17 +59,17 @@ router.get("/:id", async (req, res) => {
 // POST create new delivery
 router.post("/", async (req, res) => {
   try {
-    const { delivery_name, description } = req.body;
+    const { delivery_name, description, delivery_charge_per_tonne } = req.body;
 
     if (!delivery_name) {
       return res.status(400).json({ error: "Delivery name is required" });
     }
 
-    const result = await pool.query(
-      `INSERT INTO deliveries (delivery_name, description) 
-       VALUES ($1, $2) 
+   const result = await pool.query(
+      `INSERT INTO deliveries (delivery_name, description, delivery_charge_per_tonne) 
+       VALUES ($1, $2, $3) 
        RETURNING *`,
-      [delivery_name, description]
+      [delivery_name, description, delivery_charge_per_tonne || 0]
     );
 
     res.status(201).json(result.rows[0]);
@@ -87,17 +87,18 @@ router.post("/", async (req, res) => {
 router.put("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { delivery_name, description, is_active } = req.body;
+    const { delivery_name, description, is_active, delivery_charge_per_tonne } = req.body;
 
     const result = await pool.query(
       `UPDATE deliveries 
        SET delivery_name = COALESCE($1, delivery_name),
            description = $2,
-           is_active = COALESCE($3, is_active),
+           delivery_charge_per_tonne = COALESCE($3, delivery_charge_per_tonne),
+           is_active = COALESCE($4, is_active),
            updated_at = NOW()
-       WHERE delivery_id = $4
+       WHERE delivery_id = $5
        RETURNING *`,
-      [delivery_name, description, is_active, id]
+      [delivery_name, description, delivery_charge_per_tonne, is_active, id]
     );
 
     if (result.rows.length === 0) {
