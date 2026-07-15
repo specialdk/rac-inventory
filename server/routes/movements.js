@@ -104,6 +104,24 @@ async function updateCurrentStock(
   }
 }
 
+// ============================================
+// Generate the next RefNo for a given prefix
+// e.g. getNextRefNo(client, "DN") -> "DN00340"
+// Looks at every RefNo already using this prefix, finds the
+// highest number, and returns the next one, padded to 5 digits.
+// ============================================
+async function getNextRefNo(client, prefix) {
+  const result = await client.query(
+    `SELECT COALESCE(MAX((SUBSTRING(docket_number FROM '[0-9]+$'))::int), 0) AS max_num
+       FROM stock_movements
+      WHERE docket_number LIKE $1`,
+    [prefix + "%"]
+  );
+
+  const nextNumber = (result.rows[0].max_num || 0) + 1;
+  return `${prefix}${String(nextNumber).padStart(5, "0")}`;
+}
+
 // POST production entry
 router.post("/production", async (req, res) => {
   const client = await pool.connect();
@@ -240,41 +258,9 @@ router.post("/sales", async (req, res) => {
     ) {
       throw new Error("Missing required fields");
     }
-
-    // AUTO-ASSIGN DOCKET NUMBER
-    // Get the latest docket number that matches DN##### format
-    const latestDocketResult = await client.query(
-      `SELECT docket_number 
-       FROM stock_movements 
-       WHERE movement_type = 'SALES' 
-         AND docket_number LIKE 'DN%'
-         AND docket_number IS NOT NULL 
-       ORDER BY movement_id DESC 
-       LIMIT 1`
-    );
-
-    let docket_number;
-    if (latestDocketResult.rows.length === 0) {
-      // First docket ever with DN format
-      docket_number = "DN00001";
-    } else {
-      const lastDocket = latestDocketResult.rows[0].docket_number;
-      // Extract the numeric part (e.g., "DN00005" -> "00005" -> 5)
-      const numericPart = parseInt(lastDocket.replace("DN", ""));
-
-      // Handle invalid formats gracefully
-      if (isNaN(numericPart)) {
-        console.warn(
-          `⚠️ Invalid docket format found: ${lastDocket}. Starting from DN00001`
-        );
-        docket_number = "DN00001";
-      } else {
-        // Increment and format back to DN00006
-        const nextNumber = numericPart + 1;
-        docket_number = `DN${nextNumber.toString().padStart(5, "0")}`;
-      }
-    }
-
+    
+// AUTO-ASSIGN DOCKET NUMBER (RefNo) — now uses the shared helper
+    const docket_number = await getNextRefNo(client, "DN");
     console.log(`🎫 Auto-assigned docket number: ${docket_number}`);
 
     // Check if sufficient stock exists
