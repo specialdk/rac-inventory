@@ -169,7 +169,16 @@ router.post("/edit", async (req, res) => {
         ? parseFloat(correctedCostResult.rows[0].average_cost)
         : 0;
 
-    // Check if sufficient stock exists at new location
+    // NEW corrected net quantity (from the edited gross/tare). This is what the
+    // corrected sale actually removes from stock — NOT the original quantity.
+    const correction_quantity = parseFloat(
+      (
+        parseFloat(gross_weight || originalDocket.gross_weight) -
+        parseFloat(tare_weight || originalDocket.tare_weight)
+      ).toFixed(2)
+    );
+
+    // Check if sufficient stock exists at new location for the corrected quantity
     const stockCheck = await client.query(
       "SELECT quantity FROM current_stock WHERE product_id = $1 AND location_id = $2",
       [product_id, from_location_id]
@@ -177,16 +186,15 @@ router.post("/edit", async (req, res) => {
 
     if (
       stockCheck.rows.length === 0 ||
-      parseFloat(stockCheck.rows[0].quantity) < reversal_quantity
+      parseFloat(stockCheck.rows[0].quantity) < correction_quantity
     ) {
       throw new Error(
         `Insufficient stock at corrected location. Available: ${
           stockCheck.rows[0]?.quantity || 0
-        }t, Required: ${reversal_quantity}t`
+        }t, Required: ${correction_quantity}t`
       );
     }
 
-    const correction_quantity = reversal_quantity; // Same quantity
     const correction_cost = correction_quantity * corrected_unit_cost;
     const correction_revenue = correction_quantity * unit_price;
 
