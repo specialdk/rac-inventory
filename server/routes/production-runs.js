@@ -13,6 +13,18 @@ const express = require('express');
 const router  = express.Router();
 const { pool } = require('../config/database');
 
+// Generate the next RefNo for a given prefix, e.g. getNextRefNo(client, "PR")
+async function getNextRefNo(client, prefix) {
+  const result = await client.query(
+    `SELECT COALESCE(MAX((SUBSTRING(docket_number FROM '[0-9]+$'))::int), 0) AS max_num
+       FROM stock_movements
+      WHERE docket_number LIKE $1`,
+    [prefix + "%"]
+  );
+  const nextNumber = (result.rows[0].max_num || 0) + 1;
+  return `${prefix}${String(nextNumber).padStart(5, "0")}`;
+}
+
 // ----------------------------------------
 // GET /api/production-runs
 // ----------------------------------------
@@ -183,7 +195,11 @@ router.post('/', async (req, res) => {
       override_required || false, override_code || null, override_notes || null, override_by || null,
       notes || null
     ]);
+
     const runId = runResult.rows[0].run_id;
+
+    // One RefNo for the whole run, shared across all its product lines
+    const runRefNo = await getNextRefNo(client, "PR");
 
     // ── Insert machine rows ───────────────────────────────────
     for (const m of machineRows) {
@@ -251,8 +267,8 @@ router.post('/', async (req, res) => {
         INSERT INTO stock_movements (
           movement_date, movement_type, product_id,
           to_location_id, quantity, unit_cost, total_cost,
-          reference_number, notes, created_by
-        ) VALUES (NOW(), 'PRODUCTION', $1, $2, $3, $4, $5, $6, $7, $8)
+          reference_number, notes, created_by, docket_number
+        ) VALUES (NOW(), 'PRODUCTION', $1, $2, $3, $4, $5, $6, $7, $8, $9)
         RETURNING movement_id
       `, [
         p.product_id,
@@ -264,8 +280,10 @@ router.post('/', async (req, res) => {
         isByProduct
           ? `Production run ${runId} — by-product @ $${creditRate.toFixed(2)}/t standard cost`
           : `Production run ${runId} — ${sharePct.toFixed(2)}% of net cost after by-product credits`,
-        operator || 'system'
+        operator || 'system',
+        runRefNo
       ]);
+      
       const movementId = movResult.rows[0].movement_id;
 
       // Update current_stock
