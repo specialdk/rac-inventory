@@ -369,7 +369,13 @@ async function loadRecentMovements() {
         <td><span class="badge ${badgeClass}">${movement.movement_type}</span></td>
         <td>${movement.product_name || "-"}</td>
         <td>${movement.customer_name || "-"}</td>
-        <td>${movement.docket_number ? `<a href="/weighbridge-delivery-docket.html?docket=${movement.docket_number}" target="_blank" style="color: #007bff; text-decoration: none;">${movement.docket_number}</a>` : "-"}</td>
+        <td>${
+        movement.docket_number
+          ? (movement.movement_type === 'SALES'
+              ? `<a href="/weighbridge-delivery-docket.html?docket=${movement.docket_number}" target="_blank" style="color:#007bff;text-decoration:none;">${movement.docket_number}</a>`
+              : `<a href="#" onclick="openMovementReview(${movement.movement_id});return false;" style="color:#007bff;text-decoration:none;">${movement.docket_number}</a>`)
+          : "-"
+      }</td>
         <td>${movement.to_location_name || movement.from_location_name || "-"}</td>
         <td class="text-right">${parseFloat(movement.quantity).toFixed(1)}t</td>
         <td class="text-muted">${movement.reference_number || "-"}</td>
@@ -722,6 +728,79 @@ function resetAndReload() {
   loadRecentMovementsWithFilter(1);
 }
 
+// ============================================
+// MOVEMENT REVIEW — shared read-only view for non-Sales RefNos
+// (Sales keeps its own Weighbridge Docket page)
+// ============================================
+function openMovementReview(movementId) {
+  const m = allMovements.find((x) => String(x.movement_id) === String(movementId));
+  if (!m) {
+    alert("Could not find that record in the current list. Try Refresh.");
+    return;
+  }
+
+  const fmtDate = (d) => d ? new Date(d).toLocaleString("en-AU",
+    { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "-";
+  const money = (v) => (v === null || v === undefined || v === "") ? "-" : `$${parseFloat(v).toFixed(2)}`;
+  const num = (v) => (v === null || v === undefined || v === "") ? "-" : parseFloat(v).toFixed(2);
+  const txt = (v) => (v === null || v === undefined || v === "") ? "-" : v;
+
+  const rows = [
+    ["RefNo", txt(m.docket_number)],
+    ["Type", txt(m.movement_type)],
+    ["Date", fmtDate(m.movement_date)],
+    ["Product", txt(m.product_name)],
+    ["From location", txt(m.from_location_name)],
+    ["To location", txt(m.to_location_name)],
+    ["Quantity (t)", num(m.quantity)],
+    ["Unit cost", money(m.unit_cost)],
+    ["Total cost", money(m.total_cost)],
+    ["Customer", txt(m.customer_name)],
+    ["Vehicle", txt(m.vehicle_registration)],
+    ["Driver", txt(m.driver_name)],
+    ["Reference", txt(m.reference_number)],
+    ["Notes", txt(m.notes)],
+    ["Entered by", txt(m.created_by)],
+    ["Entered at", fmtDate(m.created_at)],
+  ];
+
+  const alwaysShow = ["RefNo", "Type", "Date", "Quantity (t)"];
+  const rowsHtml = rows
+    .filter(([label, value]) => value !== "-" || alwaysShow.includes(label))
+    .map(([label, value]) => `
+      <tr>
+        <td style="padding:6px 14px;color:#666;white-space:nowrap;vertical-align:top;font-weight:600;border-bottom:1px solid #f0f0f0;">${label}</td>
+        <td style="padding:6px 14px;color:#111;border-bottom:1px solid #f0f0f0;">${value}</td>
+      </tr>`)
+    .join("");
+
+  let modal = document.getElementById("movementReviewModal");
+  if (modal) modal.remove();
+
+  modal = document.createElement("div");
+  modal.id = "movementReviewModal";
+  modal.style.cssText = "display:flex;position:fixed;inset:0;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;z-index:1000;";
+  modal.innerHTML = `
+    <div style="background:#fff;border-radius:10px;max-width:520px;width:92%;max-height:85vh;overflow:auto;box-shadow:0 10px 40px rgba(0,0,0,0.25);">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #eee;">
+        <h2 style="margin:0;font-size:18px;">Movement Review — ${txt(m.docket_number)}</h2>
+        <button onclick="closeMovementReview()" style="border:none;background:none;font-size:22px;cursor:pointer;color:#888;">×</button>
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:14px;">${rowsHtml}</table>
+      <div style="padding:14px 20px;text-align:right;border-top:1px solid #eee;">
+        <button onclick="closeMovementReview()" class="btn-secondary">Close</button>
+      </div>
+    </div>
+  `;
+  modal.addEventListener("click", (e) => { if (e.target === modal) closeMovementReview(); });
+  document.body.appendChild(modal);
+}
+
+function closeMovementReview() {
+  const modal = document.getElementById("movementReviewModal");
+  if (modal) modal.remove();
+}
+
 function populateCustomerFilter() {
   const customerFilter = document.getElementById("customerFilter");
   if (!customerFilter) return;
@@ -815,7 +894,13 @@ function displayMovements(movements) {
 
       <td>${movement.product_name || "-"}</td>
       <td>${movement.customer_name || "-"}</td>
-      <td>${movement.docket_number ? `<a href="/weighbridge-delivery-docket.html?docket=${movement.docket_number}" target="_blank" style="color: #007bff; text-decoration: none;">${movement.docket_number}</a>` : "-"}</td>
+      <td>${
+        movement.docket_number
+          ? (movement.movement_type === 'SALES'
+              ? `<a href="/weighbridge-delivery-docket.html?docket=${movement.docket_number}" target="_blank" style="color:#007bff;text-decoration:none;">${movement.docket_number}</a>`
+              : `<a href="#" onclick="openMovementReview(${movement.movement_id});return false;" style="color:#007bff;text-decoration:none;">${movement.docket_number}</a>`)
+          : "-"
+      }</td>
       <td>${movement.to_location_name || movement.from_location_name || "-"}</td>
       <td class="text-right">${parseFloat(movement.quantity).toFixed(1)}t</td>
       <td class="text-muted">${movement.reference_number || "-"}</td>
