@@ -168,12 +168,15 @@ router.post("/production", async (req, res) => {
 
     const total_cost = quantity * unit_cost;
 
+  // Assign RefNo
+    const docket_number = await getNextRefNo(client, "PR");
+
     // Insert movement record
     const movementResult = await client.query(
       `INSERT INTO stock_movements 
        (movement_date, movement_type, product_id, from_location_id, to_location_id, 
-        quantity, unit_cost, total_cost, vehicle_id, driver_id, reference_number, notes, created_by)
-       VALUES ($1, 'PRODUCTION', $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        quantity, unit_cost, total_cost, vehicle_id, driver_id, reference_number, notes, created_by, docket_number)
+       VALUES ($1, 'PRODUCTION', $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
        RETURNING *`,
       [
         movement_date,
@@ -188,6 +191,7 @@ router.post("/production", async (req, res) => {
         reference_number,
         notes,
         created_by,
+        docket_number,
       ]
     );
 
@@ -258,7 +262,7 @@ router.post("/sales", async (req, res) => {
     ) {
       throw new Error("Missing required fields");
     }
-    
+
 // AUTO-ASSIGN DOCKET NUMBER (RefNo) — now uses the shared helper
     const docket_number = await getNextRefNo(client, "DN");
     console.log(`🎫 Auto-assigned docket number: ${docket_number}`);
@@ -413,11 +417,14 @@ router.post("/adjustment", async (req, res) => {
     const total_cost = absQty * finalCost;
 
     // Insert movement record
+ // Assign RefNo
+    const docket_number = await getNextRefNo(client, "AJ");
+
     const movementResult = await client.query(
       `INSERT INTO stock_movements 
        (movement_date, movement_type, product_id, from_location_id, to_location_id, quantity, 
-        unit_cost, total_cost, reference_number, notes, created_by)
-       VALUES ($1, 'ADJUSTMENT', $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        unit_cost, total_cost, reference_number, notes, created_by, docket_number)
+       VALUES ($1, 'ADJUSTMENT', $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        RETURNING *`,
       [
         movement_date,
@@ -430,6 +437,7 @@ router.post("/adjustment", async (req, res) => {
         reason,
         notes,
         created_by,
+        docket_number,
       ]
     );
 
@@ -669,10 +677,13 @@ router.post("/demand", async (req, res) => {
     }
 
     // Insert demand record (no stock impact - just tracking future orders)
+    // Assign RefNo
+    const docket_number = await getNextRefNo(client, "DM");
+
     const movementResult = await client.query(
       `INSERT INTO stock_movements 
-       (movement_date, movement_type, product_id, quantity, customer_id, reference_number, notes, created_by)
-       VALUES ($1, 'DEMAND', $2, $3, $4, $5, $6, $7)
+       (movement_date, movement_type, product_id, quantity, customer_id, reference_number, notes, created_by, docket_number)
+       VALUES ($1, 'DEMAND', $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
       [
         movement_date,
@@ -682,6 +693,7 @@ router.post("/demand", async (req, res) => {
         po_number,
         notes,
         created_by,
+        docket_number,
       ]
     );
 
@@ -782,6 +794,9 @@ router.post("/transfer", async (req, res) => {
     }
 
     // Create stock movement record
+    // Assign RefNo
+    const docket_number = await getNextRefNo(client, "TF");
+
     const movementResult = await client.query(
       `INSERT INTO stock_movements (
         movement_date, 
@@ -792,8 +807,9 @@ router.post("/transfer", async (req, res) => {
         quantity,
         unit_cost,
         reference_number,
-        notes
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        notes,
+        docket_number
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       RETURNING movement_id`,
       [
         movement_date,
@@ -805,6 +821,7 @@ router.post("/transfer", async (req, res) => {
         avgCost,
         reference_number || `TRF-${Date.now()}`,
         notes,
+        docket_number,
       ]
     );
 
