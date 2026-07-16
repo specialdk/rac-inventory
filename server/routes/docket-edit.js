@@ -7,6 +7,18 @@ const express = require("express");
 const router = express.Router();
 const { pool } = require("../config/database");
 
+// Generate the next RefNo for a given prefix, e.g. getNextRefNo(client, "ED")
+async function getNextRefNo(client, prefix) {
+  const result = await client.query(
+    `SELECT COALESCE(MAX((SUBSTRING(docket_number FROM '[0-9]+$'))::int), 0) AS max_num
+       FROM stock_movements
+      WHERE docket_number LIKE $1`,
+    [prefix + "%"]
+  );
+  const nextNumber = (result.rows[0].max_num || 0) + 1;
+  return `${prefix}${String(nextNumber).padStart(5, "0")}`;
+}
+
 // ============================================
 // POST /api/dockets/edit
 // Edit a docket (creates REVERSAL + CORRECTION movements)
@@ -90,13 +102,16 @@ router.post("/edit", async (req, res) => {
     const reversal_quantity = parseFloat(originalDocket.quantity); // Positive (returning)
     const reversal_cost = reversal_quantity * original_unit_cost;
 
+    // One RefNo for this whole edit, shared by the reversal and correction rows
+    const editRefNo = await getNextRefNo(client, "ED");
+
     const reversalResult = await client.query(
       `INSERT INTO stock_movements 
        (movement_date, movement_type, product_id, to_location_id, 
         quantity, unit_cost, total_cost, customer_id, vehicle_id, driver_id,
         carrier_id, delivery_id, gross_weight, tare_weight, reference_number, notes, 
-        original_docket_number, edit_reason, edited_by, created_by)
-       VALUES ($1, 'EDIT', $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+        original_docket_number, edit_reason, edited_by, created_by, docket_number)
+       VALUES ($1, 'EDIT', $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
        RETURNING movement_id`,
       [
         movement_date || originalDocket.movement_date, // Use new date if provided
@@ -119,6 +134,7 @@ router.post("/edit", async (req, res) => {
         edit_reason,
         "system", // Could be updated to track actual user
         "system",
+        editRefNo,
       ]
     );
 
@@ -180,8 +196,8 @@ router.post("/edit", async (req, res) => {
         quantity, unit_cost, total_cost, unit_price, total_revenue,
         customer_id, vehicle_id, driver_id, carrier_id, delivery_id,
         gross_weight, tare_weight, reference_number, notes, 
-        original_docket_number, edit_reason, edited_by, created_by)
-       VALUES ($1, 'EDIT', $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
+        original_docket_number, edit_reason, edited_by, created_by, docket_number)
+       VALUES ($1, 'EDIT', $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)
        RETURNING movement_id`,
       [
         movement_date || originalDocket.movement_date, // Use new date if provided
@@ -206,8 +222,11 @@ router.post("/edit", async (req, res) => {
         edit_reason,
         "system",
         "system",
+        editRefNo,
       ]
     );
+
+    // Update current_stock for correction (remove stock)
 
     console.log(
       "✅ Correction movement created:",
@@ -427,13 +446,16 @@ router.post("/cancel", async (req, res) => {
     const reversal_quantity = parseFloat(originalDocket.quantity); // Positive (returning)
     const reversal_cost = reversal_quantity * original_unit_cost;
 
+    // RefNo for this cancellation
+    const cancelRefNo = await getNextRefNo(client, "CN");
+
     const reversalResult = await client.query(
       `INSERT INTO stock_movements 
        (movement_date, movement_type, product_id, to_location_id, 
         quantity, unit_cost, total_cost, customer_id, vehicle_id, driver_id,
         carrier_id, delivery_id, gross_weight, tare_weight, reference_number, notes, 
-        original_docket_number, edit_reason, edited_by, created_by)
-       VALUES ($1, 'CANCEL', $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+        original_docket_number, edit_reason, edited_by, created_by, docket_number)
+       VALUES ($1, 'CANCEL', $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
        RETURNING movement_id`,
       [
         originalDocket.movement_date, // Keep original date
@@ -455,6 +477,7 @@ router.post("/cancel", async (req, res) => {
         cancel_reason,
         "system", // Could be updated to track actual user
         "system",
+        cancelRefNo,
       ]
     );
 
