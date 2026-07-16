@@ -758,6 +758,7 @@ function openMovementReview(movementId) {
     ["Customer", txt(m.customer_name)],
     ["Vehicle", txt(m.vehicle_registration)],
     ["Driver", txt(m.driver_name)],
+    ["Reason", txt(m.reason)],
     ["Reference", txt(m.reference_number)],
     ["Notes", txt(m.notes)],
     ["Entered by", txt(m.created_by)],

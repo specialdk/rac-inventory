@@ -381,6 +381,7 @@ router.post("/adjustment", async (req, res) => {
       quantity,
       unit_cost,
       reason,
+      reference_number,
       notes,
       created_by = "system",
     } = req.body;
@@ -423,8 +424,8 @@ router.post("/adjustment", async (req, res) => {
     const movementResult = await client.query(
       `INSERT INTO stock_movements 
        (movement_date, movement_type, product_id, from_location_id, to_location_id, quantity, 
-        unit_cost, total_cost, reference_number, notes, created_by, docket_number)
-       VALUES ($1, 'ADJUSTMENT', $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        unit_cost, total_cost, reference_number, notes, created_by, docket_number, reason)
+       VALUES ($1, 'ADJUSTMENT', $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
        RETURNING *`,
       [
         movement_date,
@@ -434,10 +435,11 @@ router.post("/adjustment", async (req, res) => {
         absQty,
         finalCost,
         total_cost,
-        reason,
+        reference_number,
         notes,
         created_by,
         docket_number,
+        reason,
       ]
     );
 
