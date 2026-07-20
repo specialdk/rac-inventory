@@ -1204,16 +1204,18 @@ function setupSalesVehicleListener() {
 
 // If the chosen vehicle is a Customer Pickup, force Destination to "Customer Pickup" and lock it
 function applyCustomerPickupLock(vehicleId) {
+  const vehicleSelect = document.getElementById("saleVehicle");
   const deliverySelect = document.getElementById("saleDelivery");
-  if (!deliverySelect) return;
+  if (!vehicleSelect || !deliverySelect) return;
 
-  const vehicle = vehiclesData.find(
-    (v) => String(v.vehicle_id) === String(vehicleId)
-  );
-  const isPickup = vehicle && vehicle.vehicle_type === "CUSTOMER_PICKUP";
+  // Read the vehicle type from the selected option's label ("REGO - TYPE").
+  // This works for existing vehicles AND ones just added via Quick Add.
+  const opt = vehicleSelect.options[vehicleSelect.selectedIndex];
+  const label = opt ? opt.text : "";
+  const type = label.includes(" - ") ? label.split(" - ").pop().trim() : "";
+  const isPickup = type.toUpperCase() === "CUSTOMER_PICKUP";
 
   if (isPickup) {
-    // Find the "Customer Pickup" destination by name (falls back to id 1)
     const pickupOption = Array.from(deliverySelect.options).find(
       (o) => o.text.trim().toLowerCase() === "customer pickup"
     );
@@ -1223,7 +1225,6 @@ function applyCustomerPickupLock(vehicleId) {
     deliverySelect.style.background = "#e9ecef";
     deliverySelect.style.cursor = "not-allowed";
   } else if (deliverySelect.disabled) {
-    // A different vehicle was chosen — release the lock
     deliverySelect.disabled = false;
     deliverySelect.style.background = "";
     deliverySelect.style.cursor = "";
