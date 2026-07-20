@@ -516,6 +516,7 @@ function openSalesModal() {
   document.getElementById("salesModal").style.display = "flex";
   document.getElementById("salesForm").reset();
   setDefaultDate();
+  applyCustomerPickupLock("");   // ← add this: start with Destination unlocked
   loadDemandOrdersForSale();
 }
 
@@ -1195,8 +1196,37 @@ function setupSalesVehicleListener() {
   if (saleVehicleSelect) {
     saleVehicleSelect.addEventListener("change", async (e) => {
       const vehicleId = e.target.value;
+      applyCustomerPickupLock(vehicleId);
       if (vehicleId) await loadRecentTareWeight(vehicleId);
     });
+  }
+}
+
+// If the chosen vehicle is a Customer Pickup, force Destination to "Customer Pickup" and lock it
+function applyCustomerPickupLock(vehicleId) {
+  const deliverySelect = document.getElementById("saleDelivery");
+  if (!deliverySelect) return;
+
+  const vehicle = vehiclesData.find(
+    (v) => String(v.vehicle_id) === String(vehicleId)
+  );
+  const isPickup = vehicle && vehicle.vehicle_type === "CUSTOMER_PICKUP";
+
+  if (isPickup) {
+    // Find the "Customer Pickup" destination by name (falls back to id 1)
+    const pickupOption = Array.from(deliverySelect.options).find(
+      (o) => o.text.trim().toLowerCase() === "customer pickup"
+    );
+    deliverySelect.value = pickupOption ? pickupOption.value : "1";
+    deliverySelect.dispatchEvent(new Event("change"));
+    deliverySelect.disabled = true;
+    deliverySelect.style.background = "#e9ecef";
+    deliverySelect.style.cursor = "not-allowed";
+  } else if (deliverySelect.disabled) {
+    // A different vehicle was chosen — release the lock
+    deliverySelect.disabled = false;
+    deliverySelect.style.background = "";
+    deliverySelect.style.cursor = "";
   }
 }
 
