@@ -180,6 +180,7 @@
             { value: "SIDE_TIPPER", label: "Side Tipper" },
             { value: "ROAD_TRAIN", label: "Road Train" },
             { value: "RIGID", label: "Rigid" },
+            { value: "CUSTOMER_PICKUP", label: "Customer Pickup" },
             { value: "OTHER", label: "Other" },
           ],
         },
