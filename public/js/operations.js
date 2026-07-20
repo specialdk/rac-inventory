@@ -63,6 +63,8 @@ function setDefaultDate() {
   const demandDate = document.getElementById("demandDate");
   if (productionDate) productionDate.value = today;
   if (saleDate) saleDate.value = today;
+  const saleTime = document.getElementById("saleTime");
+  if (saleTime) saleTime.value = new Date().toTimeString().slice(0, 5); // HH:MM
   if (demandDate) demandDate.value = today;
 }
 
@@ -575,7 +577,13 @@ async function saveSales() {
   const netWeight = grossWeight - tareWeight;
 
   const formData = {
-    movement_date: (() => { const d = document.getElementById("saleDate").value; const now = new Date(); return d ? new Date(`${d}T${now.toTimeString().split(' ')[0]}`).toISOString() : now.toISOString(); })(),
+    movement_date: (() => {
+      const d = document.getElementById("saleDate").value;
+      const t = document.getElementById("saleTime").value;      // "HH:MM"
+      const now = new Date();
+      const timePart = t ? `${t}:00` : now.toTimeString().split(' ')[0];
+      return d ? new Date(`${d}T${timePart}`).toISOString() : now.toISOString();
+    })(),
     product_id: document.getElementById("saleProduct").value,
     from_location_id: document.getElementById("saleLocation").value,
     gross_weight: grossWeight,

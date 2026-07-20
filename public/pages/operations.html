@@ -420,9 +420,12 @@
         <form id="salesForm" onsubmit="event.preventDefault(); saveSales();">
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label required">Sale Date</label>
-              <input type="date" class="form-control" id="saleDate" required />
-            </div>
+  <label class="form-label required">Sale Date &amp; Time</label>
+  <div style="display:flex; gap:8px;">
+    <input type="date" class="form-control" id="saleDate" required style="flex:2" />
+    <input type="time" class="form-control" id="saleTime" required style="flex:1" />
+  </div>
+</div>
             <div class="form-group">
               <label class="form-label required">Product Sold</label>
               <select class="form-control" id="saleProduct" required onchange="updateSalePrice()"><option value="">Select Product Sold</option></select>

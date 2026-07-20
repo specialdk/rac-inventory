@@ -79,7 +79,7 @@ router.get("/reports/account-detail", async (req, res) => {
       LEFT JOIN deliveries del ON sm.delivery_id = del.delivery_id
       LEFT JOIN delivery_hourly_rates dhr ON sm.trailer_count::text = dhr.trailer_count AND dhr.is_active = true
       WHERE sm.movement_type = 'SALES'
-        AND sm.movement_date BETWEEN $1 AND $2
+        AND sm.movement_date::date BETWEEN $1::date AND $2::date
     `;
 
     const params = [dateFrom, dateTo];
@@ -210,7 +210,7 @@ router.get("/reports/account-detail/pdf", async (req, res) => {
       LEFT JOIN deliveries del ON sm.delivery_id = del.delivery_id
       LEFT JOIN delivery_hourly_rates dhr ON sm.trailer_count::text = dhr.trailer_count AND dhr.is_active = true
       WHERE sm.movement_type = 'SALES'
-        AND sm.movement_date BETWEEN $1 AND $2
+        AND sm.movement_date::date BETWEEN $1::date AND $2::date
     `;
 
     const params = [dateFrom, dateTo];
@@ -344,7 +344,7 @@ router.get("/reports/account-detail/pdf-with-dockets", async (req, res) => {
       LEFT JOIN deliveries del ON sm.delivery_id = del.delivery_id
       LEFT JOIN delivery_hourly_rates dhr ON sm.trailer_count::text = dhr.trailer_count AND dhr.is_active = true
       WHERE sm.movement_type = 'SALES'
-        AND sm.movement_date BETWEEN $1 AND $2
+        AND sm.movement_date::date BETWEEN $1::date AND $2::date
     `;
 
     const params = [dateFrom, dateTo];
@@ -611,7 +611,7 @@ router.post("/reports/account-detail/email", async (req, res) => {
       LEFT JOIN deliveries del ON sm.delivery_id = del.delivery_id
       LEFT JOIN delivery_hourly_rates dhr ON sm.trailer_count::text = dhr.trailer_count AND dhr.is_active = true
       WHERE sm.movement_type = 'SALES'
-        AND sm.movement_date BETWEEN $1 AND $2
+        AND sm.movement_date::date BETWEEN $1::date AND $2::date
     `;
 
     const params = [dateFrom, dateTo];
