@@ -112,15 +112,18 @@ function renderStocktakeTable() {
     SAND: 6,
   };
 
-  // Step 1: Build rows from currentStock (each is a product+location combo with stock > 0)
-  const productsWithStock = new Set();
-
+  // Only ACTIVE products that hold stock (SOH > 0) belong on the stocktake.
+  // The server's /api/stock/as-at endpoint already limits results to active
+  // products, and here we keep only product+location combos that actually hold
+  // stock. Everything else — zero-balance piles, inactive/test items, and
+  // products created after the count date — is intentionally left off. Use the
+  // "Add Product at Different Location" button to bring one in if you genuinely
+  // need to count it.
   currentStock.forEach((stock) => {
-    // Skip locations with zero or near-zero stock
+    // Skip locations with zero or near-zero stock (SOH > 0 test)
     const qty = parseFloat(stock.quantity) || 0;
     if (qty < 0.1) return;
 
-    productsWithStock.add(stock.product_id);
     stocktakeRows.push({
       product_id: stock.product_id,
       product_name: stock.product_name,
@@ -133,23 +136,10 @@ function renderStocktakeTable() {
     });
   });
 
-  // Step 2: Add products that have NO stock at all (so they can be counted fresh)
-  products.forEach((product) => {
-    if (!productsWithStock.has(product.product_id)) {
-      stocktakeRows.push({
-        product_id: product.product_id,
-        product_name: product.product_name,
-        family_group: product.family_group,
-        location_id: null,
-        location_name: null,
-        current_qty: 0,
-        average_cost: parseFloat(product.standard_cost) || 40,
-        is_existing: false,
-      });
-    }
-  });
+  // (Products with no stock are intentionally NOT auto-listed — see note above.
+  // Add one manually with "Add Product at Different Location" if needed.)
 
-  // Step 3: Sort by family group, then product name, then location name
+  // Sort by family group, then product name, then location name
   stocktakeRows.sort((a, b) => {
     const familyA = familyOrder[a.family_group] || 99;
     const familyB = familyOrder[b.family_group] || 99;
