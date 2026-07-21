@@ -11,6 +11,7 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "../public")));
+app.use("/api/stocktakes", require("./routes/stocktakes"));
 
 const { pool } = require("./config/database");
 
