@@ -164,13 +164,15 @@
         <table class="table" style="font-size: 0.9rem">
           <thead>
             <tr style="background-color: var(--gray-100, #f5f5f5)">
-              <th style="width: 10%">Group</th>
-              <th style="width: 18%">Product</th>
-              <th style="width: 12%">Location</th>
-              <th style="text-align: right; width: 8%">SOH (t)</th>
-              <th style="text-align: center; width: 10%">Count (t)</th>
-              <th style="text-align: center; width: 10%">Avg Cost ($/t)</th>
-              <th style="width: 28%">Notes</th>
+              <th style="width: 8%">Group</th>
+              <th style="width: 15%">Product</th>
+              <th style="width: 11%">Location</th>
+              <th style="text-align: right; width: 8%">INV HUB (t)<br /><small style="font-weight: 400; color: #888">A</small></th>
+              <th style="text-align: center; width: 8%">COUNT (t)<br /><small style="font-weight: 400; color: #888">B</small></th>
+              <th style="text-align: center; width: 8%">COST ($/t)<br /><small style="font-weight: 400; color: #888">C</small></th>
+              <th style="text-align: right; width: 8%">VARIANCE (t)<br /><small style="font-weight: 400; color: #888">B − A</small></th>
+              <th style="text-align: right; width: 11%">VALUE ($)<br /><small style="font-weight: 400; color: #888">(B − A) × C</small></th>
+              <th style="width: 19%">Notes</th>
               <th style="width: 4%"></th>
             </tr>
           </thead>
@@ -187,12 +189,19 @@
             >
               <td colspan="3"><strong>TOTAL ADJUSTMENT</strong></td>
               <td style="text-align: right">
-                <strong id="totalAdjustment">0.0 t</strong>
+                <strong id="totalHub">0.0 t</strong>
               </td>
-              <td colspan="3" style="text-align: center">
-                <strong id="totalValue">$0</strong>
+              <td style="text-align: center">
+                <strong id="totalCount">0.0 t</strong>
               </td>
               <td></td>
+              <td style="text-align: right">
+                <strong id="totalAdjustment">0.0 t</strong>
+              </td>
+              <td style="text-align: right">
+                <strong id="totalValue">$0.00</strong>
+              </td>
+              <td colspan="2"></td>
             </tr>
           </tfoot>
         </table>

@@ -227,6 +227,12 @@ function renderStocktakeTable() {
           onchange="calculateTotals()"
         />
       </td>
+      <td style="text-align: right; padding: 0.3rem 0.5rem;">
+        <span id="qvar_${rowId}" style="font-weight: 600; color: #666">—</span>
+      </td>
+      <td id="valcell_${rowId}" style="text-align: right; padding: 0.3rem 0.5rem;">
+        <span id="var_${rowId}" style="font-weight: 600; color: #999">—</span>
+      </td>
       <td style="padding: 0.3rem 0.5rem;">
         <input
           type="text"
@@ -269,74 +275,129 @@ function updateRowSOH(index) {
   calculateTotals();
 }
 
-// Calculate all totals
-function calculateTotals() {
-  let totalAdjustment = 0;
-  let totalValue = 0;
+// $ with 2 decimals, e.g. -$83,348.00 (matches the Excel look)
+function formatMoney2(value) {
+  const n = parseFloat(value) || 0;
+  return (
+    (n < 0 ? "-$" : "$") +
+    Math.abs(n).toLocaleString("en-AU", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })
+  );
+}
 
-  // Calculate from stocktake rows
-  stocktakeRows.forEach((row) => {
-    const rowId = row.rowId;
+// Blend two [r,g,b] colours by t (0..1)
+function lerpColor(a, b, t) {
+  t = Math.max(0, Math.min(1, t));
+  return `rgb(${Math.round(a[0] + (b[0] - a[0]) * t)}, ${Math.round(
+    a[1] + (b[1] - a[1]) * t
+  )}, ${Math.round(a[2] + (b[2] - a[2]) * t)})`;
+}
+
+// Excel-style 3-colour scale: green (gain) -> yellow (nil) -> red (loss)
+const HEAT_GREEN = [99, 190, 123]; // #63BE7B
+const HEAT_YELLOW = [255, 235, 132]; // #FFEB84
+const HEAT_RED = [248, 105, 107]; // #F8696B
+function heatColor(value, maxPos, maxNegMag) {
+  if (value > 0)
+    return lerpColor(HEAT_YELLOW, HEAT_GREEN, maxPos > 0 ? value / maxPos : 0);
+  if (value < 0)
+    return lerpColor(
+      HEAT_YELLOW,
+      HEAT_RED,
+      maxNegMag > 0 ? Math.abs(value) / maxNegMag : 0
+    );
+  return "rgb(255, 235, 132)"; // exactly nil -> yellow
+}
+
+// Calculate every column's totals AND each row's qty + $ variance,
+// then heat-map the VALUE cells. A typed 0 counts (only blank is skipped).
+function calculateTotals() {
+  let totalHub = 0,
+    totalCount = 0,
+    totalAdjustment = 0,
+    totalValue = 0;
+  const computed = []; // { rowId, lineValue, counted }
+  let maxPos = 0,
+    maxNegMag = 0;
+
+  const processRow = (rowId) => {
     const countInput = document.getElementById(`count_${rowId}`);
     const costInput = document.getElementById(`cost_${rowId}`);
     const sohElement = document.getElementById(`soh_${rowId}`);
     const locationSelect = document.getElementById(`location_${rowId}`);
+    const qSpan = document.getElementById(`qvar_${rowId}`);
 
-    if (
+    const counted =
       countInput &&
-      countInput.value &&
+      countInput.value !== "" &&
       locationSelect &&
-      locationSelect.value
-    ) {
-      const currentQty = parseFloat(sohElement.textContent);
-      const newQty = parseFloat(countInput.value) || 0;
-      const adjustment = newQty - currentQty;
-      const cost = parseFloat(costInput.value) || 0;
+      locationSelect.value &&
+      sohElement;
 
-      totalAdjustment += adjustment;
-      totalValue += adjustment * cost;
+    if (counted) {
+      const soh = parseFloat(sohElement.textContent) || 0;
+      const cnt = parseFloat(countInput.value) || 0;
+      const qtyVar = cnt - soh;
+      const cost = parseFloat(costInput.value) || 0;
+      const lineValue = qtyVar * cost;
+
+      totalHub += soh;
+      totalCount += cnt;
+      totalAdjustment += qtyVar;
+      totalValue += lineValue;
+      if (lineValue > maxPos) maxPos = lineValue;
+      if (-lineValue > maxNegMag) maxNegMag = -lineValue;
+
+      if (qSpan) {
+        qSpan.textContent = qtyVar.toFixed(2);
+        qSpan.style.color =
+          qtyVar < 0 ? "#c0392b" : qtyVar > 0 ? "#1e7e34" : "#666";
+      }
+      computed.push({ rowId, lineValue, counted: true });
+    } else {
+      if (qSpan) {
+        qSpan.textContent = "—";
+        qSpan.style.color = "#999";
+      }
+      computed.push({ rowId, lineValue: 0, counted: false });
+    }
+  };
+
+  // Pass 1: figures + qty variance
+  stocktakeRows.forEach((row) => processRow(row.rowId));
+  for (let i = 1; i <= manualRowCounter; i++) {
+    if (document.getElementById(`count_manual_${i}`)) processRow(`manual_${i}`);
+  }
+
+  // Pass 2: colour the VALUE cells now the range is known
+  computed.forEach(({ rowId, lineValue, counted }) => {
+    const cell = document.getElementById(`valcell_${rowId}`);
+    const span = document.getElementById(`var_${rowId}`);
+    if (!cell || !span) return;
+    if (!counted) {
+      span.textContent = "—";
+      span.style.color = "#999";
+      cell.style.backgroundColor = "";
+    } else {
+      span.textContent = formatMoney2(lineValue);
+      span.style.color = "#333";
+      cell.style.backgroundColor = heatColor(lineValue, maxPos, maxNegMag);
     }
   });
 
-  // Calculate from manual rows
-  for (let i = 1; i <= manualRowCounter; i++) {
-    const rowId = `manual_${i}`;
-    const countInput = document.getElementById(`count_${rowId}`);
-    const costInput = document.getElementById(`cost_${rowId}`);
-    const sohElement = document.getElementById(`soh_${rowId}`);
-    const locationSelect = document.getElementById(`location_${rowId}`);
-
-    if (
-      countInput &&
-      countInput.value &&
-      locationSelect &&
-      locationSelect.value &&
-      sohElement
-    ) {
-      const currentQty = parseFloat(sohElement.textContent) || 0;
-      const newQty = parseFloat(countInput.value) || 0;
-      const adjustment = newQty - currentQty;
-      const cost = parseFloat(costInput.value) || 0;
-
-      totalAdjustment += adjustment;
-      totalValue += adjustment * cost;
-    }
-  }
-
+  document.getElementById("totalHub").textContent =
+    formatNumber(totalHub) + " t";
+  document.getElementById("totalCount").textContent =
+    formatNumber(totalCount) + " t";
   document.getElementById("totalAdjustment").textContent =
     formatNumber(totalAdjustment) + " t";
-  document.getElementById("totalValue").textContent =
-    formatCurrency(totalValue);
+  document.getElementById("totalValue").textContent = formatMoney2(totalValue);
 
-  // Color code total value
   const totalValueElement = document.getElementById("totalValue");
-  if (totalValue > 0) {
-    totalValueElement.style.color = "green";
-  } else if (totalValue < 0) {
-    totalValueElement.style.color = "red";
-  } else {
-    totalValueElement.style.color = "inherit";
-  }
+  totalValueElement.style.color =
+    totalValue < 0 ? "red" : totalValue > 0 ? "green" : "inherit";
 }
 
 // Collect all adjustments
@@ -909,6 +970,12 @@ function addProductRow() {
         style="width: 80px; text-align: center; padding: 0.25rem; font-size: 0.9rem;"
         onchange="calculateTotals()"
       />
+    </td>
+    <td style="text-align: right; padding: 0.3rem 0.5rem;">
+      <span id="qvar_${rowId}" style="font-weight: 600; color: #666">—</span>
+    </td>
+    <td id="valcell_${rowId}" style="text-align: right; padding: 0.3rem 0.5rem;">
+      <span id="var_${rowId}" style="font-weight: 600; color: #999">—</span>
     </td>
     <td style="padding: 0.3rem 0.5rem;">
       <input
