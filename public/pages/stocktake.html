@@ -62,10 +62,48 @@
           <button class="btn-secondary" onclick="cancelStocktake()">
             Cancel
           </button>
+          <button
+            class="btn-secondary"
+            style="background:#17a2b8;color:#fff;border:none"
+            onclick="saveDraft()"
+          >
+            📝 Save Draft
+          </button>
           <button class="btn-primary" onclick="applyStocktake()">
-            💾 Apply Stocktake
+            ✅ Post Stocktake
           </button>
         </div>
+      </div>
+
+      <!-- Resume a saved draft -->
+      <div
+        class="card"
+        style="
+          margin-bottom: 1rem;
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          flex-wrap: wrap;
+        "
+      >
+        <label class="form-label" style="margin: 0; white-space: nowrap">
+          📂 Resume saved draft
+        </label>
+        <select
+          id="resumeDraftSelect"
+          class="form-control"
+          style="max-width: 520px"
+          onchange="resumeDraft(this.value)"
+        >
+          <option value="">-- Resume a saved draft --</option>
+        </select>
+        <small style="color: #666">
+          Loads a previously saved stocktake so you can review and post it.
+        </small>
+        <span
+          id="draftStatusLabel"
+          style="margin-left: auto; font-weight: 600; color: #17a2b8"
+        ></span>
       </div>
 
       <!-- Stocktake Header - Single Row -->
@@ -186,8 +224,15 @@
         <button class="btn-secondary btn-lg" onclick="cancelStocktake()">
           Cancel
         </button>
+        <button
+          class="btn-secondary btn-lg"
+          style="background:#17a2b8;color:#fff;border:none"
+          onclick="saveDraft()"
+        >
+          📝 Save Draft
+        </button>
         <button class="btn-primary btn-lg" onclick="applyStocktake()">
-          💾 Apply Stocktake Adjustment
+          ✅ Post Stocktake Adjustment
         </button>
       </div>
     </div>

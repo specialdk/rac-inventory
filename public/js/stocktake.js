@@ -1,11 +1,13 @@
 // Stocktake Page JavaScript - Shows ALL product+location combinations
-// Uses existing /api/movements/adjustment endpoint
+// Uses existing /api/movements/adjustment endpoint to POST,
+// and /api/stocktakes to SAVE / RESUME drafts (nothing posted until Post).
 
 let currentStock = [];
 let products = [];
 let locations = [];
 let stocktakeRows = []; // Track all rendered rows
 let manualRowCounter = 0;
+let currentDraftId = null; // set when we save a draft or resume one
 
 // Initialize page
 document.addEventListener("DOMContentLoaded", function () {
@@ -14,6 +16,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Load data for today by default
   loadStocktakeData();
+
+  // Populate the "Resume saved draft" picker
+  loadDraftsList();
 });
 
 // Format currency
@@ -186,9 +191,9 @@ function renderStocktakeTable() {
       )}</strong></small></td>
       <td style="padding: 0.3rem 0.5rem;">${row.product_name}</td>
       <td style="padding: 0.3rem 0.5rem;">
-        <select 
-          class="form-control" 
-          id="location_${rowId}" 
+        <select
+          class="form-control"
+          id="location_${rowId}"
           data-row-index="${index}"
           onchange="updateRowSOH(${index})"
           style="padding: 0.25rem; font-size: 0.9rem;"
@@ -200,33 +205,33 @@ function renderStocktakeTable() {
         <span id="soh_${rowId}">${formatNumber(row.current_qty)}</span>
       </td>
       <td style="text-align: center; padding: 0.3rem 0.5rem;">
-        <input 
-          type="number" 
-          class="form-control" 
-          id="count_${rowId}" 
-          step="0.1" 
+        <input
+          type="number"
+          class="form-control"
+          id="count_${rowId}"
+          step="0.1"
           placeholder="0.0"
           style="width: 90px; text-align: center; padding: 0.25rem; font-size: 0.9rem;"
           onchange="calculateTotals()"
         />
       </td>
       <td style="text-align: center; padding: 0.3rem 0.5rem;">
-        <input 
-          type="number" 
-          class="form-control" 
-          id="cost_${rowId}" 
+        <input
+          type="number"
+          class="form-control"
+          id="cost_${rowId}"
           value="${row.average_cost}"
-          step="0.01" 
+          step="0.01"
           placeholder="0.00"
           style="width: 80px; text-align: center; padding: 0.25rem; font-size: 0.9rem;"
           onchange="calculateTotals()"
         />
       </td>
       <td style="padding: 0.3rem 0.5rem;">
-        <input 
-          type="text" 
-          class="form-control" 
-          id="notes_${rowId}" 
+        <input
+          type="text"
+          class="form-control"
+          id="notes_${rowId}"
           placeholder="Optional notes..."
           style="width: 100%; padding: 0.25rem; font-size: 0.85rem;"
         />
@@ -416,6 +421,287 @@ function collectAdjustments() {
   return adjustments;
 }
 
+// ============================================================
+// SAVE DRAFT  — capture everything typed without touching stock
+// ============================================================
+
+// Collect every row that has been touched (count and/or notes),
+// including rows whose count equals SOH (still worth keeping).
+function collectDraftLines() {
+  const lines = [];
+  let totalQty = 0;
+  let totalValue = 0;
+
+  // Existing product+location rows
+  stocktakeRows.forEach((row) => {
+    const rowId = row.rowId;
+    const countInput = document.getElementById(`count_${rowId}`);
+    const costInput = document.getElementById(`cost_${rowId}`);
+    const notesInput = document.getElementById(`notes_${rowId}`);
+    const locationSelect = document.getElementById(`location_${rowId}`);
+    const sohElement = document.getElementById(`soh_${rowId}`);
+    if (!countInput) return;
+
+    const countVal = countInput.value;
+    const notesVal = notesInput ? notesInput.value : "";
+    if (countVal === "" && notesVal.trim() === "") return; // nothing entered
+
+    const soh = sohElement ? parseFloat(sohElement.textContent) || 0 : 0;
+    const locationId =
+      locationSelect && locationSelect.value
+        ? parseInt(locationSelect.value)
+        : null;
+    const counted = countVal === "" ? null : parseFloat(countVal);
+    const cost = costInput && costInput.value ? parseFloat(costInput.value) : null;
+
+    lines.push({
+      product_id: row.product_id,
+      location_id: locationId,
+      soh_snapshot: soh,
+      counted_qty: counted,
+      unit_cost: cost,
+      notes: notesVal,
+      is_manual: false,
+    });
+
+    if (locationId && counted != null) {
+      const adj = counted - soh;
+      totalQty += adj;
+      totalValue += adj * (cost || 0);
+    }
+  });
+
+  // Manual rows ("product at new location")
+  for (let i = 1; i <= manualRowCounter; i++) {
+    const rowId = `manual_${i}`;
+    const productSelect = document.getElementById(`product_${rowId}`);
+    if (!productSelect || !productSelect.value) continue; // removed or empty
+
+    const locationSelect = document.getElementById(`location_${rowId}`);
+    const countInput = document.getElementById(`count_${rowId}`);
+    const costInput = document.getElementById(`cost_${rowId}`);
+    const notesInput = document.getElementById(`notes_${rowId}`);
+    const sohElement = document.getElementById(`soh_${rowId}`);
+
+    const soh = sohElement ? parseFloat(sohElement.textContent) || 0 : 0;
+    const locationId =
+      locationSelect && locationSelect.value
+        ? parseInt(locationSelect.value)
+        : null;
+    const counted =
+      countInput && countInput.value !== "" ? parseFloat(countInput.value) : null;
+    const cost = costInput && costInput.value ? parseFloat(costInput.value) : null;
+    const notesVal = notesInput ? notesInput.value : "";
+
+    lines.push({
+      product_id: parseInt(productSelect.value),
+      location_id: locationId,
+      soh_snapshot: soh,
+      counted_qty: counted,
+      unit_cost: cost,
+      notes: notesVal,
+      is_manual: true,
+    });
+
+    if (locationId && counted != null) {
+      const adj = counted - soh;
+      totalQty += adj;
+      totalValue += adj * (cost || 0);
+    }
+  }
+
+  return { lines, totalQty, totalValue };
+}
+
+async function saveDraft() {
+  const stocktakeDate = document.getElementById("stocktakeDate").value;
+  const reference = document.getElementById("stocktakeReference").value;
+  const operator = document.getElementById("stocktakeOperator").value;
+  const generalNotes = document.getElementById("stocktakeNotes").value;
+
+  if (!stocktakeDate || !reference) {
+    alert("Please fill in As-At Date and Reference before saving.");
+    return;
+  }
+
+  const { lines, totalQty, totalValue } = collectDraftLines();
+
+  if (lines.length === 0) {
+    alert("Nothing to save yet — enter some counts first.");
+    return;
+  }
+
+  try {
+    const response = await fetch("/api/stocktakes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        stocktake_id: currentDraftId || undefined,
+        reference,
+        as_at_date: stocktakeDate,
+        operator,
+        general_notes: generalNotes,
+        created_by: "Admin User",
+        total_qty_adjustment: totalQty,
+        total_value_adjustment: totalValue,
+        lines,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok && data.success) {
+      currentDraftId = data.stocktake_id;
+      document.getElementById("draftStatusLabel").textContent =
+        `✓ Draft saved (#${currentDraftId}) — safe to leave and resume later`;
+      await loadDraftsList();
+      document.getElementById("resumeDraftSelect").value = String(currentDraftId);
+      alert(
+        `✅ Draft saved.\n\n` +
+          `Reference: ${reference}\n` +
+          `Lines saved: ${lines.length}\n\n` +
+          `You can safely leave this page and Resume it later. ` +
+          `Nothing has been posted to stock yet.`
+      );
+    } else {
+      alert("❌ Failed to save draft: " + (data.error || "Unknown error"));
+    }
+  } catch (error) {
+    console.error("Error saving draft:", error);
+    alert("❌ Error saving draft: " + error.message);
+  }
+}
+
+// ============================================================
+// RESUME DRAFT  — reload a saved stocktake and re-populate the screen
+// ============================================================
+
+async function loadDraftsList() {
+  try {
+    const response = await fetch("/api/stocktakes/drafts");
+    const drafts = await response.json();
+    const select = document.getElementById("resumeDraftSelect");
+    if (!select) return;
+
+    const current = select.value;
+    select.innerHTML = '<option value="">-- Resume a saved draft --</option>';
+
+    drafts.forEach((d) => {
+      const saved = d.updated_at
+        ? new Date(d.updated_at).toLocaleString("en-AU", {
+            day: "2-digit",
+            month: "short",
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+        : "";
+      const label = `${d.reference} — ${d.line_count} lines (saved ${saved})`;
+      select.add(new Option(label, d.stocktake_id));
+    });
+
+    if (current) select.value = current;
+  } catch (error) {
+    console.error("Error loading drafts list:", error);
+  }
+}
+
+async function resumeDraft(id) {
+  if (!id) return;
+
+  try {
+    const response = await fetch(`/api/stocktakes/${id}`);
+    if (!response.ok) {
+      alert("Could not load that draft.");
+      return;
+    }
+    const st = await response.json();
+
+    // Restore the header fields
+    document.getElementById("stocktakeReference").value = st.reference || "";
+    document.getElementById("stocktakeNotes").value = st.general_notes || "";
+    document.getElementById("stocktakeOperator").value =
+      st.operator || "Admin User";
+
+    const dateStr = (st.as_at_date || "").split("T")[0];
+    if (dateStr) document.getElementById("stocktakeDate").value = dateStr;
+
+    currentDraftId = st.stocktake_id;
+
+    // Rebuild the base table for that as-at date, then overlay the saved counts
+    await loadStockAsAt();
+    overlaySavedLines(st.lines || []);
+
+    document.getElementById("draftStatusLabel").textContent =
+      `✎ Editing saved draft: ${st.reference}`;
+  } catch (error) {
+    console.error("Error resuming draft:", error);
+    alert("❌ Error resuming draft: " + error.message);
+  }
+}
+
+// Drop each saved line back onto the rebuilt table
+function overlaySavedLines(lines) {
+  lines.forEach((line) => {
+    if (line.is_manual) {
+      // Recreate a manual "product at new location" row
+      addProductRow();
+      const rowId = `manual_${manualRowCounter}`;
+      const productSelect = document.getElementById(`product_${rowId}`);
+      if (productSelect) {
+        productSelect.value = String(line.product_id || "");
+        updateManualRow(rowId);
+      }
+      const locationSelect = document.getElementById(`location_${rowId}`);
+      if (locationSelect && line.location_id) {
+        locationSelect.value = String(line.location_id);
+        updateManualRowSOH(rowId);
+      }
+      setRowValues(rowId, line);
+    } else {
+      // Find the matching existing product+location row
+      let idx = stocktakeRows.findIndex(
+        (r) =>
+          r.product_id === line.product_id && r.location_id === line.location_id
+      );
+
+      // If the product only had a blank (no-location) row, set its location first
+      if (idx === -1 && line.location_id != null) {
+        idx = stocktakeRows.findIndex(
+          (r) => r.product_id === line.product_id && r.location_id == null
+        );
+        if (idx !== -1) {
+          const locSel = document.getElementById(
+            `location_${stocktakeRows[idx].rowId}`
+          );
+          if (locSel) {
+            locSel.value = String(line.location_id);
+            updateRowSOH(idx);
+          }
+        }
+      }
+
+      if (idx === -1) return; // couldn't match — skip
+      setRowValues(stocktakeRows[idx].rowId, line);
+    }
+  });
+
+  calculateTotals();
+}
+
+// Helper: put a saved line's count / cost / notes onto a rendered row
+function setRowValues(rowId, line) {
+  const countInput = document.getElementById(`count_${rowId}`);
+  const costInput = document.getElementById(`cost_${rowId}`);
+  const notesInput = document.getElementById(`notes_${rowId}`);
+  if (countInput && line.counted_qty != null) countInput.value = line.counted_qty;
+  if (costInput && line.unit_cost != null) costInput.value = line.unit_cost;
+  if (notesInput && line.notes) notesInput.value = line.notes;
+}
+
+// ============================================================
+// POST (Apply) — writes the adjustments to live stock
+// ============================================================
+
 // Apply stocktake - uses existing /api/movements/adjustment endpoint
 async function applyStocktake() {
   // Validation
@@ -449,10 +735,10 @@ async function applyStocktake() {
   );
 
   const confirmed = confirm(
-    `Apply Stocktake Adjustment?\n\n` +
+    `Post Stocktake Adjustment?\n\n` +
       `Total Quantity Change: ${formatNumber(grandQtyAdj)} tonnes\n` +
       `Total Value Change: ${formatCurrency(grandValueAdj)}\n\n` +
-      `This will create ${adjustments.length} adjustment transactions.`
+      `This will create ${adjustments.length} adjustment transactions and update live stock.`
   );
 
   if (!confirmed) return;
@@ -502,36 +788,50 @@ async function applyStocktake() {
     }
 
     if (successCount > 0) {
-      let message = `✅ Stocktake applied!\n\n` +
+      // If this came from a saved draft, mark it POSTED so it leaves the Resume list
+      if (currentDraftId) {
+        try {
+          await fetch(`/api/stocktakes/${currentDraftId}/posted`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ posted_by: "Admin User" }),
+          });
+          currentDraftId = null;
+        } catch (e) {
+          console.error("Could not mark draft posted:", e);
+        }
+      }
+
+      let message = `✅ Stocktake posted!\n\n` +
         `${successCount} adjustments successful\n`;
-      
+
       if (failCount > 0) {
         message += `${failCount} adjustments failed:\n`;
         failedItems.forEach(item => {
           message += `  • ${item}\n`;
         });
       }
-      
+
       message += `\nReference: ${reference}`;
-      
+
       alert(message);
       window.location.href = "operations.html";
     } else {
       alert(
-        "❌ Failed to apply stocktake.\n\n" +
+        "❌ Failed to post stocktake.\n\n" +
         failedItems.join("\n") +
         "\n\nCheck console for details."
       );
     }
   } catch (error) {
     console.error("Error applying stocktake:", error);
-    alert("❌ Error applying stocktake");
+    alert("❌ Error posting stocktake");
   }
 }
 
 // Cancel stocktake
 function cancelStocktake() {
-  if (confirm("Cancel stocktake? Any entered data will be lost.")) {
+  if (confirm("Cancel stocktake? Any unsaved data will be lost.")) {
     window.location.href = "operations.html";
   }
 }
@@ -566,9 +866,9 @@ function addProductRow() {
       <small><em id="group_${rowId}">-</em></small>
     </td>
     <td style="padding: 0.3rem 0.5rem;">
-      <select 
-        class="form-control" 
-        id="product_${rowId}" 
+      <select
+        class="form-control"
+        id="product_${rowId}"
         onchange="updateManualRow('${rowId}')"
         style="padding: 0.25rem; font-size: 0.9rem;"
       >
@@ -576,9 +876,9 @@ function addProductRow() {
       </select>
     </td>
     <td style="padding: 0.3rem 0.5rem;">
-      <select 
-        class="form-control" 
-        id="location_${rowId}" 
+      <select
+        class="form-control"
+        id="location_${rowId}"
         onchange="updateManualRowSOH('${rowId}')"
         style="padding: 0.25rem; font-size: 0.9rem;"
       >
@@ -589,39 +889,39 @@ function addProductRow() {
       <span id="soh_${rowId}">0.0</span>
     </td>
     <td style="text-align: center; padding: 0.3rem 0.5rem;">
-      <input 
-        type="number" 
-        class="form-control" 
-        id="count_${rowId}" 
-        step="0.1" 
+      <input
+        type="number"
+        class="form-control"
+        id="count_${rowId}"
+        step="0.1"
         placeholder="0.0"
         style="width: 90px; text-align: center; padding: 0.25rem; font-size: 0.9rem;"
         onchange="calculateTotals()"
       />
     </td>
     <td style="text-align: center; padding: 0.3rem 0.5rem;">
-      <input 
-        type="number" 
-        class="form-control" 
-        id="cost_${rowId}" 
-        step="0.01" 
+      <input
+        type="number"
+        class="form-control"
+        id="cost_${rowId}"
+        step="0.01"
         placeholder="0.00"
         style="width: 80px; text-align: center; padding: 0.25rem; font-size: 0.9rem;"
         onchange="calculateTotals()"
       />
     </td>
     <td style="padding: 0.3rem 0.5rem;">
-      <input 
-        type="text" 
-        class="form-control" 
-        id="notes_${rowId}" 
+      <input
+        type="text"
+        class="form-control"
+        id="notes_${rowId}"
         placeholder="Optional notes..."
         style="width: 100%; padding: 0.25rem; font-size: 0.85rem;"
       />
     </td>
     <td style="text-align: center; padding: 0.3rem 0.5rem;">
-      <button 
-        class="btn-icon" 
+      <button
+        class="btn-icon"
         onclick="removeManualRow('${rowId}')"
         title="Remove"
         style="background: none; border: none; cursor: pointer; font-size: 1.2rem;"
