@@ -29,6 +29,7 @@ router.get("/inventory-summary", async (req, res) => {
         COALESCE(SUM(CASE WHEN movement_type = 'SALES' THEN ABS(total_revenue) ELSE 0 END), 0) as mtd_sales_revenue
       FROM stock_movements
       WHERE movement_date >= DATE_TRUNC('month', CURRENT_DATE)
+      AND is_cancelled = false
     `);
 
     // 3. QTD Production & Sales (current quarter)
@@ -40,6 +41,7 @@ router.get("/inventory-summary", async (req, res) => {
         COALESCE(SUM(CASE WHEN movement_type = 'SALES' THEN ABS(total_revenue) ELSE 0 END), 0) as qtd_sales_revenue
       FROM stock_movements
       WHERE movement_date >= DATE_TRUNC('quarter', CURRENT_DATE)
+      AND is_cancelled = false
     `);
 
     // 4. Today's Production
@@ -49,6 +51,7 @@ router.get("/inventory-summary", async (req, res) => {
         COALESCE(SUM(CASE WHEN movement_type = 'SALES' THEN ABS(quantity) ELSE 0 END), 0) as today_sales
       FROM stock_movements
       WHERE movement_date = CURRENT_DATE
+      AND is_cancelled = false
     `);
 
     // 5. Forward Orders (demand orders with PENDING or CONFIRMED status)
@@ -82,13 +85,13 @@ router.get("/inventory-summary", async (req, res) => {
         COALESCE(
           (SELECT SUM(quantity) FROM stock_movements 
            WHERE product_id = p.product_id AND movement_type = 'PRODUCTION'
-           AND movement_date >= DATE_TRUNC('month', CURRENT_DATE)),
+           AND movement_date >= DATE_TRUNC('month', CURRENT_DATE) AND is_cancelled = false),
           0
         ) as mtd_production,
         COALESCE(
           (SELECT SUM(ABS(quantity)) FROM stock_movements 
            WHERE product_id = p.product_id AND movement_type = 'SALES'
-           AND movement_date >= DATE_TRUNC('month', CURRENT_DATE)),
+           AND movement_date >= DATE_TRUNC('month', CURRENT_DATE) AND is_cancelled = false),
           0
         ) as mtd_sales
       FROM products p
@@ -252,6 +255,7 @@ router.get("/inventory-summary/production", async (req, res) => {
       JOIN products p ON sm.product_id = p.product_id
       WHERE sm.movement_type = 'PRODUCTION'
         AND sm.movement_date >= CURRENT_DATE - $1::integer
+        AND sm.is_cancelled = false
       GROUP BY sm.movement_date, p.product_code, p.product_name, p.family_group
       ORDER BY sm.movement_date DESC, p.family_group, p.product_name
     `, [days]);
@@ -265,6 +269,7 @@ router.get("/inventory-summary/production", async (req, res) => {
       FROM stock_movements
       WHERE movement_type = 'PRODUCTION'
         AND movement_date >= CURRENT_DATE - $1::integer
+        AND is_cancelled = false
       GROUP BY movement_date
       ORDER BY movement_date DESC
     `, [days]);
@@ -307,6 +312,7 @@ router.get("/inventory-summary/sales", async (req, res) => {
       LEFT JOIN customers c ON sm.customer_id = c.customer_id
       WHERE sm.movement_type = 'SALES'
         AND sm.movement_date >= CURRENT_DATE - $1::integer
+        AND sm.is_cancelled = false
       GROUP BY sm.movement_date, p.product_code, p.product_name, p.family_group,
                c.customer_name, c.customer_code
       ORDER BY sm.movement_date DESC, c.customer_name, p.product_name

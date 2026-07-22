@@ -28,8 +28,8 @@ app.get("/api/dashboard/stats", async (req, res) => {
   try {
     const productsResult    = await pool.query("SELECT COUNT(DISTINCT product_id) as count FROM current_stock WHERE quantity > 0");
     const valueResult       = await pool.query("SELECT COALESCE(SUM(total_value), 0) as total FROM current_stock");
-    const productionResult  = await pool.query(`SELECT COALESCE(SUM(quantity), 0) as total FROM stock_movements WHERE movement_type = 'PRODUCTION' AND movement_date >= DATE_TRUNC('month', CURRENT_DATE)`);
-    const salesResult       = await pool.query(`SELECT COALESCE(SUM(ABS(quantity)), 0) as total FROM stock_movements WHERE movement_type = 'SALES' AND movement_date >= DATE_TRUNC('month', CURRENT_DATE)`);
+    const productionResult  = await pool.query(`SELECT COALESCE(SUM(quantity), 0) as total FROM stock_movements WHERE movement_type = 'PRODUCTION' AND movement_date >= DATE_TRUNC('month', CURRENT_DATE) AND is_cancelled = false`);
+    const salesResult       = await pool.query(`SELECT COALESCE(SUM(ABS(quantity)), 0) as total FROM stock_movements WHERE movement_type = 'SALES' AND movement_date >= DATE_TRUNC('month', CURRENT_DATE) AND is_cancelled = false`);
     res.json({
       productsWithStock:   parseInt(productsResult.rows[0].count) || 0,
       totalInventoryValue: parseFloat(valueResult.rows[0].total) || 0,

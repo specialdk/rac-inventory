@@ -261,12 +261,14 @@ router.get("/as-at", async (req, res) => {
         FROM stock_movements
         WHERE movement_date::date <= $1
           AND movement_type NOT IN ('DEMAND', 'EDIT', 'CANCEL')
+          AND is_cancelled = false
           AND to_location_id IS NOT NULL
         UNION ALL
         SELECT product_id, from_location_id as location_id, -quantity as qty_change
         FROM stock_movements
         WHERE movement_date::date <= $1
           AND movement_type NOT IN ('DEMAND', 'EDIT', 'CANCEL')
+          AND is_cancelled = false
           AND from_location_id IS NOT NULL
       ) movements
       JOIN products p ON p.product_id = movements.product_id

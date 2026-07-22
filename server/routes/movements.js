@@ -602,6 +602,7 @@ router.get("/today", async (req, res) => {
         SUM(COALESCE(total_cost, 0)) as total_cost
       FROM stock_movements
       WHERE movement_date = CURRENT_DATE
+      AND is_cancelled = false
       GROUP BY movement_type
     `);
 
