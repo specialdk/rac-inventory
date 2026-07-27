@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAC Production Costing — SANDPIT</title>
+<style>
+  :root{
+    --orange:#e8720c; --orange-dark:#c25e07; --orange-soft:#fff4e9;
+    --ink:#1f2733; --muted:#66707d; --line:#e2e6ec; --bg:#f4f6f9;
+    --green:#1f8a4c; --green-soft:#eaf6ef; --red:#c0392b; --red-soft:#fbeeec; --sand:#f7efe2;
+    --blue:#2563a8; --blue-soft:#eaf1fa; --teal:#0f766e; --teal-soft:#e6f4f2;
+    --card:#ffffff; --shadow:0 1px 3px rgba(20,30,45,.08),0 1px 2px rgba(20,30,45,.06);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);background:var(--bg);font-size:14px;line-height:1.45}
+  h1,h2,h3{margin:0;font-weight:650}
+  .sandpit-bar{background:repeating-linear-gradient(45deg,#2b3442,#2b3442 18px,#222b38 18px,#222b38 36px);
+    color:#fff;padding:10px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .sandpit-tag{background:#ffd23f;color:#2b3442;font-weight:800;letter-spacing:.5px;
+    padding:3px 10px;border-radius:5px;font-size:12px}
+  .sandpit-bar .msg{font-size:13px;opacity:.95}
+  .sandpit-bar .msg b{color:#ffd23f}
+  header.app{background:var(--card);border-bottom:1px solid var(--line);padding:16px 22px;
+    display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+  header.app .title{display:flex;align-items:center;gap:12px}
+  .dot{width:34px;height:34px;border-radius:8px;background:var(--orange);display:grid;place-items:center;color:#fff;font-weight:800}
+  header.app h1{font-size:18px}
+  header.app .sub{color:var(--muted);font-size:12px;margin-top:2px}
+  .livechip{display:inline-flex;align-items:center;gap:6px;background:var(--blue-soft);color:var(--blue);
+    font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;margin-top:6px}
+  .livechip .d{width:7px;height:7px;border-radius:50%;background:var(--blue)}
+  .wrap{max-width:1120px;margin:20px auto;padding:0 18px 60px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);margin-bottom:18px;overflow:hidden}
+  .card > .head{padding:13px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fbfcfd}
+  .card > .head h2{font-size:14px;text-transform:uppercase;letter-spacing:.4px;color:var(--ink)}
+  .card > .head .hint{font-size:12px;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0}
+  .card > .body{padding:18px}
+  .grid{display:grid;gap:14px}
+  .g2{grid-template-columns:repeat(2,1fr)} .g3{grid-template-columns:repeat(3,1fr)} .g4{grid-template-columns:repeat(4,1fr)}
+  @media(max-width:760px){.g2,.g3,.g4{grid-template-columns:1fr 1fr}}
+  label.fld{display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:5px}
+  input,select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;font-size:14px;font-family:inherit;color:var(--ink);background:#fff}
+  input:focus,select:focus{outline:none;border-color:var(--orange);box-shadow:0 0 0 3px var(--orange-soft)}
+  input[readonly]{background:#f5f7fa;color:var(--muted)}
+  input.num{text-align:right}
+  table{width:100%;border-collapse:collapse}
+  th{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);text-align:left;padding:8px 8px;border-bottom:1px solid var(--line);font-weight:700}
+  td{padding:6px 8px;border-bottom:1px solid #eef1f5;vertical-align:middle}
+  td input,td select{padding:7px 8px}
+  th.r,td.r{text-align:right}
+  .sec-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 0 8px 0}
+  .sec-head h2{font-size:13px} .sec-head .hint{font-size:12px;color:var(--muted)}
+  .btn{border:1px solid var(--line);background:#fff;color:var(--ink);padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:.12s}
+  .btn:hover{background:#f4f6f9}
+  .btn.primary{background:var(--orange);border-color:var(--orange);color:#fff}
+  .btn.primary:hover{background:var(--orange-dark)}
+  .btn.ghost{background:transparent}
+  .btn.sm{padding:5px 10px;font-size:12px}
+  .btn.danger{color:var(--red);border-color:#f0cfca}
+  .btn.danger:hover{background:#fbeeec}
+  .rowbtns{display:flex;gap:8px;flex-wrap:wrap}
+  .link{color:var(--orange-dark);cursor:pointer;font-weight:600}
+  .iconbtn{border:none;background:transparent;cursor:pointer;color:var(--muted);font-size:15px;padding:2px 6px;border-radius:6px}
+  .iconbtn:hover{background:#f0f2f5;color:var(--red)}
+  .subrow{display:flex;justify-content:flex-end;gap:22px;padding:8px 8px 0;font-size:12px;color:var(--muted)}
+  .subrow b{color:var(--ink);font-variant-numeric:tabular-nums}
+  .summary{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}
+  @media(max-width:760px){.summary{grid-template-columns:1fr}}
+  .costlist{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .costlist .r{display:flex;justify-content:space-between;padding:9px 14px;border-bottom:1px solid #eef1f5;font-size:13px}
+  .costlist .r:last-child{border-bottom:none}
+  .costlist .r .lbl{color:var(--muted)}
+  .costlist .r.sub{background:#fafbfc;font-weight:600}
+  .costlist .r.total{background:var(--sand);font-weight:700;font-size:15px}
+  .cpt{background:var(--orange);color:#fff;border-radius:10px;padding:16px 18px;display:flex;flex-direction:column;justify-content:center;gap:2px}
+  .cpt .big{font-size:34px;font-weight:800;line-height:1}
+  .cpt .small{font-size:12px;opacity:.9}
+  .cpt .row2{display:flex;gap:18px;margin-top:10px;border-top:1px solid rgba(255,255,255,.3);padding-top:10px}
+  .cpt .row2 div .n{font-size:18px;font-weight:700}
+  .cpt .row2 div .l{font-size:11px;opacity:.85}
+  .massbal{margin-top:12px;background:var(--teal-soft);border:1px solid #bfe3de;color:#0c5b54;border-radius:10px;padding:10px 14px;font-size:12px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .massbal b{font-variant-numeric:tabular-nums}
+  .splitwrap{margin-top:16px}
+  .ratebox{background:var(--orange-soft);border:1px dashed #f0c79a;border-radius:10px;padding:14px;margin-bottom:16px}
+  .ratebox .note{font-size:12px;color:#95591a;margin-bottom:10px}
+  .foot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:16px 18px;border-top:1px solid var(--line);background:#fbfcfd}
+  .foot .left{color:var(--muted);font-size:12px}
+  .saved-empty{padding:26px;text-align:center;color:var(--muted);font-size:13px}
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 20px;border-radius:10px;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:.25s;z-index:50}
+  .toast.show{opacity:1;bottom:30px}
+  .tag-money{font-variant-numeric:tabular-nums}
+  .muted{color:var(--muted)} .up{color:var(--red);font-weight:600} .down{color:var(--green);font-weight:600}
+  .stdref{font-size:11px;color:var(--muted)}
+  .warnstore{background:#fff8e6;border:1px solid #f2dc9a;color:#7a5c12;padding:8px 12px;border-radius:8px;font-size:12px;margin-bottom:14px;display:none}
+</style>
+</head>
+<body>
+
+<div class="sandpit-bar">
+  <span class="sandpit-tag">SANDPIT</span>
+  <span class="msg"><b>Costing only.</b> Nothing posts, no stock moves (materials are not depleted, product is not created), no average costs change. Reads your master data, never writes back.</span>
+</div>
+
+<header class="app">
+  <div class="title">
+    <div class="dot">RAC</div>
+    <div>
+      <h1>Production Costing Sandpit</h1>
+      <div class="sub">Rirratjingu Mining — cost a crush run <b>or</b> a blend/premix run · build a reviewable record</div>
+      <div class="livechip"><span class="d"></span>Using live master data · snapshot <span id="snapDate">—</span> · read-only</div>
+    </div>
+  </div>
+  <div class="rowbtns">
+    <button class="btn ghost" onclick="loadPremix()">Load premix example</button>
+    <button class="btn" onclick="newRun()">Clear form</button>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div id="storeWarn" class="warnstore">Local saving is blocked in this browser, so saved runs won't persist after you close the tab. Use <b>Export JSON / CSV</b> to keep a durable record.</div>
+
+  <!-- ENTRY -->
+  <div class="card">
+    <div class="head"><h2>Production Run — Costing</h2><span class="hint">Materials in (products or Blast WIP) + labour + machines → cost per tonne produced</span></div>
+    <div class="body">
+
+      <!-- HEADER ROW -->
+      <div class="grid g4" style="margin-bottom:20px">
+        <div><label class="fld">Production Date</label><input type="date" id="runDate"></div>
+        <div><label class="fld">Reference</label><input type="text" id="reference" placeholder="e.g. PROD-001"></div>
+        <div><label class="fld">Operator</label>
+          <select id="operator"><option value="">—</option><option>RIA</option><option>RM</option><option>RE</option></select></div>
+        <div><label class="fld">Run type</label>
+          <select id="mode"><option value="Blend">Blend / Premix (products in)</option><option value="Crush">Crush (Blast WIP in)</option><option value="Manual">Manual</option></select></div>
+      </div>
+
+      <!-- PRODUCTS MADE (OUTPUT) — leads the form -->
+      <div class="sec-head"><h2>Products Made (Output)</h2><span class="hint">One or more finished products from this run (up to ~4) · <b id="outTonHint">0.00 t</b> total</span></div>
+      <table id="prodTable">
+        <thead><tr><th style="width:44%">Product Made</th><th class="r" style="width:16%">Tonnes</th><th style="width:34%">Location</th><th style="width:6%"></th></tr></thead>
+        <tbody id="prodBody"></tbody>
+      </table>
+      <div style="margin-top:8px"><button class="btn sm" onclick="addProduct()">+ Add product</button></div>
+
+      <!-- NOTES -->
+      <div style="margin-top:20px">
+        <label class="fld">Notes about this run</label>
+        <textarea id="runNotes" rows="2" placeholder="Conditions, what was made, delivery pattern, anything worth recording for this run…"></textarea>
+      </div>
+
+      <!-- DEFAULT RATES -->
+      <div class="ratebox" style="margin-top:20px">
+        <div class="note">✎ <b>Default rates — pre-filled from your live Production Rates table.</b> Blast WIP rate is used when a material line is Blast WIP. Edit any of these for a "what-if".</div>
+        <div class="grid g3">
+          <div><label class="fld">Blast WIP Rate ($/t)</label><input type="number" step="0.01" id="wipRate" class="num" oninput="calc()"></div>
+          <div><label class="fld">Labour Rate ($/hr)</label><input type="number" step="0.01" id="labRate" class="num" oninput="calc()"></div>
+          <div><label class="fld">Fuel Rate ($/L)</label><input type="number" step="0.01" id="fuelRate" class="num" oninput="calc()"></div>
+        </div>
+      </div>
+
+      <!-- MATERIALS CONSUMED -->
+      <div class="sec-head" style="margin-top:6px"><h2>Materials Consumed (Inputs)</h2><span class="hint">Products drawn from stock, or Blast WIP · reduced as product is made · cost/t auto-fills</span></div>
+      <table id="matTable">
+        <thead><tr>
+          <th style="width:28%">Material</th><th style="width:24%">From location</th><th class="r" style="width:14%">Tonnes</th>
+          <th class="r" style="width:14%">Cost / t</th><th class="r" style="width:14%">Line cost</th><th style="width:6%"></th>
+        </tr></thead>
+        <tbody id="matBody"></tbody>
+      </table>
+      <div class="subrow"><span>Input tonnes: <b id="inTon">0.00</b> t</span><span>Materials cost: <b id="matTot">$0.00</b></span></div>
+      <div style="margin-top:8px"><button class="btn sm" onclick="addMaterial()">+ Add material</button></div>
+
+      <!-- LABOUR -->
+      <div class="sec-head" style="margin-top:22px"><h2>Labour</h2></div>
+      <div class="grid g3">
+        <div><label class="fld">Man Hours <span class="muted">(all operators)</span></label>
+          <input type="number" step="0.01" id="manHours" class="num" value="0" oninput="calc()"></div>
+        <div><label class="fld">Labour cost</label>
+          <input type="text" class="num" id="labCostCell" value="$0.00" readonly></div>
+        <div></div>
+      </div>
+
+      <!-- OVERHEAD (MACHINES) -->
+      <div class="sec-head" style="margin-top:22px"><h2>Overhead (Machines)</h2><span class="hint">Pick a machine — rate/maint/fuel auto-fill from the register. Hours for THIS RUN only.</span></div>
+      <table id="machTable">
+        <thead><tr><th style="width:28%">Machine</th><th class="r">Hours</th><th class="r">Rate/hr</th><th class="r">Maint/hr</th><th class="r">Fuel L/hr</th><th class="r">Total cost</th><th></th></tr></thead>
+        <tbody id="machBody"></tbody>
+      </table>
+      <div style="margin-top:8px"><button class="btn sm" onclick="addMachine()">+ Add machine</button></div>
+
+    </div>
+  </div>
+
+  <!-- COST SUMMARY -->
+  <div class="card">
+    <div class="head"><h2>Cost Summary</h2><span class="hint">Same cost/t applied to every product produced, split by weight</span></div>
+    <div class="body">
+      <div class="summary">
+        <div class="costlist">
+          <div class="r sub"><span class="lbl">Materials consumed</span><span class="tag-money" id="sumMat">$0.00</span></div>
+          <div class="r"><span class="lbl">Labour</span><span class="tag-money" id="sumLab">$0.00</span></div>
+          <div class="r"><span class="lbl">Machine operating</span><span class="tag-money" id="sumMachOp">$0.00</span></div>
+          <div class="r"><span class="lbl">Maintenance</span><span class="tag-money" id="sumMaint">$0.00</span></div>
+          <div class="r"><span class="lbl">Fuel</span><span class="tag-money" id="sumFuel">$0.00</span></div>
+          <div class="r total"><span>TOTAL RUN COST</span><span class="tag-money" id="sumTotal">$0.00</span></div>
+        </div>
+        <div class="cpt">
+          <div class="small">COST PER TONNE PRODUCED</div>
+          <div class="big" id="cptBig">$0.00</div>
+          <div class="row2">
+            <div><div class="n" id="cptTonnes">0.00 t</div><div class="l">Tonnes produced</div></div>
+            <div><div class="n tag-money" id="cptTotal">$0.00</div><div class="l">Total run cost</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="massbal">
+        <span>Mass balance — In: <b id="mbIn">0.00</b> t · Out: <b id="mbOut">0.00</b> t</span>
+        <span>Yield: <b id="mbYield">—</b> · Variance: <b id="mbVar">0.00</b> t</span>
+      </div>
+
+      <div class="splitwrap" id="splitSection" style="display:none">
+        <div class="sec-head"><h2>Product Split</h2><span class="hint">Only shown when a run makes more than one product · Std cost = current book cost, for comparison</span></div>
+        <table>
+          <thead><tr><th>Product</th><th>Location</th><th class="r">Tonnes</th><th class="r">Share</th><th class="r">Run cost/t</th><th class="r">Std cost/t</th><th class="r">vs std</th><th class="r">Product cost</th></tr></thead>
+          <tbody id="splitBody"><tr><td colspan="8" class="muted" style="padding:14px">Add output products and tonnes to see the split.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="foot">
+      <div class="left" id="cptNote">Enter materials, labour, machines and output to calculate.</div>
+      <div class="rowbtns">
+        <button class="btn primary" onclick="saveRun()">Save costing to record</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SAVED -->
+  <div class="card">
+    <div class="head">
+      <h2>Saved Costings <span class="muted" id="savedCount" style="font-weight:400">(0)</span></h2>
+      <div class="rowbtns">
+        <button class="btn sm" onclick="exportCSVsummary()">Export CSV (summary)</button>
+        <button class="btn sm" onclick="exportCSVdetail()">Export CSV (detailed)</button>
+        <button class="btn sm" onclick="exportJSON()">Export JSON</button>
+        <label class="btn sm" style="cursor:pointer">Import JSON<input type="file" accept=".json" style="display:none" onchange="importJSON(event)"></label>
+      </div>
+    </div>
+    <div class="body" style="padding:0">
+      <table>
+        <thead><tr><th>Saved</th><th>Run date</th><th>Reference</th><th>Type</th><th class="r">Produced</th><th class="r">Total cost</th><th class="r">Cost/t</th><th>Notes</th><th></th></tr></thead>
+        <tbody id="savedBody"></tbody>
+      </table>
+      <div id="savedEmpty" class="saved-empty">No saved costings yet. Enter a run above and click <b>Save costing to record</b>.</div>
+    </div>
+  </div>
+
+  <p class="muted" style="font-size:12px;text-align:center;margin-top:8px">RAC Production Costing Sandpit · assessment tool only · not connected to the live inventory system for writing</p>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   RAC PRODUCTION COSTING SANDPIT  (v3 — materials-in model)
+   - Pure costing. No posting, no stock, no average-cost update.
+   - Supports two input styles in one table:
+       * Blend/Premix: consumes finished PRODUCTS from stock (e.g. 100 minus + Fine Sand -> Concrete Premix)
+       * Crush: consumes BLAST WIP (raw)
+   - Cost/t = total run cost / total OUTPUT tonnes; same cost/t on every product, split by weight.
+   - The materials list is effectively the BOM/recipe. 'expected*' slots reserved for a future BOM-standard compare.
+   - Master data is a READ-ONLY snapshot of the live Inventory System.
+   ============================================================ */
+
+const SNAPSHOT_DATE = '2026-07-23';
+const PRODUCTS = [
+  {code:'A10MM', name:'10mm Concrete Aggregate', family:'AGGREGATES', std:80.00},
+  {code:'A20-STD', name:'20mm Aggregate', family:'AGGREGATES', std:50.00},
+  {code:'A710-STD', name:'7-10mm Aggregate', family:'AGGREGATES', std:50.00},
+  {code:'A100M', name:'100 minus', family:'DIRT', std:26.80},
+  {code:'A20M-STD', name:'20mm Minus', family:'DIRT', std:26.80},
+  {code:'A-CRU100M', name:'Crushables 100mm', family:'DIRT', std:25.00},
+  {code:'GF-01', name:'General Fill', family:'DIRT', std:1.00},
+  {code:'D-CRU', name:'Crusher Dust', family:'DUST', std:26.80},
+  {code:'R-T2', name:'Type 2 Road Base', family:'ROAD_BASE', std:26.80},
+  {code:'R-TYPEC', name:'Type C Rip Rap (100-200mm)', family:'ROCK_ARMOR', std:62.03},
+  {code:'R-TYPED', name:'Type D Rip Rap (250-350mm)', family:'ROCK_ARMOR', std:50.00},
+  {code:'R-TYPEE', name:'Type E Rip Rap (500-700mm)', family:'ROCK_ARMOR', std:50.00},
+  {code:'A-PM20', name:'Pre-mix Sand & 20mm Agg', family:'SAND', std:70.00},
+  {code:'S-FS', name:'Fine Sand', family:'SAND', std:20.00},
+  {code:'S-RS', name:'Red Sand', family:'SAND', std:65.00},
+  {code:'S-SCR', name:'Screened Sand', family:'SAND', std:40.00},
+  {code:'WTD', name:'Concrete Premix 20mm Agg/Sand/Dust', family:'SAND', std:93.57},
+  {code:'WTD1', name:'Corefill Premix 7/10mm Agg/Sand/Dust', family:'SAND', std:70.00}
+];
+const MACHINES = [
+  {name:'CAT 336 Excavator', type:'EXCAVATOR', rate:111.34, maint:0.00, fuelLhr:22.00},
+  {name:'CAT 982M Loader', type:'LOADER', rate:118.07, maint:0.00, fuelLhr:30.00},
+  {name:'Stacker 1', type:'STACKER', rate:38.59, maint:0.00, fuelLhr:0.00},
+  {name:'Stacker 2', type:'STACKER', rate:38.59, maint:0.00, fuelLhr:0.00},
+  {name:'Terex 893 Reclaimer', type:'SCREEN', rate:193.29, maint:0.00, fuelLhr:16.80},
+  {name:'Terex I-140 Impactor', type:'IMPACTOR', rate:292.20, maint:0.00, fuelLhr:32.40},
+  {name:'Terex J-1175 Jaw Crusher', type:'CRUSHER', rate:290.02, maint:0.00, fuelLhr:22.49}
+];
+const RATES = { wip:45.00, labour:116.00, fuel:2.10 };
+const LOCATIONS = [
+  {code:'00',name:'Main Production Area'},{code:'01',name:'WTD Products'},{code:'03',name:'Stockpile 3'},
+  {code:'04',name:'Mulch 4'},{code:'05',name:'Stockpile 5'},{code:'06',name:'Stockpile 6'},{code:'08',name:'Stockpile 8'},
+  {code:'09',name:'Stockpile 9'},{code:'12',name:'Stockpile 12'},{code:'14',name:'Pit 14'},{code:'17',name:'Stockpile 17'},
+  {code:'20',name:'Stockpile 20'},{code:'22',name:'Stockpile 22'},{code:'23',name:'Stockpile 23'},{code:'24',name:'Stockpile 24'},
+  {code:'25',name:'Stockpile 25'},{code:'26',name:'Stockpile 26'},{code:'27',name:'Overburden 27'},{code:'29',name:'Stockpile 29'},
+  {code:'31',name:'Stockpile 31'},{code:'33',name:'Pit 33'},{code:'34',name:'Pit 34'},{code:'35',name:'Stockpile 35'},
+  {code:'36',name:'Stockpile 36'},{code:'39',name:'Stockpile 39'},{code:'41',name:'Stockpile 41'},{code:'42',name:'Stockpile 42'},
+  {code:'46',name:'Stockpile 46'},{code:'52',name:'Stockpile 52'},{code:'53',name:'Stockpile 53'},{code:'64',name:'Stockpile 64'},
+  {code:'65',name:'Stockpile 65'},{code:'SP-13',name:'General Fill'},{code:'SP-30',name:'Stockpile 30'}
+];
+const WIP_LABEL = 'Blast WIP (raw material)';
+const PRODUCT_BY_NAME = {}; PRODUCTS.forEach(p=>PRODUCT_BY_NAME[p.name.toLowerCase()]=p);
+const MACHINE_BY_NAME = {}; MACHINES.forEach(m=>MACHINE_BY_NAME[m.name.toLowerCase()]=m);
+
+/* Known stock locations per product — snapshot of current_stock (qty>0), sorted by qty desc.
+   [0] is the "main" (largest) pile, used for auto-suggest. */
+const PRODUCT_LOCATIONS = {
+  '100 minus':[{name:'Stockpile 36',code:'36',qty:6557.34}],
+  '20mm aggregate':[{name:'Stockpile 22',code:'22',qty:769.53}],
+  '20mm minus':[{name:'Stockpile 3',code:'03',qty:5386.61}],
+  '7-10mm aggregate':[{name:'Stockpile 23',code:'23',qty:2762.90},{name:'Stockpile 40',code:'40',qty:26.00}],
+  'concrete premix 20mm agg/sand/dust':[{name:'WTD Products',code:'01',qty:7.00}],
+  'crushables 100mm':[{name:'Stockpile 24',code:'24',qty:11820.96},{name:'Stockpile 41',code:'41',qty:459.00},{name:'Stockpile 42',code:'42',qty:36.40}],
+  'crusher dust':[{name:'Stockpile 29',code:'29',qty:74.51},{name:'Stockpile 39',code:'39',qty:38.20}],
+  'fine sand':[{name:'Stockpile 64',code:'64',qty:3261.03}],
+  'general fill':[{name:'Stockpile 30',code:'SP-30',qty:1098.90}],
+  'pre-mix sand & 20mm agg':[{name:'Stockpile 46',code:'46',qty:89.95}],
+  'red sand':[{name:'Stockpile 52',code:'52',qty:132.00}],
+  'screened sand':[{name:'Stockpile 26',code:'26',qty:3618.31}],
+  'type 2 road base':[{name:'Stockpile 31',code:'31',qty:135.47}],
+  'type c rip rap (100-200mm)':[{name:'Stockpile 20',code:'20',qty:2664.80}],
+  'type d rip rap (250-350mm)':[{name:'Stockpile 8',code:'08',qty:80.10}],
+  'type e rip rap (500-700mm)':[{name:'Stockpile 12',code:'12',qty:261.62}]
+};
+
+const STORE_KEY = 'rac_prod_costing_sandpit_v3';
+let saved = [];
+let matUid = 0;
+
+const money = n => '$' + (isFinite(n)?n:0).toLocaleString('en-AU',{minimumFractionDigits:2,maximumFractionDigits:2});
+const t2 = n => (isFinite(n)?n:0).toLocaleString('en-AU',{minimumFractionDigits:2,maximumFractionDigits:2});
+const num = v => { const n=parseFloat(v); return isFinite(n)?n:0; };
+const esc = s => (s||'').toString().replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---------- rows ---------- */
+function addMaterial(m={}){
+  const uid=++matUid;
+  const tr=document.createElement('tr');
+  tr.innerHTML=`
+    <td><input type="text" class="x-name" list="matList" placeholder="e.g. 100 minus / Fine Sand / Blast WIP" value="${esc(m.name)}" onchange="fillMaterial(this)" oninput="calc()"></td>
+    <td><input type="text" class="x-loc" list="xloc_${uid}" placeholder="source location" value="${esc(m.location)}" oninput="calc()"><datalist id="xloc_${uid}"></datalist></td>
+    <td class="r"><input type="number" step="0.01" class="x-ton num" value="${m.tonnes??''}" oninput="calc()"></td>
+    <td class="r"><input type="number" step="0.01" class="x-cost num" value="${m.costPerT??''}" oninput="calc()"></td>
+    <td class="r tag-money x-line">$0.00</td>
+    <td class="r"><button class="iconbtn" title="Remove" onclick="this.closest('tr').remove();calc()">🗑</button></td>`;
+  document.getElementById('matBody').appendChild(tr);
+  if(m.name) populateMatLoc(tr, m.name, m.location);
+}
+/* Fill a material row's location datalist from known stock locations, and auto-suggest the main pile. */
+function populateMatLoc(tr, name, preset){
+  const locInput=tr.querySelector('.x-loc'); const dl=tr.querySelector('datalist');
+  const locs=PRODUCT_LOCATIONS[(name||'').trim().toLowerCase()]||[];
+  if(locs.length){ dl.innerHTML=locs.map(l=>`<option value="${esc(l.name)}">${t2(l.qty)} t on hand</option>`).join(''); }
+  else { dl.innerHTML=LOCATIONS.map(l=>`<option value="${esc(l.name)}">`).join(''); }
+  if(preset!=null && preset!==''){ locInput.value=preset; }
+  else if(locs.length){ locInput.value=locs[0].name; }   // [0] = largest pile = main
+}
+function fillMaterial(inp){
+  const v=inp.value.trim(); const tr=inp.closest('tr'); const cell=tr.querySelector('.x-cost');
+  if(/blast wip/i.test(v)){ cell.value=num(document.getElementById('wipRate').value); }
+  else { const p=PRODUCT_BY_NAME[v.toLowerCase()]; if(p) cell.value=p.std; }
+  populateMatLoc(tr, v, null);
+  calc();
+}
+function addProduct(p={}){
+  const tr=document.createElement('tr');
+  tr.innerHTML=`
+    <td><input type="text" class="p-name" list="prodList" placeholder="e.g. Concrete Premix 20mm Agg/Sand/Dust" value="${esc(p.product)}" oninput="calc()"></td>
+    <td class="r"><input type="number" step="0.01" class="p-ton num" value="${p.tonnes??''}" oninput="calc()"></td>
+    <td><input type="text" class="p-loc" list="locList" placeholder="e.g. WTD Products" value="${esc(p.location)}"></td>
+    <td class="r"><button class="iconbtn" title="Remove" onclick="this.closest('tr').remove();calc()">🗑</button></td>`;
+  document.getElementById('prodBody').appendChild(tr);
+}
+function addMachine(m={}){
+  const tr=document.createElement('tr');
+  tr.innerHTML=`
+    <td><input type="text" class="m-name" list="machList" placeholder="Pick a machine…" value="${esc(m.name)}" onchange="fillMachine(this)" oninput="calc()"></td>
+    <td class="r"><input type="number" step="0.01" class="m-hrs num" value="${m.hours??''}" oninput="calc()"></td>
+    <td class="r"><input type="number" step="0.01" class="m-rate num" value="${m.rate??''}" oninput="calc()"></td>
+    <td class="r"><input type="number" step="0.01" class="m-maint num" value="${m.maint??''}" oninput="calc()"></td>
+    <td class="r"><input type="number" step="0.01" class="m-fuel num" value="${m.fuelLhr??''}" oninput="calc()"></td>
+    <td class="r tag-money m-cost">$0.00</td>
+    <td class="r"><button class="iconbtn" title="Remove" onclick="this.closest('tr').remove();calc()">🗑</button></td>`;
+  document.getElementById('machBody').appendChild(tr);
+}
+function fillMachine(inp){
+  const m=MACHINE_BY_NAME[inp.value.trim().toLowerCase()];
+  if(m){ const tr=inp.closest('tr'); tr.querySelector('.m-rate').value=m.rate; tr.querySelector('.m-maint').value=m.maint; tr.querySelector('.m-fuel').value=m.fuelLhr; }
+  calc();
+}
+
+/* ---------- gather + compute ---------- */
+function gather(){
+  const materials=[];
+  document.querySelectorAll('#matBody tr').forEach(tr=>{
+    const nm=tr.querySelector('.x-name').value.trim();
+    materials.push({ name:nm, isWip:/blast wip/i.test(nm),
+      code:(PRODUCT_BY_NAME[nm.toLowerCase()]||{}).code||'',
+      location:tr.querySelector('.x-loc').value.trim(),
+      tonnes:num(tr.querySelector('.x-ton').value), costPerT:num(tr.querySelector('.x-cost').value),
+      expectedTonnes:null });
+  });
+  const products=[];
+  document.querySelectorAll('#prodBody tr').forEach(tr=>{
+    const nm=tr.querySelector('.p-name').value.trim(); const match=PRODUCT_BY_NAME[nm.toLowerCase()];
+    products.push({ product:nm, code:match?match.code:'', stdCost:match?match.std:null,
+      location:tr.querySelector('.p-loc').value.trim(), tonnes:num(tr.querySelector('.p-ton').value), expectedTonnes:null });
+  });
+  const machines=[];
+  document.querySelectorAll('#machBody tr').forEach(tr=>{
+    machines.push({ name:tr.querySelector('.m-name').value.trim(), hours:num(tr.querySelector('.m-hrs').value),
+      rate:num(tr.querySelector('.m-rate').value), maint:num(tr.querySelector('.m-maint').value),
+      fuelLhr:num(tr.querySelector('.m-fuel').value), expectedHours:null });
+  });
+  return { runDate:document.getElementById('runDate').value, reference:document.getElementById('reference').value.trim(),
+    operator:document.getElementById('operator').value, mode:document.getElementById('mode').value,
+    notes:document.getElementById('runNotes').value.trim(),
+    wipRate:num(document.getElementById('wipRate').value), labRate:num(document.getElementById('labRate').value),
+    fuelRate:num(document.getElementById('fuelRate').value), manHours:num(document.getElementById('manHours').value),
+    materials, products, machines };
+}
+function compute(d){
+  const matDetail=d.materials.map(m=>({...m, lineCost:m.tonnes*m.costPerT}));
+  const matTotal=matDetail.reduce((s,m)=>s+m.lineCost,0);
+  const inputTonnes=d.materials.reduce((s,m)=>s+m.tonnes,0);
+  const labCost=d.manHours*d.labRate;
+  let machOp=0,maint=0,fuel=0;
+  const machDetail=d.machines.map(m=>{ const op=m.hours*m.rate, mn=m.hours*m.maint, fl=m.hours*m.fuelLhr*d.fuelRate;
+    machOp+=op; maint+=mn; fuel+=fl; return {...m, total:op+mn+fl}; });
+  const totalCost=matTotal+labCost+machOp+maint+fuel;
+  const outputTonnes=d.products.reduce((s,p)=>s+p.tonnes,0);
+  const costPerTonne=outputTonnes>0?totalCost/outputTonnes:0;
+  const split=d.products.map(p=>({ product:p.product, code:p.code, location:p.location, tonnes:p.tonnes, stdCost:p.stdCost,
+    share:outputTonnes>0?p.tonnes/outputTonnes:0, costPerTonne, productCost:p.tonnes*costPerTonne }));
+  const yield_=inputTonnes>0?outputTonnes/inputTonnes:0;
+  return {matDetail,matTotal,inputTonnes,labCost,machDetail,machOp,maint,fuel,totalCost,outputTonnes,costPerTonne,split,yield_,variance:outputTonnes-inputTonnes};
+}
+function calc(){
+  const d=gather(), r=compute(d);
+  let i=0; document.querySelectorAll('#matBody tr').forEach(tr=>{ tr.querySelector('.x-line').textContent=money(r.matDetail[i]?r.matDetail[i].lineCost:0); i++; });
+  i=0; document.querySelectorAll('#machBody tr').forEach(tr=>{ tr.querySelector('.m-cost').textContent=money(r.machDetail[i]?r.machDetail[i].total:0); i++; });
+  document.getElementById('inTon').textContent=t2(r.inputTonnes);
+  document.getElementById('matTot').textContent=money(r.matTotal);
+  document.getElementById('labCostCell').value=money(r.labCost);
+  document.getElementById('outTonHint').textContent=t2(r.outputTonnes)+' t';
+  document.getElementById('sumMat').textContent=money(r.matTotal);
+  document.getElementById('sumLab').textContent=money(r.labCost);
+  document.getElementById('sumMachOp').textContent=money(r.machOp);
+  document.getElementById('sumMaint').textContent=money(r.maint);
+  document.getElementById('sumFuel').textContent=money(r.fuel);
+  document.getElementById('sumTotal').textContent=money(r.totalCost);
+  document.getElementById('cptBig').textContent=money(r.costPerTonne);
+  document.getElementById('cptTonnes').textContent=t2(r.outputTonnes)+' t';
+  document.getElementById('cptTotal').textContent=money(r.totalCost);
+  document.getElementById('mbIn').textContent=t2(r.inputTonnes);
+  document.getElementById('mbOut').textContent=t2(r.outputTonnes);
+  document.getElementById('mbYield').textContent=r.inputTonnes>0?(r.yield_*100).toFixed(1)+'%':'—';
+  const mbv=document.getElementById('mbVar'); mbv.textContent=(r.variance>=0?'+':'')+t2(r.variance)+' t';
+  const producedLines=r.split.filter(s=>s.tonnes>0).length;
+  document.getElementById('splitSection').style.display = producedLines>1 ? 'block' : 'none';
+  const sb=document.getElementById('splitBody');
+  if(r.split.length && r.outputTonnes>0){
+    sb.innerHTML=r.split.map(s=>{
+      let stdCell='<span class="stdref">—</span>', vsCell='<span class="stdref">n/a</span>';
+      if(s.stdCost!=null){ stdCell=money(s.stdCost); const diff=s.costPerTonne-s.stdCost; vsCell=`<span class="${diff>0?'up':'down'}">${diff>0?'+':''}${money(diff)}</span>`; }
+      return `<tr>
+        <td>${esc(s.product)||'<span class="muted">(unnamed)</span>'}${s.code?' <span class="stdref">'+esc(s.code)+'</span>':''}</td>
+        <td>${esc(s.location)||'<span class="muted">—</span>'}</td>
+        <td class="r">${t2(s.tonnes)}</td><td class="r">${(s.share*100).toFixed(1)}%</td>
+        <td class="r tag-money">${money(s.costPerTonne)}</td><td class="r tag-money">${stdCell}</td>
+        <td class="r tag-money">${vsCell}</td><td class="r tag-money">${money(s.productCost)}</td></tr>`;
+    }).join('');
+  } else { sb.innerHTML='<tr><td colspan="8" class="muted" style="padding:14px">Add output products and tonnes to see the split.</td></tr>'; }
+  document.getElementById('cptNote').textContent = r.outputTonnes>0
+    ? `${r.matDetail.length} material(s) in · ${d.products.length} product(s) out · ${money(r.costPerTonne)}/t · total ${money(r.totalCost)}`
+    : 'Enter materials, labour, machines and output to calculate.';
+  return {d,r};
+}
+
+/* ---------- save ---------- */
+function saveRun(){
+  const {d,r}=calc();
+  if(r.outputTonnes<=0){ toast('Enter at least one output product with tonnes before saving.'); return; }
+  const rec={ id:'C'+(saved.reduce((m,s)=>Math.max(m,parseInt(s.id.slice(1))||0),0)+1).toString().padStart(4,'0'),
+    savedAt:new Date().toISOString(), snapshotDate:SNAPSHOT_DATE, input:d,
+    totals:{matTotal:r.matTotal,inputTonnes:r.inputTonnes,labCost:r.labCost,machOp:r.machOp,maint:r.maint,fuel:r.fuel,
+      totalCost:r.totalCost,outputTonnes:r.outputTonnes,costPerTonne:r.costPerTonne,yield:r.yield_},
+    materials:r.matDetail, split:r.split };
+  saved.unshift(rec); persist(); renderSaved(); toast('Saved '+rec.id+' — '+money(r.costPerTonne)+'/t');
+}
+function renderSaved(){
+  document.getElementById('savedCount').textContent='('+saved.length+')';
+  const body=document.getElementById('savedBody'), empty=document.getElementById('savedEmpty');
+  if(!saved.length){ body.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  body.innerHTML=saved.map(s=>{
+    const sd=new Date(s.savedAt); const str=sd.toLocaleDateString('en-AU')+' '+sd.toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit'});
+    const prods=s.split.map(x=>x.product||'(unnamed)').join(', ');
+    return `<tr>
+      <td>${str}<div class="muted" style="font-size:11px">${s.id}</div></td>
+      <td>${esc(s.input.runDate)||'—'}</td>
+      <td>${esc(s.input.reference)||'<span class="muted">—</span>'}</td>
+      <td>${esc(s.input.mode)||'—'}</td>
+      <td class="r">${t2(s.totals.outputTonnes)}</td>
+      <td class="r tag-money">${money(s.totals.totalCost)}</td>
+      <td class="r tag-money"><b>${money(s.totals.costPerTonne)}</b></td>
+      <td style="max-width:220px"><div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(prods)} ${esc(s.input.notes)}">${esc(prods)}${s.input.notes?' · <span class="muted">'+esc(s.input.notes)+'</span>':''}</div></td>
+      <td class="r rowbtns" style="justify-content:flex-end"><button class="btn sm" onclick="loadRecord('${s.id}')">Load</button><button class="btn sm danger" onclick="deleteRecord('${s.id}')">Del</button></td></tr>`;
+  }).join('');
+}
+function loadRecord(id){
+  const s=saved.find(x=>x.id===id); if(!s) return; const d=s.input;
+  document.getElementById('runDate').value=d.runDate||''; document.getElementById('reference').value=d.reference||'';
+  document.getElementById('operator').value=d.operator||''; document.getElementById('mode').value=d.mode||'Blend';
+  document.getElementById('runNotes').value=d.notes||''; document.getElementById('wipRate').value=d.wipRate;
+  document.getElementById('labRate').value=d.labRate; document.getElementById('fuelRate').value=d.fuelRate;
+  document.getElementById('manHours').value=d.manHours;
+  document.getElementById('matBody').innerHTML=''; (d.materials||[]).forEach(addMaterial);
+  document.getElementById('prodBody').innerHTML=''; (d.products||[]).forEach(addProduct);
+  document.getElementById('machBody').innerHTML=''; (d.machines||[]).forEach(addMachine);
+  if(!(d.materials||[]).length) addMaterial(); if(!(d.products||[]).length) addProduct(); if(!(d.machines||[]).length) addMachine();
+  calc(); window.scrollTo({top:0,behavior:'smooth'}); toast('Loaded '+id+' — editing a copy; Save creates a new record.');
+}
+function deleteRecord(id){ saved=saved.filter(x=>x.id!==id); persist(); renderSaved(); toast('Deleted '+id); }
+
+/* ---------- persistence ---------- */
+function persist(){ try{ localStorage.setItem(STORE_KEY,JSON.stringify(saved)); }catch(e){ document.getElementById('storeWarn').style.display='block'; } }
+function restore(){ try{ const raw=localStorage.getItem(STORE_KEY); if(raw) saved=JSON.parse(raw)||[]; }catch(e){ document.getElementById('storeWarn').style.display='block'; } }
+
+/* ---------- export / import ---------- */
+function download(name,text,type){ const b=new Blob([text],{type:type||'text/plain'}); const a=document.createElement('a');
+  a.href=URL.createObjectURL(b); a.download=name; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href); }
+function csvCell(v){ v=(v==null?'':v).toString(); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }
+function stamp(){ const d=new Date(); return d.getFullYear()+('0'+(d.getMonth()+1)).slice(-2)+('0'+d.getDate()).slice(-2); }
+function exportCSVsummary(){
+  if(!saved.length){ toast('Nothing to export yet.'); return; }
+  const head=['Costing ID','Saved At','Run Date','Reference','Operator','Type','Input Tonnes','Output Tonnes','Yield %','Materials Cost','Labour Cost','Machine Op','Maintenance','Fuel','Total Run Cost','Cost per Tonne','Products','Notes'];
+  const rows=saved.map(s=>[s.id,s.savedAt,s.input.runDate,s.input.reference,s.input.operator,s.input.mode,
+    s.totals.inputTonnes.toFixed(2),s.totals.outputTonnes.toFixed(2),(s.totals.yield*100).toFixed(1),
+    s.totals.matTotal.toFixed(2),s.totals.labCost.toFixed(2),s.totals.machOp.toFixed(2),s.totals.maint.toFixed(2),
+    s.totals.fuel.toFixed(2),s.totals.totalCost.toFixed(2),s.totals.costPerTonne.toFixed(2),
+    s.split.map(x=>x.product).join(' | '),s.input.notes]);
+  download('RAC_Production_Costings_Summary_'+stamp()+'.csv',[head,...rows].map(r=>r.map(csvCell).join(',')).join('\r\n'),'text/csv');
+}
+function exportCSVdetail(){
+  if(!saved.length){ toast('Nothing to export yet.'); return; }
+  const head=['Costing ID','Run Date','Reference','Row Kind','Item','Code','Location','Tonnes','Cost/t or Rate','Line/Product Cost','Run Cost/t','Std Cost/t','Variance vs Std','Notes'];
+  const rows=[];
+  saved.forEach(s=>{
+    (s.materials||[]).forEach(m=>rows.push([s.id,s.input.runDate,s.input.reference,'MATERIAL IN',m.name,m.code||'',m.location||'',m.tonnes.toFixed(2),m.costPerT.toFixed(2),(m.lineCost).toFixed(2),'','','',s.input.notes]));
+    s.split.forEach(x=>rows.push([s.id,s.input.runDate,s.input.reference,'PRODUCT OUT',x.product,x.code||'',x.location,x.tonnes.toFixed(2),'',x.productCost.toFixed(2),x.costPerTonne.toFixed(2),x.stdCost!=null?x.stdCost.toFixed(2):'',x.stdCost!=null?(x.costPerTonne-x.stdCost).toFixed(2):'',s.input.notes]));
+  });
+  download('RAC_Production_Costings_Detailed_'+stamp()+'.csv',[head,...rows].map(r=>r.map(csvCell).join(',')).join('\r\n'),'text/csv');
+}
+function exportJSON(){ if(!saved.length){ toast('Nothing to export yet.'); return; } download('RAC_Production_Costings_'+stamp()+'.json',JSON.stringify(saved,null,2),'application/json'); }
+function importJSON(ev){ const f=ev.target.files[0]; if(!f) return; const rd=new FileReader();
+  rd.onload=()=>{ try{ const data=JSON.parse(rd.result); if(!Array.isArray(data)) throw 0;
+      const ids=new Set(saved.map(s=>s.id)); let added=0; data.forEach(r=>{ if(r&&r.id&&!ids.has(r.id)){ saved.push(r); added++; } });
+      saved.sort((a,b)=>(b.savedAt||'').localeCompare(a.savedAt||'')); persist(); renderSaved(); toast('Imported '+added+' costing(s).');
+    }catch(e){ toast('That file could not be read as a costings JSON.'); } ev.target.value=''; }; rd.readAsText(f); }
+
+/* ---------- form setup ---------- */
+function newRun(){
+  document.getElementById('runDate').value=new Date().toISOString().slice(0,10);
+  ['reference','runNotes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('operator').value=''; document.getElementById('mode').value='Blend';
+  document.getElementById('wipRate').value=RATES.wip.toFixed(2); document.getElementById('labRate').value=RATES.labour.toFixed(2);
+  document.getElementById('fuelRate').value=RATES.fuel.toFixed(2); document.getElementById('manHours').value='0';
+  document.getElementById('matBody').innerHTML=''; addMaterial();
+  document.getElementById('prodBody').innerHTML=''; addProduct();
+  document.getElementById('machBody').innerHTML=''; addMachine();
+  calc();
+}
+function loadPremix(){
+  document.getElementById('runDate').value=new Date().toISOString().slice(0,10);
+  document.getElementById('reference').value='WTD-PREMIX-01'; document.getElementById('operator').value='RM';
+  document.getElementById('mode').value='Blend';
+  document.getElementById('wipRate').value=RATES.wip.toFixed(2); document.getElementById('labRate').value=RATES.labour.toFixed(2);
+  document.getElementById('fuelRate').value=RATES.fuel.toFixed(2); document.getElementById('manHours').value='27';
+  document.getElementById('runNotes').value='WTD premix run. 100 minus through the cone (20mm Agg + 7-10mm Agg + Dust) plus Sand, blended to one product. Delivered 50t x 7 loads = 350t. Machine hours assumed — edit.';
+  document.getElementById('matBody').innerHTML='';
+  addMaterial({name:'100 minus', tonnes:292, costPerT:26.80});
+  addMaterial({name:'Fine Sand', tonnes:57, costPerT:20.00});
+  document.getElementById('prodBody').innerHTML='';
+  addProduct({product:'Concrete Premix 20mm Agg/Sand/Dust', location:'WTD Products', tonnes:350});
+  document.getElementById('machBody').innerHTML='';
+  addMachine({name:'CAT 982M Loader', hours:12, rate:118.07, maint:0, fuelLhr:30.00});
+  calc(); toast('Premix example loaded — materials & labour from the sheet; machine hours assumed, edit as needed.');
+}
+
+/* ---------- datalists ---------- */
+function seedLists(){
+  const dl=(id,items)=>{ const d=document.createElement('datalist'); d.id=id; d.innerHTML=items.map(v=>`<option value="${esc(v)}">`).join(''); document.body.appendChild(d); };
+  dl('matList',[WIP_LABEL,...PRODUCTS.map(p=>p.name)]);
+  dl('prodList',PRODUCTS.map(p=>p.name));
+  dl('locList',LOCATIONS.map(l=>l.name));
+  dl('machList',MACHINES.map(m=>m.name));
+}
+
+/* ---------- init ---------- */
+document.getElementById('snapDate').textContent=SNAPSHOT_DATE;
+seedLists(); restore(); newRun(); renderSaved();
+let toastTimer;
+function toast(msg){ const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('show'),2600); }
+</script>
+</body>
+</html>
