@@ -70,6 +70,7 @@ app.use("/api", require("./routes/account-detail-report-api"));
 app.use("/api", require("./routes/weighbridge-docket-api"));
 app.use("/api/dockets", require("./routes/docket-edit"));
 app.use("/api", require("./routes/audit-log").router);
+app.use("/api/reconciliation", require("./routes/reconciliation"));
 
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "../public/index.html"));

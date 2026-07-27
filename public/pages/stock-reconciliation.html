@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stock Reconciliation - RAC Inventory System</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <style>
+      /* Small page-specific styles — status banner + gap colouring */
+      .recon-banner {
+        border-radius: 10px;
+        padding: 22px 26px;
+        margin: 18px 0 8px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        color: #fff;
+      }
+      .recon-banner .icon { font-size: 34px; line-height: 1; }
+      .recon-banner h2 { margin: 0 0 2px; font-size: 22px; }
+      .recon-banner p { margin: 0; opacity: 0.9; font-size: 13px; }
+      .recon-banner.ok  { background: #16a34a; }
+      .recon-banner.bad { background: #dc2626; }
+      .recon-banner.loading { background: #64748b; }
+      .gap-neg { color: #dc2626; font-weight: 600; }
+      .flag-neg {
+        background: #fee2e2; color: #b91c1c; font-size: 11px;
+        padding: 2px 8px; border-radius: 999px;
+      }
+      .muted { color: #6b7280; font-size: 13px; }
+      #allLinesWrap { display: none; margin-top: 14px; }
+    </style>
+  </head>
+  <body>
+    <!-- Header -->
+    <header class="header">
+      <div class="header-content">
+        <div class="logo-section">
+          <div class="logo">📦</div>
+          <div class="site-title">
+            <h1>Rirratjingu Mining Inventory System</h1>
+            <p>Quarry production and inventory management</p>
+          </div>
+        </div>
+        <div class="header-stats">
+          <div class="stat-item">
+            <div class="stat-label">Total Inventory Value</div>
+            <div class="stat-value" id="headerTotalValue">$0</div>
+          </div>
+          <div class="user-info"><span>👤</span><span>Admin User</span></div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="nav">
+      <div class="nav-content">
+        <a href="dashboard.html" class="nav-item">📊 Dashboard</a>
+        <a href="operations.html" class="nav-item">⚙️ Operations</a>
+        <a href="maintenance.html" class="nav-item">🔧 Maintenance</a>
+        <a href="reports.html" class="nav-item">📈 Reports</a>
+        <a href="stock-reconciliation.html" class="nav-item active">🔁 Reconciliation</a>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container">
+      <div class="page-header">
+        <h1 class="page-title">🔁 Stock Reconciliation</h1>
+        <p class="page-subtitle">
+          Live check that Current Stock (SOH) equals the movement ledger, per product and location
+        </p>
+      </div>
+
+      <!-- Status banner -->
+      <div class="recon-banner loading" id="banner">
+        <div class="icon">⏳</div>
+        <div>
+          <h2 id="bannerTitle">Running reconciliation…</h2>
+          <p id="bannerSub">Comparing live stock against the movement ledger</p>
+        </div>
+      </div>
+
+      <!-- Summary tiles -->
+      <div class="stats-grid" style="grid-template-columns: repeat(4, 1fr)">
+        <div class="stat-card">
+          <div class="stat-icon">📋</div>
+          <div class="stat-details">
+            <div class="stat-label">Lines Checked</div>
+            <div class="stat-value" id="tLines">–</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">⚠️</div>
+          <div class="stat-details">
+            <div class="stat-label">Out of Sync</div>
+            <div class="stat-value" id="tOut">–</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">➖</div>
+          <div class="stat-details">
+            <div class="stat-label">Negative Lines</div>
+            <div class="stat-value" id="tNeg">–</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">Δ</div>
+          <div class="stat-details">
+            <div class="stat-label">Net Gap (t)</div>
+            <div class="stat-value" id="tGap">–</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Exceptions -->
+      <div class="dashboard-section">
+        <div class="section-header">
+          <h2>Exceptions</h2>
+          <div class="section-actions">
+            <span class="muted" id="asAt"></span>
+            <button id="toggleAll" class="btn-secondary">Show all lines</button>
+            <button id="refreshBtn" class="btn-secondary">🔄 Refresh</button>
+          </div>
+        </div>
+
+        <div class="data-table" id="exceptionsWrap">
+          <table class="table" style="font-size: 1rem">
+            <thead>
+              <tr style="background-color: var(--gray-100, #f5f5f5)">
+                <th style="width: 26%">PRODUCT</th>
+                <th style="width: 14%">STOCKPILE</th>
+                <th style="text-align: right">SOH (t)</th>
+                <th style="text-align: right">LEDGER (t)</th>
+                <th style="text-align: right">GAP (t)</th>
+                <th style="text-align: center; width: 12%">FLAG</th>
+              </tr>
+            </thead>
+            <tbody id="exceptionsBody"></tbody>
+          </table>
+        </div>
+
+        <!-- Full detail (hidden until "Show all lines") -->
+        <div class="data-table" id="allLinesWrap">
+          <table class="table" style="font-size: 1rem">
+            <thead>
+              <tr style="background-color: var(--gray-100, #f5f5f5)">
+                <th style="width: 26%">PRODUCT</th>
+                <th style="width: 14%">STOCKPILE</th>
+                <th style="text-align: right">SOH (t)</th>
+                <th style="text-align: right">LEDGER (t)</th>
+                <th style="text-align: right">GAP (t)</th>
+              </tr>
+            </thead>
+            <tbody id="allLinesBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <script src="/js/stock-reconciliation.js"></script>
+  </body>
+</html>
