@@ -72,6 +72,9 @@ app.use("/api/dockets", require("./routes/docket-edit"));
 app.use("/api", require("./routes/audit-log").router);
 app.use("/api/reconciliation", require("./routes/reconciliation"));
 
+const reconAlert = require("./jobs/reconciliation-alert");
+app.use("/api/reconciliation", reconAlert.router);   // adds POST /api/reconciliation/email-now
+
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "../public/index.html"));
 });
@@ -91,4 +94,5 @@ app.listen(PORT, () => {
   console.log(`🔗 Local: http://localhost:${PORT}`);
   console.log(`   - /api/production-rates  (rates, machines, BOM templates)`);
   console.log(`   - /api/production-runs   (production run journal)`);
+  reconAlert.startScheduler();
 });
