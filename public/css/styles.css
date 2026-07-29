@@ -83,7 +83,7 @@ body {
 }
 
 .stat-label {
-  font-size: 11px;
+  font-size: 13px;
   color: var(--gray-500);
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -212,7 +212,7 @@ body {
 }
 
 .stat-card-title {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--gray-500);
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -285,7 +285,7 @@ thead {
 th {
   padding: 0.875rem 1.5rem;
   text-align: left;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--gray-600);
   text-transform: uppercase;
@@ -325,7 +325,7 @@ tbody tr:last-child td {
 .movements-table thead th {
   padding: 0.75rem 1rem;
   text-align: left;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--gray-600);
   text-transform: uppercase;
@@ -411,7 +411,7 @@ tbody tr:last-child td {
 
 .btn-sm {
   padding: 0.5rem 1rem;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .btn-icon {
@@ -429,7 +429,7 @@ tbody tr:last-child td {
   align-items: center;
   padding: 0.25rem 0.625rem;
   border-radius: 4px;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.3px;
