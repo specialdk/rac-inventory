@@ -104,7 +104,7 @@ body {
   padding: 0.5rem 1rem;
   background: var(--gray-100);
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 16px;
   color: var(--gray-700);
 }
 
@@ -129,7 +129,7 @@ body {
   border-bottom: 2px solid transparent;
   transition: all 0.2s;
   font-weight: 500;
-  font-size: 14px;
+  font-size: 16px;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -166,7 +166,7 @@ body {
 
 .page-subtitle {
   color: var(--gray-500);
-  font-size: 14px;
+  font-size: 16px;
 }
 
 /* Stats Cards */
@@ -296,7 +296,7 @@ th {
 td {
   padding: 1rem 1.5rem;
   border-bottom: 1px solid var(--gray-100);
-  font-size: 14px;
+  font-size: 16px;
   color: var(--gray-700);
 }
 
@@ -643,7 +643,7 @@ tbody tr:last-child td {
   padding: 0.625rem 0.875rem;
   border: 1px solid var(--gray-300);
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 16px;
   transition: all 0.2s;
   color: var(--gray-900);
 }
@@ -716,7 +716,7 @@ textarea.form-control {
   border: none;
   border-bottom: 3px solid transparent;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 500;
   color: var(--gray-600);
   transition: all 0.2s;
@@ -933,7 +933,7 @@ textarea.form-control {
   border: none;
   padding: 0.625rem 1.25rem;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
