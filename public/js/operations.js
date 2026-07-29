@@ -205,8 +205,10 @@ async function loadDropdowns() {
     if (salePriceListSelect) {
       salePriceListSelect.innerHTML = "";
       priceListsData.forEach((pl) => {
-        const option = new Option(pl.price_list_name, pl.price_list_id);
-        if (pl.is_default) option.selected = true;
+        const isDefault = !!pl.is_default;
+        // 3rd arg marks it the "factory default" so it survives salesForm.reset();
+        // 4th arg selects it right now. Both point at whichever list has is_default = true.
+        const option = new Option(pl.price_list_name, pl.price_list_id, isDefault, isDefault);
         salePriceListSelect.add(option);
       });
     }
