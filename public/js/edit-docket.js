@@ -512,7 +512,10 @@ async function submitEdit() {
   try {
     const correctedData = {
       original_docket_number: originalDocket.docket_number,
-      movement_date: new Date().toISOString(),
+      // Use the date the user picked in the form (the delivery date), not today's date
+      movement_date: document.getElementById("movementDate").value
+        ? new Date(document.getElementById("movementDate").value).toISOString()
+        : new Date().toISOString(),
       gross_weight: parseFloat(document.getElementById("grossWeight").value),
       tare_weight: parseFloat(document.getElementById("tareWeight").value),
       product_id: parseInt(document.getElementById("productId").value),
