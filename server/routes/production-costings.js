@@ -1,193 +1,178 @@
 // ============================================================
-// RAC Inventory — Production Costings API
+// RAC Inventory System — server/routes/production-costings.js
+// Phase 1: saved Sandpit costings (shared + searchable)
 //
-// Saved Sandpit costings, shared + searchable (replaces the
-// Sandpit's per-browser localStorage). The Production screen
-// searches these and imports one to post.
+// A "costing" is a SAVED CALCULATION only. It never moves stock and
+// never posts a production run — it's the shared, searchable replacement
+// for the old per-browser localStorage costings.
 //
-// Routes mounted at /api/production-costings
-//   GET    /api/production-costings          - search / list
-//   GET    /api/production-costings/:id       - one costing (full payload, for import)
-//   POST   /api/production-costings           - save a costing (from the Sandpit)
-//   PATCH  /api/production-costings/:id/status - archive / restore
+// Backs the three endpoints the smoke test checks:
+//   POST /api/production-costings        -> save a costing (returns id + ref)
+//   GET  /api/production-costings?q=...   -> search / list (returns an ARRAY)
+//   GET  /api/production-costings/:id     -> fetch one back (for import)
 //
-// Also exports markCostingPosted(client, costingId, runId) so the
-// production-runs POST can stamp a costing POSTED inside its own
-// transaction when it is imported and posted.
+// Requires migration 006 (production_costings table) to be applied.
 // ============================================================
 
 const express = require('express');
-const router  = express.Router();
-const { pool } = require('../config/database');
-const RACCosting = require('../../public/js/production-costing-engine');
+const router = express.Router();
+const { query } = require('../config/database');
 
-// Next costing reference, e.g. C0001
-async function getNextCostingRef(client) {
-  const r = await client.query(
-    `SELECT COALESCE(MAX((SUBSTRING(costing_ref FROM '[0-9]+$'))::int), 0) AS max_num
-       FROM production_costings
-      WHERE costing_ref LIKE 'C%'`
-  );
-  return 'C' + String((r.rows[0].max_num || 0) + 1).padStart(4, '0');
-}
+// The SAME engine the Sandpit and the test use, so the server's numbers
+// always match the browser's. Path is relative to THIS file:
+//   server/routes/  ->  ../../  (repo root)  ->  public/js/
+const engine = require('../../public/js/production-costing-engine');
 
-// Recompute headline totals from the input, server-side, so what's
-// stored/searched is trustworthy regardless of what the client sent.
-function totalsFrom(input) {
-  const r = RACCosting.compute(input || {});
-  return {
-    input_tonnes:   r.inputTonnes,
-    output_tonnes:  r.outputTonnes,
-    total_run_cost: r.totalCost,
-    cost_per_tonne: r.costPerTonne,
-    computed: r
-  };
-}
+// Little helper: safely add up the "tonnes" column from a list of rows.
+const sumTonnes = (rows) =>
+  (Array.isArray(rows) ? rows : []).reduce((t, r) => t + Number(r.tonnes || 0), 0);
 
-// Shared helper — used by the production-runs POST to link a costing to its run.
-async function markCostingPosted(client, costingId, runId) {
-  if (!costingId) return;
-  await client.query(
-    `UPDATE production_costings
-        SET status = 'POSTED', posted_run_id = $2, posted_at = NOW(), updated_at = NOW()
-      WHERE costing_id = $1`,
-    [costingId, runId]
-  );
-}
 
-// ----------------------------------------
-// GET /api/production-costings   (search / list)
-//   ?status=DRAFT|POSTED|ARCHIVED  ?q=text  ?from=YYYY-MM-DD  ?to=YYYY-MM-DD  ?limit=50
-// ----------------------------------------
+// ------------------------------------------------------------
+// POST /api/production-costings   — save a costing
+// ------------------------------------------------------------
+router.post('/', async (req, res) => {
+  try {
+    const {
+      operator    = null,
+      entry_mode  = null,
+      notes       = null,
+      run_date    = null,
+      costing_ref = null,          // optional user reference; auto-made if blank
+      rates       = {},
+      manHours    = 0,
+      materials   = [],
+      products    = [],
+      machines    = []
+    } = req.body || {};
+
+    // 1) Do the maths with the shared engine (single source of truth).
+    const result       = engine.compute({ rates, manHours, materials, products, machines });
+    const totalRunCost = Number(result.totalCost);
+    const costPerTonne = Number(result.costPerTonne);
+
+    // 2) Headline tonnes, pulled out for fast searching/listing later.
+    const inputTonnes  = sumTonnes(materials);
+    const outputTonnes = sumTonnes(products);
+
+    // 3) Keep the FULL costing exactly as sent, so it round-trips on import.
+    const payload = { rates, manHours, materials, products, machines, result };
+
+    // 4) Save the row. Status starts as DRAFT; costing_ref set in step 5.
+    const insert = await query(
+      `INSERT INTO production_costings
+         (costing_ref, run_date, operator, entry_mode, notes,
+          input_tonnes, output_tonnes, total_run_cost, cost_per_tonne,
+          payload, status, created_by)
+       VALUES
+         ($1, COALESCE($2::date, CURRENT_DATE), $3, $4, $5,
+          $6, $7, $8, $9,
+          $10::jsonb, 'DRAFT', $11)
+       RETURNING costing_id, created_at`,
+      [
+        costing_ref, run_date, operator, entry_mode, notes,
+        inputTonnes, outputTonnes, totalRunCost, costPerTonne,
+        JSON.stringify(payload), operator
+      ]
+    );
+
+    const costingId = insert.rows[0].costing_id;
+
+    // 5) If no reference was supplied, make a tidy one like C0001.
+    let ref = costing_ref;
+    if (!ref) {
+      ref = 'C' + String(costingId).padStart(4, '0');
+      await query(
+        `UPDATE production_costings
+            SET costing_ref = $1, updated_at = NOW()
+          WHERE costing_id = $2`,
+        [ref, costingId]
+      );
+    }
+
+    // 6) Reply in the exact shape the test expects.
+    return res.json({
+      success:        true,
+      costing_id:     costingId,
+      costing_ref:    ref,
+      cost_per_tonne: costPerTonne,
+      total_run_cost: totalRunCost,
+      input_tonnes:   inputTonnes,
+      output_tonnes:  outputTonnes
+    });
+
+  } catch (err) {
+    console.error('POST /api/production-costings failed:', err);
+    return res.status(500).json({
+      success: false,
+      error:   err.message,
+      hint:    'If this mentions a missing relation/table, migration 006 may not be applied yet.'
+    });
+  }
+});
+
+
+// ------------------------------------------------------------
+// GET /api/production-costings?q=...&status=...   — search / list
+// Returns a PLAIN ARRAY of headline rows (leaves the heavy payload out).
+// ------------------------------------------------------------
 router.get('/', async (req, res) => {
   try {
-    const { status, q, from, to } = req.query;
-    const limit = Math.min(parseInt(req.query.limit) || 50, 500);
-    const where = [];
-    const vals = [];
-    if (status) { vals.push(status); where.push(`status = $${vals.length}`); }
-    if (from)   { vals.push(from);   where.push(`run_date >= $${vals.length}`); }
-    if (to)     { vals.push(to);     where.push(`run_date <= $${vals.length}`); }
+    const { q = '', status } = req.query;
+
+    const where  = [];
+    const params = [];
+
     if (q) {
-      vals.push('%' + q + '%');
-      const p = `$${vals.length}`;
-      where.push(`(costing_ref ILIKE ${p} OR notes ILIKE ${p} OR operator ILIKE ${p} OR payload::text ILIKE ${p})`);
+      params.push('%' + q + '%');
+      const p = '$' + params.length;
+      // Match the search text against notes, reference or operator.
+      where.push(`(notes ILIKE ${p} OR costing_ref ILIKE ${p} OR operator ILIKE ${p})`);
     }
-    vals.push(limit);
+    if (status) {
+      params.push(status);
+      where.push(`status = $${params.length}`);
+    }
+
     const sql = `
       SELECT costing_id, costing_ref, run_date, operator, entry_mode, notes,
              input_tonnes, output_tonnes, total_run_cost, cost_per_tonne,
-             status, posted_run_id, created_by, created_at, updated_at
+             status, posted_run_id, created_at
         FROM production_costings
-       ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
+        ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
        ORDER BY created_at DESC
-       LIMIT $${vals.length}`;
-    const result = await pool.query(sql, vals);
-    res.json(result.rows);
-  } catch (error) {
-    console.error('Error listing costings:', error);
-    res.status(500).json({ error: 'Failed to list costings' });
+       LIMIT 200`;
+
+    const result = await query(sql, params);
+    return res.json(result.rows);          // <-- a plain array, as the test wants
+
+  } catch (err) {
+    console.error('GET /api/production-costings failed:', err);
+    return res.status(500).json({ error: err.message });
   }
 });
 
-// ----------------------------------------
-// GET /api/production-costings/:id   (full payload, for import)
-// ----------------------------------------
+
+// ------------------------------------------------------------
+// GET /api/production-costings/:id   — fetch one (for import)
+// Returns the full row INCLUDING payload, so materials round-trip out.
+// ------------------------------------------------------------
 router.get('/:id', async (req, res) => {
   try {
-    const r = await pool.query('SELECT * FROM production_costings WHERE costing_id = $1', [req.params.id]);
-    if (!r.rows.length) return res.status(404).json({ error: 'Costing not found' });
-    res.json(r.rows[0]);
-  } catch (error) {
-    console.error('Error fetching costing:', error);
-    res.status(500).json({ error: 'Failed to fetch costing' });
-  }
-});
-
-// ----------------------------------------
-// POST /api/production-costings   (save a costing)
-// Body: { costing_ref?, run_date, operator, entry_mode, notes, created_by,
-//         rates:{wip,labour,fuel}, manHours, materials:[], products:[], machines:[] }
-// The input object is stored verbatim in payload; totals are recomputed here.
-// ----------------------------------------
-router.post('/', async (req, res) => {
-  const client = await pool.connect();
-  try {
-    const b = req.body || {};
-    const input = {
-      rates:    b.rates || { wip: b.wipRate, labour: b.labRate, fuel: b.fuelRate },
-      manHours: b.manHours,
-      materials: b.materials || [],
-      products:  b.products  || [],
-      machines:  b.machines  || []
-    };
-    if (!(input.products || []).some(p => parseFloat(p.tonnes) > 0)) {
-      return res.status(400).json({ error: 'A costing needs at least one output product with tonnes.' });
-    }
-
-    const t = totalsFrom(input);
-    // Store the input plus the computed split so a reader has both.
-    const payload = { ...input,
-      meta: { run_date: b.run_date || null, reference: b.costing_ref || null,
-              operator: b.operator || null, entry_mode: b.entry_mode || null, notes: b.notes || null },
-      computed: t.computed };
-
-    await client.query('BEGIN');
-    const ref = b.costing_ref && String(b.costing_ref).trim()
-      ? String(b.costing_ref).trim()
-      : await getNextCostingRef(client);
-
-    const ins = await client.query(`
-      INSERT INTO production_costings (
-        costing_ref, run_date, operator, entry_mode, notes,
-        input_tonnes, output_tonnes, total_run_cost, cost_per_tonne,
-        payload, status, created_by
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'DRAFT',$11)
-      RETURNING costing_id, costing_ref
-    `, [
-      ref, b.run_date || null, b.operator || null, b.entry_mode || null, b.notes || null,
-      t.input_tonnes, t.output_tonnes, t.total_run_cost, t.cost_per_tonne,
-      JSON.stringify(payload), b.created_by || null
-    ]);
-    await client.query('COMMIT');
-
-    res.json({ success: true,
-      costing_id: ins.rows[0].costing_id,
-      costing_ref: ins.rows[0].costing_ref,
-      total_run_cost: t.total_run_cost,
-      cost_per_tonne: t.cost_per_tonne });
-  } catch (error) {
-    await client.query('ROLLBACK');
-    console.error('Error saving costing:', error);
-    res.status(500).json({ error: error.message || 'Failed to save costing' });
-  } finally {
-    client.release();
-  }
-});
-
-// ----------------------------------------
-// PATCH /api/production-costings/:id/status   (archive / restore)
-// Body: { status: 'DRAFT' | 'ARCHIVED' }   (POSTED is set only by posting a run)
-// ----------------------------------------
-router.patch('/:id/status', async (req, res) => {
-  try {
-    const status = (req.body && req.body.status || '').toUpperCase();
-    if (!['DRAFT', 'ARCHIVED'].includes(status)) {
-      return res.status(400).json({ error: "status must be 'DRAFT' or 'ARCHIVED'" });
-    }
-    const r = await pool.query(
-      `UPDATE production_costings SET status = $2, updated_at = NOW()
-         WHERE costing_id = $1 AND status <> 'POSTED'
-       RETURNING costing_id, status`,
-      [req.params.id, status]
+    const result = await query(
+      `SELECT * FROM production_costings WHERE costing_id = $1`,
+      [req.params.id]
     );
-    if (!r.rows.length) return res.status(409).json({ error: 'Not found, or already POSTED (cannot change).' });
-    res.json({ success: true, ...r.rows[0] });
-  } catch (error) {
-    console.error('Error updating costing status:', error);
-    res.status(500).json({ error: 'Failed to update status' });
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Costing not found' });
+    }
+    return res.json(result.rows[0]);       // payload comes back as a JSON object
+
+  } catch (err) {
+    console.error('GET /api/production-costings/:id failed:', err);
+    return res.status(500).json({ error: err.message });
   }
 });
 
 module.exports = router;
-module.exports.markCostingPosted = markCostingPosted;

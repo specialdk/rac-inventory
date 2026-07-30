@@ -58,6 +58,7 @@ app.use("/api/price-lists", require("./routes/price-lists"));
 app.use("/api", require("./routes/carriers"));
 app.use("/api", require("./routes/tare-weights"));
 app.use("/api", require("./routes/inventory-api"));
+app.use('/api/production-costings', require('./routes/production-costings'));
 
 // Production Rates, Machines & BOM Templates
 app.use("/api/production-rates", require("./routes/production-rates"));
