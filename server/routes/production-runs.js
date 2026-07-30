@@ -7,11 +7,25 @@
 //   GET  /api/production-runs/:id          - single run with detail
 //   POST /api/production-runs              - save a new production run
 //   GET  /api/production-runs/wip-report?year=&month=  - monthly WIP summary
+//
+// Phase 1 (Sandpit unification):
+//   * Costing maths come from the shared engine (production-costing-engine)
+//     so what the Sandpit shows is exactly what posts.
+//   * A run can now CONSUME real input products from a source pile
+//     (two-directional posting): each input posts a negative CONSUMPTION
+//     movement and reduces current_stock at its current average cost,
+//     while outputs post PRODUCTION movements as before.
+//   * Fully backward compatible: with no `inputs`, behaviour is unchanged
+//     (Blast WIP stays a cost-only line).
 // ============================================================
 
 const express = require('express');
 const router  = express.Router();
 const { pool } = require('../config/database');
+const RACCosting = require('../../public/js/production-costing-engine');
+const { markCostingPosted } = require('./production-costings');
+
+const DEFAULT_FUEL_RATE = 2.10;
 
 // Generate the next RefNo for a given prefix, e.g. getNextRefNo(client, "PR")
 async function getNextRefNo(client, prefix) {
@@ -63,8 +77,9 @@ router.get('/', async (req, res) => {
 // ----------------------------------------
 // GET /api/production-runs/:id
 // ----------------------------------------
-router.get('/:id', async (req, res) => {
+router.get('/:id', async (req, res, next) => {
   const { id } = req.params;
+  if (!/^\d+$/.test(id)) return next();  // let non-numeric paths (e.g. /wip-report) fall through
   try {
     const runResult = await pool.query('SELECT * FROM production_runs WHERE run_id = $1', [id]);
     if (runResult.rows.length === 0) return res.status(404).json({ error: 'Production run not found' });
@@ -84,7 +99,21 @@ router.get('/:id', async (req, res) => {
       WHERE prp.run_id = $1 ORDER BY prp.run_product_id
     `, [id]);
 
-    res.json({ run: runResult.rows[0], machines: machinesResult.rows, products: productsResult.rows });
+    // Inputs consumed (may be empty for legacy WIP-only runs)
+    const inputsResult = await pool.query(`
+      SELECT pri.*, p.product_name, p.product_code, l.location_name, l.location_code
+      FROM production_run_inputs pri
+      LEFT JOIN products p ON p.product_id = pri.product_id
+      LEFT JOIN locations l ON l.location_id = pri.from_location_id
+      WHERE pri.run_id = $1 ORDER BY pri.run_input_id
+    `, [id]);
+
+    res.json({
+      run: runResult.rows[0],
+      machines: machinesResult.rows,
+      products: productsResult.rows,
+      inputs: inputsResult.rows
+    });
   } catch (error) {
     console.error('Error fetching production run:', error);
     res.status(500).json({ error: 'Failed to fetch production run' });
@@ -93,257 +122,304 @@ router.get('/:id', async (req, res) => {
 
 // ----------------------------------------
 // POST /api/production-runs
-// Save a complete production run
+// Save a complete production run (with optional input consumption)
 // ----------------------------------------
 router.post('/', async (req, res) => {
-  const client = await pool.connect();
+  const {
+    run_date, operator, reference_number, entry_mode, notes,
+    wip_tonnes_used, wip_rate_per_tonne,
+    labour_hours, labour_rate_per_hour,
+    fuel_rate_per_litre,
+    variance_zone, amber_check_confirmed,
+    override_required, override_code, override_notes, override_by,
+    machines = [], products = [], inputs = [],
+    costing_id, allow_negative
+  } = req.body || {};
+
+  if (!run_date)        return res.status(400).json({ error: 'run_date is required' });
+  if (!products.length) return res.status(400).json({ error: 'At least one product is required' });
+  if (!machines.length) return res.status(400).json({ error: 'At least one machine is required' });
+
+  const totalTonnes = products.reduce((s, p) => s + parseFloat(p.tonnes_produced || 0), 0);
+  if (totalTonnes <= 0) return res.status(400).json({ error: 'Total tonnes produced must be greater than 0' });
+
+  const num = v => { const n = parseFloat(v); return isFinite(n) ? n : 0; };
+  const round2 = n => Math.round(num(n) * 100) / 100;
+
+  const wipRate  = num(wip_rate_per_tonne);
+  const labRate  = num(labour_rate_per_hour);
+  const labHrs   = num(labour_hours);
+  const fuelRate = num(fuel_rate_per_litre) || DEFAULT_FUEL_RATE;
+
+  // Split inputs into real (stocked) vs Blast WIP (cost-only)
+  const realInputs = inputs.filter(i => !i.is_wip && i.product_id);
+  const wipInputs  = inputs.filter(i =>  i.is_wip);
+  // Legacy header WIP still supported when no explicit WIP input line is given
+  const legacyWipTonnes = wipInputs.length ? 0 : num(wip_tonnes_used);
+  const wipTonnesTotal  = wipInputs.reduce((s, i) => s + num(i.tonnes), 0) + legacyWipTonnes;
+
   try {
-    await client.query('BEGIN');
-
-    const {
-      run_date, operator, reference_number, entry_mode, notes,
-      wip_tonnes_used, wip_rate_per_tonne,
-      labour_hours, labour_rate_per_hour,
-      variance_zone, amber_check_confirmed,
-      override_required, override_code, override_notes, override_by,
-      machines = [], products = []
-    } = req.body;
-
-    if (!run_date)        throw new Error('run_date is required');
-    if (!products.length) throw new Error('At least one product is required');
-    if (!machines.length) throw new Error('At least one machine is required');
-
-    const totalTonnes = products.reduce((s, p) => s + parseFloat(p.tonnes_produced || 0), 0);
-    if (totalTonnes <= 0) throw new Error('Total tonnes produced must be greater than 0');
-
-    // ── Cost calculations ─────────────────────────────────────
-    const wipRate  = parseFloat(wip_rate_per_tonne)   || 0;
-    const wipT     = parseFloat(wip_tonnes_used)      || 0;
-    const wipCost  = Math.round(wipT * wipRate * 100) / 100;
-
-    const labRate  = parseFloat(labour_rate_per_hour) || 0;
-    const labHrs   = parseFloat(labour_hours)         || 0;
-    const labCost  = Math.round(labHrs * labRate * 100) / 100;
-
-    const machineRows = machines.map(m => {
-      const hrs       = parseFloat(m.hours_used)                || 0;
-      const rate      = parseFloat(m.rate_per_hour)             || 0;
-      const maintRate = parseFloat(m.maintenance_rate_per_hour) || 0;
-      const fuelLph   = parseFloat(m.fuel_litres_per_hour)      || 0;
-      const fuelRate  = parseFloat(m.fuel_rate_per_litre)       || 0;
-      const machineCost  = Math.round(hrs * rate * 100) / 100;
-      const maintCost    = Math.round(hrs * maintRate * 100) / 100;
-      const fuelLitres   = Math.round(hrs * fuelLph * 100) / 100;
-      const fuelCost     = Math.round(fuelLitres * fuelRate * 100) / 100;
-      const totalMachine = Math.round((machineCost + maintCost + fuelCost) * 100) / 100;
-      return {
-        machine_id: parseInt(m.machine_id),
-        hours_used: hrs, rate_per_hour: rate,
-        maintenance_rate_per_hour: maintRate,
-        fuel_litres_per_hour: fuelLph, fuel_rate_per_litre: fuelRate,
-        machine_cost: machineCost, maintenance_cost: maintCost,
-        fuel_litres_total: fuelLitres, fuel_cost: fuelCost,
-        total_cost: totalMachine,
-        bom_hours_expected: parseFloat(m.bom_hours_expected) || null,
-        variance_pct:       parseFloat(m.variance_pct)       || null,
-        variance_zone:      m.variance_zone                   || null
-      };
-    });
-
-    const machineTotalCost = machineRows.reduce((s, m) => s + m.total_cost, 0);
-    const totalRunCost     = Math.round((wipCost + labCost + machineTotalCost) * 100) / 100;
-
-    // ── By-product credit calculation ────────────────────────
-    // By-products receive their standard cost as a credit, reducing cost to primaries
-    const byProductRows = products.filter(p => p.is_by_product);
-    const primaryRows   = products.filter(p => !p.is_by_product);
-
-    const byProductCreditTotal = Math.round(
-      byProductRows.reduce((s, p) => {
-        const tonnes     = parseFloat(p.tonnes_produced || 0);
-        const creditRate = parseFloat(p.credit_rate_per_tonne || 0);
-        return s + (tonnes * creditRate);
-      }, 0) * 100
-    ) / 100;
-
-    const netCostAfterCredits = Math.round((totalRunCost - byProductCreditTotal) * 100) / 100;
-
-    // Primary products share the net cost; by-products use their credit rate
-    const primaryTonnes   = primaryRows.reduce((s, p) => s + parseFloat(p.tonnes_produced || 0), 0);
-    const costPerTonne    = primaryTonnes > 0
-      ? Math.round((netCostAfterCredits / primaryTonnes) * 10000) / 10000
-      : 0;
-
-    // ── Insert production_runs header ─────────────────────────
-    const runResult = await client.query(`
-      INSERT INTO production_runs (
-        run_date, operator, reference_number, entry_mode,
-        wip_tonnes_used, wip_rate_per_tonne, wip_total_cost,
-        labour_hours, labour_rate_per_hour, labour_total_cost,
-        total_run_cost, by_product_credit_total, net_cost_after_credits,
-        variance_zone, amber_check_confirmed,
-        override_required, override_code, override_notes, override_by,
-        notes
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)
-      RETURNING run_id
-    `, [
-      run_date, operator || null, reference_number || null, entry_mode || 'MANUAL',
-      wipT, wipRate, wipCost,
-      labHrs, labRate, labCost,
-      totalRunCost, byProductCreditTotal, netCostAfterCredits,
-      variance_zone || null, amber_check_confirmed || false,
-      override_required || false, override_code || null, override_notes || null, override_by || null,
-      notes || null
-    ]);
-
-    const runId = runResult.rows[0].run_id;
-
-    // One RefNo for the whole run, shared across all its product lines
-    const runRefNo = await getNextRefNo(client, "PR");
-
-    // ── Insert machine rows ───────────────────────────────────
-    for (const m of machineRows) {
-      await client.query(`
-        INSERT INTO production_run_machines (
-          run_id, machine_id, hours_used,
-          rate_per_hour, maintenance_rate_per_hour,
-          fuel_litres_per_hour, fuel_rate_per_litre,
-          machine_cost, maintenance_cost,
-          fuel_litres_total, fuel_cost, total_cost,
-          bom_hours_expected, variance_pct, variance_zone
-        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
-      `, [
-        runId, m.machine_id, m.hours_used,
-        m.rate_per_hour, m.maintenance_rate_per_hour,
-        m.fuel_litres_per_hour, m.fuel_rate_per_litre,
-        m.machine_cost, m.maintenance_cost,
-        m.fuel_litres_total, m.fuel_cost, m.total_cost,
-        m.bom_hours_expected, m.variance_pct, m.variance_zone
-      ]);
-    }
-
-    // ── Insert product rows + stock movements ─────────────────
-    for (const p of products) {
-      const tonnes       = parseFloat(p.tonnes_produced) || 0;
-      const isByProduct  = !!p.is_by_product;
-      const creditRate   = isByProduct ? (parseFloat(p.credit_rate_per_tonne) || 0) : 0;
-      const creditTotal  = isByProduct ? Math.round(tonnes * creditRate * 100) / 100 : 0;
-
-      // Cost allocation:
-      //   By-products: valued at their standard cost (credit rate)
-      //   Primaries: share net cost proportionally by weight among primaries only
-      let costPerT, costAllocated, sharePct;
-
-      if (isByProduct) {
-        costPerT      = creditRate;
-        costAllocated = creditTotal;
-        sharePct      = 0; // by-products don't take a share of the run cost
-      } else {
-        sharePct      = primaryTonnes > 0
-          ? Math.round((tonnes / primaryTonnes) * 1000000) / 10000
-          : 0;
-        costAllocated = Math.round(netCostAfterCredits * (sharePct / 100) * 100) / 100;
-        costPerT      = tonnes > 0
-          ? Math.round((costAllocated / tonnes) * 10000) / 10000
-          : 0;
-      }
-
-      // Get existing stock for weighted average
-      const existingStock = await client.query(
+    // ── Resolve each real input's source stock (avg cost + availability) ──
+    for (const inp of realInputs) {
+      const q = await pool.query(
         'SELECT quantity, average_cost FROM current_stock WHERE product_id = $1 AND location_id = $2',
-        [p.product_id, p.to_location_id]
+        [inp.product_id, inp.from_location_id]
       );
-
-      const prevAvgCost = existingStock.rows.length > 0 ? parseFloat(existingStock.rows[0].average_cost) || 0 : 0;
-      const prevQty     = existingStock.rows.length > 0 ? parseFloat(existingStock.rows[0].quantity)     || 0 : 0;
-
-      // Weighted average cost
-      const newAvgCost = (prevQty + tonnes) > 0
-        ? Math.round(((prevAvgCost * prevQty) + (costPerT * tonnes)) / (prevQty + tonnes) * 10000) / 10000
-        : costPerT;
-
-      // Create stock movement
-      const movResult = await client.query(`
-        INSERT INTO stock_movements (
-          movement_date, movement_type, product_id,
-          to_location_id, quantity, unit_cost, total_cost,
-          reference_number, notes, created_by, docket_number
-        ) VALUES (NOW(), 'PRODUCTION', $1, $2, $3, $4, $5, $6, $7, $8, $9)
-        RETURNING movement_id
-      `, [
-        p.product_id,
-        p.to_location_id || null,
-        tonnes,
-        costPerT,
-        Math.round(costAllocated * 100) / 100,
-        reference_number || `RUN-${runId}`,
-        isByProduct
-          ? `Production run ${runId} — by-product @ $${creditRate.toFixed(2)}/t standard cost`
-          : `Production run ${runId} — ${sharePct.toFixed(2)}% of net cost after by-product credits`,
-        operator || 'system',
-        runRefNo
-      ]);
-      
-      const movementId = movResult.rows[0].movement_id;
-
-      // Update current_stock
-      const newQty   = prevQty + tonnes;
-      const newValue = Math.round(newQty * newAvgCost * 100) / 100;
-
-      if (existingStock.rows.length === 0) {
-        await client.query(`
-          INSERT INTO current_stock (product_id, location_id, quantity, average_cost, total_value, last_movement_date)
-          VALUES ($1, $2, $3, $4, $5, NOW())
-        `, [p.product_id, p.to_location_id, newQty, newAvgCost, newValue]);
-      } else {
-        await client.query(`
-          UPDATE current_stock
-          SET quantity = $1, average_cost = $2, total_value = $3,
-              last_movement_date = NOW(), updated_at = NOW()
-          WHERE product_id = $4 AND location_id = $5
-        `, [newQty, newAvgCost, newValue, p.product_id, p.to_location_id]);
-      }
-
-      // Update product standard cost
-      await client.query(
-        'UPDATE products SET standard_cost = $1 WHERE product_id = $2',
-        [newAvgCost, p.product_id]
-      );
-
-      // Insert production_run_products record
-      await client.query(`
-        INSERT INTO production_run_products (
-          run_id, product_id, to_location_id, tonnes_produced,
-          cost_share_pct, cost_allocated, cost_per_tonne,
-          movement_id, prev_avg_cost, new_avg_cost,
-          is_by_product, credit_rate_per_tonne, credit_total
-        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
-      `, [
-        runId, p.product_id, p.to_location_id || null, tonnes,
-        sharePct, costAllocated, costPerT,
-        movementId, prevAvgCost, newAvgCost,
-        isByProduct, creditRate, creditTotal
-      ]);
+      inp._avail = q.rows.length ? num(q.rows[0].quantity) : 0;
+      inp._avgCost = q.rows.length ? num(q.rows[0].average_cost)
+                                   : num(inp.cost_per_tonne); // fallback if no stock row
+      inp._tonnes = num(inp.tonnes);
+      inp._exists = q.rows.length > 0;
     }
 
-    await client.query('COMMIT');
+    // ── Soft-warning guard: block on shortfall unless allow_negative ──
+    const shortfalls = realInputs
+      .filter(i => i._tonnes > i._avail + 1e-9)
+      .map(i => ({ product_id: i.product_id, from_location_id: i.from_location_id,
+                   requested: i._tonnes, available: i._avail }));
+    if (shortfalls.length && !allow_negative) {
+      return res.status(409).json({
+        error: 'INSUFFICIENT_INPUT_STOCK',
+        message: 'One or more inputs would go negative. Re-submit with allow_negative:true to proceed.',
+        shortfalls
+      });
+    }
 
-    res.json({
-      success: true,
-      run_id: runId,
-      total_run_cost: totalRunCost,
-      by_product_credit_total: byProductCreditTotal,
-      net_cost_after_credits: netCostAfterCredits,
-      cost_per_tonne: costPerTonne,
-      total_tonnes: totalTonnes
+    // ── Cost the run via the shared engine (single source of truth) ──
+    const engineMaterials = [
+      ...realInputs.map(i => ({ name: 'input', tonnes: i._tonnes, costPerT: i._avgCost })),
+      ...(wipTonnesTotal > 0 ? [{ name: 'Blast WIP', isWip: true, tonnes: wipTonnesTotal, costPerT: wipRate }] : [])
+    ];
+    const engineMachines = machines.map(m => ({
+      name: m.machine_id, hours: num(m.hours_used), rate: num(m.rate_per_hour),
+      maint: num(m.maintenance_rate_per_hour), fuelLhr: num(m.fuel_litres_per_hour)
+    }));
+    const engineProducts = products.map(p => ({
+      tonnes: num(p.tonnes_produced),
+      isByProduct: !!p.is_by_product,
+      creditRate: num(p.credit_rate_per_tonne)
+    }));
+    const R = RACCosting.compute({
+      rates: { wip: wipRate, labour: labRate, fuel: fuelRate },
+      manHours: labHrs, materials: engineMaterials,
+      machines: engineMachines, products: engineProducts
     });
 
+    const totalRunCost         = R.totalCost;
+    const byProductCreditTotal = R.byProductCreditTotal;
+    const netCostAfterCredits  = R.netCostAfterCredits;
+    const wipCost              = round2(wipTonnesTotal * wipRate);
+
+    // ── Everything below is one transaction ──
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      const runResult = await client.query(`
+        INSERT INTO production_runs (
+          run_date, operator, reference_number, entry_mode,
+          wip_tonnes_used, wip_rate_per_tonne, wip_total_cost,
+          labour_hours, labour_rate_per_hour, labour_total_cost,
+          total_run_cost, by_product_credit_total, net_cost_after_credits,
+          variance_zone, amber_check_confirmed,
+          override_required, override_code, override_notes, override_by,
+          notes
+        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)
+        RETURNING run_id
+      `, [
+        run_date, operator || null, reference_number || null,
+        (entry_mode === 'BOM' ? 'BOM' : 'MANUAL'),
+        wipTonnesTotal, wipRate, wipCost,
+        labHrs, labRate, R.labCost,
+        totalRunCost, byProductCreditTotal, netCostAfterCredits,
+        variance_zone || null, amber_check_confirmed || false,
+        override_required || false, override_code || null, override_notes || null, override_by || null,
+        notes || null
+      ]);
+      const runId = runResult.rows[0].run_id;
+
+      // One RefNo for the whole run, shared across its movement lines
+      const runRefNo = await getNextRefNo(client, "PR");
+
+      // ── Machines ──
+      for (let i = 0; i < machines.length; i++) {
+        const m = machines[i], md = R.machDetail[i];
+        await client.query(`
+          INSERT INTO production_run_machines (
+            run_id, machine_id, hours_used,
+            rate_per_hour, maintenance_rate_per_hour,
+            fuel_litres_per_hour, fuel_rate_per_litre,
+            machine_cost, maintenance_cost,
+            fuel_litres_total, fuel_cost, total_cost,
+            bom_hours_expected, variance_pct, variance_zone
+          ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+        `, [
+          runId, parseInt(m.machine_id), num(m.hours_used),
+          num(m.rate_per_hour), num(m.maintenance_rate_per_hour),
+          num(m.fuel_litres_per_hour), fuelRate,
+          md.machineCost, md.maintCost,
+          md.litres, md.fuelCost, md.total,
+          m.bom_hours_expected != null ? num(m.bom_hours_expected) : null,
+          m.variance_pct != null ? num(m.variance_pct) : null,
+          m.variance_zone || null
+        ]);
+      }
+
+      // ── Inputs consumed (two-directional: reduce input stock) ──
+      for (const inp of realInputs) {
+        const tonnes = inp._tonnes;
+        const avg    = inp._avgCost;
+        const lineCost = round2(tonnes * avg);
+
+        const mov = await client.query(`
+          INSERT INTO stock_movements (
+            movement_date, movement_type, product_id,
+            from_location_id, quantity, unit_cost, total_cost,
+            reference_number, notes, created_by, docket_number
+          ) VALUES (NOW(), 'CONSUMPTION', $1, $2, $3, $4, $5, $6, $7, $8, $9)
+          RETURNING movement_id
+        `, [
+          inp.product_id, inp.from_location_id, tonnes, avg, lineCost,
+          reference_number || `RUN-${runId}`,
+          `Production run ${runId} — consumed into production`,
+          operator || 'system', runRefNo
+        ]);
+
+        if (inp._exists) {
+          await client.query(`
+            UPDATE current_stock
+               SET quantity = quantity - $3,
+                   total_value = ROUND((quantity - $3) * average_cost, 2),
+                   last_movement_date = NOW(), updated_at = NOW()
+             WHERE product_id = $1 AND location_id = $2
+          `, [inp.product_id, inp.from_location_id, tonnes]);
+        } else {
+          // No prior stock row (only reachable with allow_negative) — create a negative row
+          await client.query(`
+            INSERT INTO current_stock (product_id, location_id, quantity, average_cost, total_value, last_movement_date)
+            VALUES ($1, $2, $3, $4, $5, NOW())
+          `, [inp.product_id, inp.from_location_id, -tonnes, avg, round2(-tonnes * avg)]);
+        }
+
+        await client.query(`
+          INSERT INTO production_run_inputs (
+            run_id, product_id, is_wip, from_location_id,
+            tonnes, cost_per_tonne, line_cost, movement_id, prev_avg_cost
+          ) VALUES ($1,$2,false,$3,$4,$5,$6,$7,$8)
+        `, [runId, inp.product_id, inp.from_location_id, tonnes, avg, lineCost, mov.rows[0].movement_id, avg]);
+      }
+
+      // WIP inputs (cost-only lines, no stock)
+      for (const w of wipInputs) {
+        const tonnes = num(w.tonnes);
+        await client.query(`
+          INSERT INTO production_run_inputs (run_id, product_id, is_wip, from_location_id, tonnes, cost_per_tonne, line_cost)
+          VALUES ($1, NULL, true, NULL, $2, $3, $4)
+        `, [runId, tonnes, wipRate, round2(tonnes * wipRate)]);
+      }
+      if (legacyWipTonnes > 0) {
+        await client.query(`
+          INSERT INTO production_run_inputs (run_id, product_id, is_wip, from_location_id, tonnes, cost_per_tonne, line_cost)
+          VALUES ($1, NULL, true, NULL, $2, $3, $4)
+        `, [runId, legacyWipTonnes, wipRate, round2(legacyWipTonnes * wipRate)]);
+      }
+
+      // ── Output products (produce stock, update weighted-avg + standard cost) ──
+      for (let i = 0; i < products.length; i++) {
+        const p = products[i], sp = R.split[i];
+        const tonnes      = num(p.tonnes_produced);
+        const isByProduct = !!p.is_by_product;
+        const creditRate  = isByProduct ? num(p.credit_rate_per_tonne) : 0;
+        const creditTotal = isByProduct ? round2(tonnes * creditRate) : 0;
+        const costPerT      = sp.costPerTonne;
+        const costAllocated = sp.productCost;
+        const sharePct      = Math.round((sp.share || 0) * 100 * 10000) / 10000;
+
+        const existingStock = await client.query(
+          'SELECT quantity, average_cost FROM current_stock WHERE product_id = $1 AND location_id = $2',
+          [p.product_id, p.to_location_id]
+        );
+        const prevAvgCost = existingStock.rows.length ? num(existingStock.rows[0].average_cost) : 0;
+        const prevQty     = existingStock.rows.length ? num(existingStock.rows[0].quantity)     : 0;
+        const newAvgCost  = (prevQty + tonnes) > 0
+          ? Math.round(((prevAvgCost * prevQty) + (costPerT * tonnes)) / (prevQty + tonnes) * 10000) / 10000
+          : costPerT;
+
+        const movResult = await client.query(`
+          INSERT INTO stock_movements (
+            movement_date, movement_type, product_id,
+            to_location_id, quantity, unit_cost, total_cost,
+            reference_number, notes, created_by, docket_number
+          ) VALUES (NOW(), 'PRODUCTION', $1, $2, $3, $4, $5, $6, $7, $8, $9)
+          RETURNING movement_id
+        `, [
+          p.product_id, p.to_location_id || null, tonnes, costPerT, round2(costAllocated),
+          reference_number || `RUN-${runId}`,
+          isByProduct
+            ? `Production run ${runId} — by-product @ $${creditRate.toFixed(2)}/t standard cost`
+            : `Production run ${runId} — ${sharePct.toFixed(2)}% of net cost after by-product credits`,
+          operator || 'system', runRefNo
+        ]);
+        const movementId = movResult.rows[0].movement_id;
+
+        const newQty   = prevQty + tonnes;
+        const newValue = round2(newQty * newAvgCost);
+        if (existingStock.rows.length === 0) {
+          await client.query(`
+            INSERT INTO current_stock (product_id, location_id, quantity, average_cost, total_value, last_movement_date)
+            VALUES ($1, $2, $3, $4, $5, NOW())
+          `, [p.product_id, p.to_location_id, newQty, newAvgCost, newValue]);
+        } else {
+          await client.query(`
+            UPDATE current_stock
+            SET quantity = $1, average_cost = $2, total_value = $3,
+                last_movement_date = NOW(), updated_at = NOW()
+            WHERE product_id = $4 AND location_id = $5
+          `, [newQty, newAvgCost, newValue, p.product_id, p.to_location_id]);
+        }
+
+        await client.query('UPDATE products SET standard_cost = $1 WHERE product_id = $2', [newAvgCost, p.product_id]);
+
+        await client.query(`
+          INSERT INTO production_run_products (
+            run_id, product_id, to_location_id, tonnes_produced,
+            cost_share_pct, cost_allocated, cost_per_tonne,
+            movement_id, prev_avg_cost, new_avg_cost,
+            is_by_product, credit_rate_per_tonne, credit_total
+          ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+        `, [
+          runId, p.product_id, p.to_location_id || null, tonnes,
+          sharePct, round2(costAllocated), costPerT,
+          movementId, prevAvgCost, newAvgCost,
+          isByProduct, creditRate, creditTotal
+        ]);
+      }
+
+      // Link an imported costing to this run (Draft -> Posted)
+      if (costing_id) await markCostingPosted(client, costing_id, runId);
+
+      await client.query('COMMIT');
+
+      res.json({
+        success: true,
+        run_id: runId,
+        total_run_cost: totalRunCost,
+        by_product_credit_total: byProductCreditTotal,
+        net_cost_after_credits: netCostAfterCredits,
+        cost_per_tonne: R.costPerTonne,
+        total_tonnes: totalTonnes,
+        inputs_consumed: realInputs.length,
+        posted_with_negative: shortfalls.length > 0
+      });
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
   } catch (error) {
-    await client.query('ROLLBACK');
     console.error('Error saving production run:', error);
     res.status(500).json({ error: error.message || 'Failed to save production run' });
-  } finally {
-    client.release();
   }
 });
 

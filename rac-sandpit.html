@@ -275,9 +275,10 @@
    - Master data is a READ-ONLY snapshot of the live Inventory System.
    ============================================================ */
 
-const SNAPSHOT_DATE = '2026-07-23';
+const SNAPSHOT_DATE = '2026-07-30';
 const PRODUCTS = [
   {code:'A10MM', name:'10mm Concrete Aggregate', family:'AGGREGATES', std:80.00},
+  {code:'A20-37', name:'20-37mm Aggregate', family:'AGGREGATES', std:25.00},
   {code:'A20-STD', name:'20mm Aggregate', family:'AGGREGATES', std:50.00},
   {code:'A710-STD', name:'7-10mm Aggregate', family:'AGGREGATES', std:50.00},
   {code:'A100M', name:'100 minus', family:'DIRT', std:26.80},
@@ -289,33 +290,37 @@ const PRODUCTS = [
   {code:'R-TYPEC', name:'Type C Rip Rap (100-200mm)', family:'ROCK_ARMOR', std:62.03},
   {code:'R-TYPED', name:'Type D Rip Rap (250-350mm)', family:'ROCK_ARMOR', std:50.00},
   {code:'R-TYPEE', name:'Type E Rip Rap (500-700mm)', family:'ROCK_ARMOR', std:50.00},
-  {code:'A-PM20', name:'Pre-mix Sand & 20mm Agg', family:'SAND', std:70.00},
-  {code:'S-FS', name:'Fine Sand', family:'SAND', std:20.00},
-  {code:'S-RS', name:'Red Sand', family:'SAND', std:65.00},
-  {code:'S-SCR', name:'Screened Sand', family:'SAND', std:40.00},
   {code:'WTD', name:'Concrete Premix 20mm Agg/Sand/Dust', family:'SAND', std:93.57},
-  {code:'WTD1', name:'Corefill Premix 7/10mm Agg/Sand/Dust', family:'SAND', std:70.00}
+  {code:'WTD1', name:'Corefill Premix 7/10mm Agg/Sand/Dust', family:'SAND', std:70.00},
+  {code:'S-FS', name:'Fine Sand', family:'SAND', std:20.00},
+  {code:'A-PM20', name:'Pre-mix Sand & 20mm Agg', family:'SAND', std:70.00},
+  {code:'S-RS', name:'Red Sand', family:'SAND', std:65.00},
+  {code:'S-SCR', name:'Screened Sand', family:'SAND', std:40.00}
 ];
 const MACHINES = [
-  {name:'CAT 336 Excavator', type:'EXCAVATOR', rate:111.34, maint:0.00, fuelLhr:22.00},
-  {name:'CAT 982M Loader', type:'LOADER', rate:118.07, maint:0.00, fuelLhr:30.00},
+  {name:'Terex C-1540P Cone Crusher', type:'CRUSHER', rate:145.00, maint:0.00, fuelLhr:0.00},
+  {name:'Terex 883 Screen', type:'SCREEN', rate:70.74, maint:0.00, fuelLhr:0.00},
+  {name:'Terex 694 Screen', type:'SCREEN', rate:94.32, maint:0.00, fuelLhr:0.00},
+  {name:'CAT 336 Excavator', type:'EXCAVATOR', rate:120.00, maint:0.00, fuelLhr:22.00},
+  {name:'CAT 982M Loader', type:'LOADER', rate:98.00, maint:0.00, fuelLhr:30.00},
+  {name:'Genset 1', type:'OTHER', rate:11.15, maint:0.00, fuelLhr:15.60},
+  {name:'Genset 2', type:'OTHER', rate:11.15, maint:0.00, fuelLhr:15.60},
+  {name:'HR Rigid Truck', type:'TRUCK', rate:80.00, maint:0.00, fuelLhr:0.00},
   {name:'Stacker 1', type:'STACKER', rate:38.59, maint:0.00, fuelLhr:0.00},
-  {name:'Stacker 2', type:'STACKER', rate:38.59, maint:0.00, fuelLhr:0.00},
-  {name:'Terex 893 Reclaimer', type:'SCREEN', rate:193.29, maint:0.00, fuelLhr:16.80},
-  {name:'Terex I-140 Impactor', type:'IMPACTOR', rate:292.20, maint:0.00, fuelLhr:32.40},
-  {name:'Terex J-1175 Jaw Crusher', type:'CRUSHER', rate:290.02, maint:0.00, fuelLhr:22.49}
+  {name:'Stacker 2', type:'STACKER', rate:38.59, maint:0.00, fuelLhr:0.00}
 ];
 const RATES = { wip:45.00, labour:116.00, fuel:2.10 };
 const LOCATIONS = [
   {code:'00',name:'Main Production Area'},{code:'01',name:'WTD Products'},{code:'03',name:'Stockpile 3'},
   {code:'04',name:'Mulch 4'},{code:'05',name:'Stockpile 5'},{code:'06',name:'Stockpile 6'},{code:'08',name:'Stockpile 8'},
-  {code:'09',name:'Stockpile 9'},{code:'12',name:'Stockpile 12'},{code:'14',name:'Pit 14'},{code:'17',name:'Stockpile 17'},
-  {code:'20',name:'Stockpile 20'},{code:'22',name:'Stockpile 22'},{code:'23',name:'Stockpile 23'},{code:'24',name:'Stockpile 24'},
-  {code:'25',name:'Stockpile 25'},{code:'26',name:'Stockpile 26'},{code:'27',name:'Overburden 27'},{code:'29',name:'Stockpile 29'},
-  {code:'31',name:'Stockpile 31'},{code:'33',name:'Pit 33'},{code:'34',name:'Pit 34'},{code:'35',name:'Stockpile 35'},
-  {code:'36',name:'Stockpile 36'},{code:'39',name:'Stockpile 39'},{code:'41',name:'Stockpile 41'},{code:'42',name:'Stockpile 42'},
-  {code:'46',name:'Stockpile 46'},{code:'52',name:'Stockpile 52'},{code:'53',name:'Stockpile 53'},{code:'64',name:'Stockpile 64'},
-  {code:'65',name:'Stockpile 65'},{code:'SP-13',name:'General Fill'},{code:'SP-30',name:'Stockpile 30'}
+  {code:'09',name:'Stockpile 9'},{code:'12',name:'Stockpile 12'},{code:'13',name:'Stockpile 13'},{code:'14',name:'Pit 14'},
+  {code:'17',name:'Stockpile 17'},{code:'20',name:'Stockpile 20'},{code:'22',name:'Stockpile 22'},{code:'23',name:'Stockpile 23'},
+  {code:'24',name:'Stockpile 24'},{code:'25',name:'Stockpile 25'},{code:'26',name:'Stockpile 26'},{code:'27',name:'Overburden 27'},
+  {code:'29',name:'Stockpile 29'},{code:'31',name:'Stockpile 31'},{code:'33',name:'Pit 33'},{code:'34',name:'Pit 34'},
+  {code:'35',name:'Stockpile 35'},{code:'36',name:'Stockpile 36'},{code:'39',name:'Stockpile 39'},{code:'40',name:'Stockpile 40'},
+  {code:'41',name:'Stockpile 41'},{code:'42',name:'Stockpile 42'},{code:'46',name:'Stockpile 46'},{code:'52',name:'Stockpile 52'},
+  {code:'53',name:'Stockpile 53'},{code:'64',name:'Stockpile 64'},{code:'65',name:'Stockpile 65'},{code:'99',name:'Stockpile 99'},
+  {code:'SP-13',name:'General Fill'},{code:'SP-30',name:'Stockpile 30'}
 ];
 const WIP_LABEL = 'Blast WIP (raw material)';
 const PRODUCT_BY_NAME = {}; PRODUCTS.forEach(p=>PRODUCT_BY_NAME[p.name.toLowerCase()]=p);
@@ -324,22 +329,23 @@ const MACHINE_BY_NAME = {}; MACHINES.forEach(m=>MACHINE_BY_NAME[m.name.toLowerCa
 /* Known stock locations per product — snapshot of current_stock (qty>0), sorted by qty desc.
    [0] is the "main" (largest) pile, used for auto-suggest. */
 const PRODUCT_LOCATIONS = {
-  '100 minus':[{name:'Stockpile 36',code:'36',qty:6557.34}],
-  '20mm aggregate':[{name:'Stockpile 22',code:'22',qty:769.53}],
-  '20mm minus':[{name:'Stockpile 3',code:'03',qty:5386.61}],
-  '7-10mm aggregate':[{name:'Stockpile 23',code:'23',qty:2762.90},{name:'Stockpile 40',code:'40',qty:26.00}],
-  'concrete premix 20mm agg/sand/dust':[{name:'WTD Products',code:'01',qty:7.00}],
-  'crushables 100mm':[{name:'Stockpile 24',code:'24',qty:11820.96},{name:'Stockpile 41',code:'41',qty:459.00},{name:'Stockpile 42',code:'42',qty:36.40}],
-  'crusher dust':[{name:'Stockpile 29',code:'29',qty:74.51},{name:'Stockpile 39',code:'39',qty:38.20}],
-  'fine sand':[{name:'Stockpile 64',code:'64',qty:3261.03}],
-  'general fill':[{name:'Stockpile 30',code:'SP-30',qty:1098.90}],
-  'pre-mix sand & 20mm agg':[{name:'Stockpile 46',code:'46',qty:89.95}],
-  'red sand':[{name:'Stockpile 52',code:'52',qty:132.00}],
-  'screened sand':[{name:'Stockpile 26',code:'26',qty:3618.31}],
-  'type 2 road base':[{name:'Stockpile 31',code:'31',qty:135.47}],
-  'type c rip rap (100-200mm)':[{name:'Stockpile 20',code:'20',qty:2664.80}],
-  'type d rip rap (250-350mm)':[{name:'Stockpile 8',code:'08',qty:80.10}],
-  'type e rip rap (500-700mm)':[{name:'Stockpile 12',code:'12',qty:261.62}]
+  '100 minus':[{name:'Stockpile 36',code:'36',qty:5797.99}],
+  '20-37mm aggregate':[{name:'Stockpile 42',code:'42',qty:39.12}],
+  '20mm aggregate':[{name:'Stockpile 22',code:'22',qty:1222.39}],
+  '20mm minus':[{name:'Stockpile 3',code:'03',qty:5695.93}],
+  '7-10mm aggregate':[{name:'Stockpile 23',code:'23',qty:2944.02},{name:'Stockpile 40',code:'40',qty:26.00}],
+  'concrete premix 20mm agg/sand/dust':[{name:'WTD Products',code:'01',qty:398.50}],
+  'crushables 100mm':[{name:'Stockpile 24',code:'24',qty:9838.04},{name:'Stockpile 41',code:'41',qty:457.67}],
+  'crusher dust':[{name:'Stockpile 39',code:'39',qty:131.71}],
+  'fine sand':[{name:'Stockpile 64',code:'64',qty:3172.14}],
+  'general fill':[{name:'Stockpile 13',code:'13',qty:475.71},{name:'Stockpile 30',code:'SP-30',qty:402.15}],
+  'pre-mix sand & 20mm agg':[{name:'Stockpile 46',code:'46',qty:303.44}],
+  'red sand':[{name:'Stockpile 52',code:'52',qty:98.37}],
+  'screened sand':[{name:'Stockpile 26',code:'26',qty:3585.14}],
+  'type 2 road base':[{name:'Stockpile 31',code:'31',qty:596.90}],
+  'type c rip rap (100-200mm)':[{name:'Stockpile 20',code:'20',qty:2627.42}],
+  'type d rip rap (250-350mm)':[{name:'Stockpile 8',code:'08',qty:33.22}],
+  'type e rip rap (500-700mm)':[{name:'Stockpile 12',code:'12',qty:205.62},{name:'Stockpile 6',code:'06',qty:64.79}]
 };
 
 const STORE_KEY = 'rac_prod_costing_sandpit_v3';
@@ -603,7 +609,12 @@ function loadPremix(){
   document.getElementById('prodBody').innerHTML='';
   addProduct({product:'Concrete Premix 20mm Agg/Sand/Dust', location:'WTD Products', tonnes:350});
   document.getElementById('machBody').innerHTML='';
-  addMachine({name:'CAT 982M Loader', hours:12, rate:118.07, maint:0, fuelLhr:30.00});
+  addMachine({name:'Terex C-1540P Cone Crusher', hours:3, rate:145.00, maint:0, fuelLhr:0.00});
+  addMachine({name:'Terex 883 Screen', hours:3, rate:70.74, maint:0, fuelLhr:0.00});
+  addMachine({name:'Genset 1', hours:3, rate:11.15, maint:0, fuelLhr:15.60});
+  addMachine({name:'Genset 2', hours:3, rate:11.15, maint:0, fuelLhr:15.60});
+  addMachine({name:'CAT 336 Excavator', hours:5, rate:120.00, maint:0, fuelLhr:22.00});
+  addMachine({name:'CAT 982M Loader', hours:7, rate:98.00, maint:0, fuelLhr:30.00});
   calc(); toast('Premix example loaded — materials & labour from the sheet; machine hours assumed, edit as needed.');
 }
 

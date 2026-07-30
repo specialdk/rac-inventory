@@ -65,6 +65,9 @@ app.use("/api/production-rates", require("./routes/production-rates"));
 // Production Runs (journal model — must come before generic /api routes)
 app.use("/api/production-runs", require("./routes/production-runs"));
 
+// Production Costings (saved Sandpit costings — searchable, importable)
+app.use("/api/production-costings", require("./routes/production-costings"));
+
 // Report Routes
 app.use("/api", require("./routes/account-detail-report-api"));
 app.use("/api", require("./routes/weighbridge-docket-api"));
