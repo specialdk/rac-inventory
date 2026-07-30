@@ -175,4 +175,33 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+
+// ------------------------------------------------------------
+// markCostingPosted(client, costingId, runId)
+//
+// Called by the production-runs POST route (inside its transaction) when a
+// saved costing is imported and posted to a real run. Stamps the costing
+// POSTED and links it to the run, so the same costing can't be posted twice
+// and every real run traces back to the costing it came from.
+//
+// Takes the transaction's `client` so it commits/rolls back WITH the run.
+// ------------------------------------------------------------
+async function markCostingPosted(client, costingId, runId) {
+  if (!costingId) return;
+  await client.query(
+    `UPDATE production_costings
+        SET status        = 'POSTED',
+            posted_run_id = $2,
+            posted_at     = NOW(),
+            updated_at    = NOW()
+      WHERE costing_id = $1`,
+    [costingId, runId]
+  );
+}
+
+// Export the router (for app.use) AND markCostingPosted (for production-runs.js).
+// An Express router is a function, so attaching a property is safe:
+//   require('./production-costings')                 -> the router (mountable)
+//   require('./production-costings').markCostingPosted -> the helper
 module.exports = router;
+module.exports.markCostingPosted = markCostingPosted;

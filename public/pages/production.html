@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAC Production — Cost or Record a Run</title>
+<style>
+  :root{
+    --orange:#e8720c; --orange-dark:#c25e07; --orange-soft:#fff4e9;
+    --ink:#1f2733; --muted:#66707d; --line:#e2e6ec; --bg:#f4f6f9;
+    --green:#1f8a4c; --green-soft:#eaf6ef; --red:#c0392b; --red-soft:#fbeeec; --sand:#f7efe2;
+    --blue:#2563a8; --blue-soft:#eaf1fa; --teal:#0f766e; --teal-soft:#e6f4f2;
+    --card:#ffffff; --shadow:0 1px 3px rgba(20,30,45,.08),0 1px 2px rgba(20,30,45,.06);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);background:var(--bg);font-size:14px;line-height:1.45}
+  h1,h2,h3{margin:0;font-weight:650}
+  .modebar{color:#fff;padding:10px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .modebar.sandpit{background:repeating-linear-gradient(45deg,#2b3442,#2b3442 18px,#222b38 18px,#222b38 36px)}
+  .modebar.production{background:linear-gradient(90deg,#1f8a4c,#0f766e)}
+  .modebar .tag{font-weight:800;letter-spacing:.5px;padding:3px 10px;border-radius:5px;font-size:12px}
+  .modebar.sandpit .tag{background:#ffd23f;color:#2b3442}
+  .modebar.production .tag{background:#fff;color:#0f766e}
+  .modebar .msg{font-size:13px;opacity:.96}
+  .modebar .msg b{color:#ffd23f}
+  .modebar.production .msg b{color:#fff}
+  .modebar .spacer{flex:1}
+  .modebar .btn.switch{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.4);color:#fff}
+  header.app{background:var(--card);border-bottom:1px solid var(--line);padding:16px 22px;
+    display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+  header.app .title{display:flex;align-items:center;gap:12px}
+  .dot{width:34px;height:34px;border-radius:8px;background:var(--orange);display:grid;place-items:center;color:#fff;font-weight:800}
+  header.app h1{font-size:18px}
+  header.app .sub{color:var(--muted);font-size:12px;margin-top:2px}
+  .livechip{display:inline-flex;align-items:center;gap:6px;background:var(--blue-soft);color:var(--blue);
+    font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;margin-top:6px}
+  .livechip .d{width:7px;height:7px;border-radius:50%;background:var(--blue)}
+  .livechip.bad{background:var(--red-soft);color:var(--red)} .livechip.bad .d{background:var(--red)}
+  .wrap{max-width:1120px;margin:20px auto;padding:0 18px 60px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);margin-bottom:18px;overflow:hidden}
+  .card > .head{padding:13px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fbfcfd}
+  .card > .head h2{font-size:14px;text-transform:uppercase;letter-spacing:.4px;color:var(--ink)}
+  .card > .head .hint{font-size:12px;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0}
+  .card > .body{padding:18px}
+  .grid{display:grid;gap:14px}
+  .g2{grid-template-columns:repeat(2,1fr)} .g3{grid-template-columns:repeat(3,1fr)} .g4{grid-template-columns:repeat(4,1fr)}
+  @media(max-width:760px){.g2,.g3,.g4{grid-template-columns:1fr 1fr}}
+  label.fld{display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:5px}
+  input,select,textarea{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;font-size:14px;font-family:inherit;color:var(--ink);background:#fff}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--orange);box-shadow:0 0 0 3px var(--orange-soft)}
+  input[readonly]{background:#f5f7fa;color:var(--muted)}
+  input.num{text-align:right}
+  table{width:100%;border-collapse:collapse}
+  th{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);text-align:left;padding:8px 8px;border-bottom:1px solid var(--line);font-weight:700}
+  td{padding:6px 8px;border-bottom:1px solid #eef1f5;vertical-align:middle}
+  td input,td select{padding:7px 8px}
+  th.r,td.r{text-align:right}
+  .sec-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 0 8px 0}
+  .sec-head h2{font-size:13px} .sec-head .hint{font-size:12px;color:var(--muted)}
+  .btn{border:1px solid var(--line);background:#fff;color:var(--ink);padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:.12s}
+  .btn:hover{background:#f4f6f9}
+  .btn.primary{background:var(--orange);border-color:var(--orange);color:#fff}
+  .btn.primary:hover{background:var(--orange-dark)}
+  .btn.post{background:var(--green);border-color:var(--green);color:#fff}
+  .btn.post:hover{background:#166b3a}
+  .btn.ghost{background:transparent}
+  .btn.sm{padding:5px 10px;font-size:12px}
+  .btn.danger{color:var(--red);border-color:#f0cfca}
+  .btn.danger:hover{background:#fbeeec}
+  .rowbtns{display:flex;gap:8px;flex-wrap:wrap}
+  .iconbtn{border:none;background:transparent;cursor:pointer;color:var(--muted);font-size:15px;padding:2px 6px;border-radius:6px}
+  .iconbtn:hover{background:#f0f2f5;color:var(--red)}
+  .subrow{display:flex;justify-content:flex-end;gap:22px;padding:8px 8px 0;font-size:12px;color:var(--muted)}
+  .subrow b{color:var(--ink);font-variant-numeric:tabular-nums}
+  .summary{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}
+  @media(max-width:760px){.summary{grid-template-columns:1fr}}
+  .costlist{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .costlist .r{display:flex;justify-content:space-between;padding:9px 14px;border-bottom:1px solid #eef1f5;font-size:13px}
+  .costlist .r:last-child{border-bottom:none}
+  .costlist .r .lbl{color:var(--muted)}
+  .costlist .r.sub{background:#fafbfc;font-weight:600}
+  .costlist .r.total{background:var(--sand);font-weight:700;font-size:15px}
+  .cpt{background:var(--orange);color:#fff;border-radius:10px;padding:16px 18px;display:flex;flex-direction:column;justify-content:center;gap:2px}
+  .cpt .big{font-size:34px;font-weight:800;line-height:1}
+  .cpt .small{font-size:12px;opacity:.9}
+  .cpt .row2{display:flex;gap:18px;margin-top:10px;border-top:1px solid rgba(255,255,255,.3);padding-top:10px}
+  .cpt .row2 div .n{font-size:18px;font-weight:700}
+  .cpt .row2 div .l{font-size:11px;opacity:.85}
+  .massbal{margin-top:12px;background:var(--teal-soft);border:1px solid #bfe3de;color:#0c5b54;border-radius:10px;padding:10px 14px;font-size:12px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .massbal b{font-variant-numeric:tabular-nums}
+  .splitwrap{margin-top:16px}
+  .ratebox{background:var(--orange-soft);border:1px dashed #f0c79a;border-radius:10px;padding:14px;margin-bottom:16px}
+  .ratebox .note{font-size:12px;color:#95591a;margin-bottom:10px}
+  .foot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:16px 18px;border-top:1px solid var(--line);background:#fbfcfd}
+  .foot .left{color:var(--muted);font-size:12px}
+  .empty{padding:26px;text-align:center;color:var(--muted);font-size:13px}
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 20px;border-radius:10px;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:.25s;z-index:50;max-width:90%}
+  .toast.show{opacity:1;bottom:30px}
+  .toast.ok{background:var(--green)} .toast.err{background:var(--red)}
+  .tag-money{font-variant-numeric:tabular-nums}
+  .muted{color:var(--muted)} .up{color:var(--red);font-weight:600} .down{color:var(--green);font-weight:600}
+  .stdref{font-size:11px;color:var(--muted)}
+  /* picker */
+  .picker{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:760px){.picker{grid-template-columns:1fr}}
+  .pick{cursor:pointer;border:1px solid var(--line);border-radius:14px;padding:24px;background:var(--card);box-shadow:var(--shadow);transition:.14s}
+  .pick:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(20,30,45,.12);border-color:var(--orange)}
+  .pick .pi{width:46px;height:46px;border-radius:11px;display:grid;place-items:center;font-size:22px;margin-bottom:12px}
+  .pick.sand .pi{background:#2b3442;color:#ffd23f}
+  .pick.prod .pi{background:var(--green-soft);color:var(--green)}
+  .pick h3{font-size:17px;margin-bottom:6px}
+  .pick p{color:var(--muted);font-size:13px;margin:0 0 10px}
+  .pick .go{font-weight:700;color:var(--orange-dark);font-size:13px}
+  .pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px}
+  .pill.draft{background:var(--blue-soft);color:var(--blue)} .pill.posted{background:var(--green-soft);color:var(--green)} .pill.archived{background:#eee;color:var(--muted)}
+  .importbar{background:var(--green-soft);border:1px solid #bfe3d0;border-radius:10px;padding:12px 14px;margin-bottom:16px}
+  .importbar .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .importbar input{max-width:340px}
+  .impresults{margin-top:10px}
+  .warnbox{background:#fff8e6;border:1px solid #f2dc9a;color:#7a5c12;padding:12px 14px;border-radius:10px;font-size:13px;margin-bottom:14px;display:none}
+  .warnbox.show{display:block}
+  .warnbox.danger{background:var(--red-soft);border-color:#f0cfca;color:#8f2114}
+  .hide{display:none}
+</style>
+</head>
+<body>
+
+<!-- MODE BAR (changes with mode) -->
+<div class="modebar sandpit" id="modeBar">
+  <span class="tag" id="modeTag">SANDPIT</span>
+  <span class="msg" id="modeMsg"><b>Costing only.</b> Nothing posts, no stock moves. Reads live master data, saves the costing to the shared list.</span>
+  <span class="spacer"></span>
+  <button class="btn switch sm" onclick="goHome()">↤ Change mode</button>
+</div>
+
+<header class="app">
+  <div class="title">
+    <div class="dot">RAC</div>
+    <div>
+      <h1 id="pageTitle">Production</h1>
+      <div class="sub">Rirratjingu Mining — one door, two modes: cost a run, or record a real one</div>
+      <div class="livechip" id="dataChip"><span class="d"></span><span id="dataChipText">Loading live master data…</span></div>
+    </div>
+  </div>
+  <div class="rowbtns" id="headerBtns"></div>
+</header>
+
+<div class="wrap">
+
+  <!-- ============ LANDING / PICKER ============ -->
+  <div id="landing">
+    <div class="picker">
+      <div class="pick sand" onclick="enterMode('sandpit')">
+        <div class="pi">🧮</div>
+        <h3>Cost a run <span class="muted" style="font-weight:400;font-size:13px">(Sandpit)</span></h3>
+        <p>Work out the cost per tonne of a crush or blend. Save it to the shared costings list. <b>Nothing posts — no stock moves.</b></p>
+        <div class="go">Start a costing →</div>
+      </div>
+      <div class="pick prod" onclick="enterMode('production')">
+        <div class="pi">🏭</div>
+        <h3>Record a run <span class="muted" style="font-weight:400;font-size:13px">(Production)</span></h3>
+        <p>Post a real production run. Optionally <b>search &amp; import a saved costing</b> as your starting point, confirm the actuals, then post. <b>This moves real stock.</b></p>
+        <div class="go">Record production →</div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:20px">
+      <div class="head"><h2>Recent costings</h2><span class="hint">Latest saved costings across the team</span></div>
+      <div class="body" style="padding:0">
+        <table>
+          <thead><tr><th>Ref</th><th>Date</th><th>Operator</th><th>Type</th><th class="r">Produced</th><th class="r">Cost/t</th><th>Status</th><th></th></tr></thead>
+          <tbody id="recentCostBody"></tbody>
+        </table>
+        <div id="recentCostEmpty" class="empty">No costings yet — start one in the Sandpit.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="head"><h2>Recent production runs</h2><span class="hint">Posted runs (these moved stock)</span></div>
+      <div class="body" style="padding:0">
+        <table>
+          <thead><tr><th>Run</th><th>Date</th><th>Operator</th><th>Products made</th><th class="r">Tonnes</th><th class="r">Cost/t</th></tr></thead>
+          <tbody id="recentRunBody"></tbody>
+        </table>
+        <div id="recentRunEmpty" class="empty">No production runs posted yet.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ FORM (both modes) ============ -->
+  <div id="form" class="hide">
+
+    <!-- IMPORT BAR (production mode only) -->
+    <div class="importbar hide" id="importBar">
+      <div class="row">
+        <b>Import a saved costing:</b>
+        <input type="text" id="impSearch" placeholder="search by ref, notes or operator…" oninput="debouncedImpSearch()">
+        <button class="btn sm" onclick="runImpSearch()">Search</button>
+        <span class="muted" id="impHint">Optional — start from a costing, then confirm actuals below.</span>
+      </div>
+      <div class="impresults" id="impResults"></div>
+    </div>
+
+    <!-- imported / negative warnings -->
+    <div class="warnbox" id="importedNote"></div>
+    <div class="warnbox danger" id="negWarn"></div>
+
+    <div class="card">
+      <div class="head"><h2 id="formCardTitle">Production Run — Costing</h2><span class="hint">Materials in (products or Blast WIP) + labour + machines → cost per tonne produced</span></div>
+      <div class="body">
+
+        <div class="grid g4" style="margin-bottom:20px">
+          <div><label class="fld">Production Date</label><input type="date" id="runDate"></div>
+          <div><label class="fld">Reference</label><input type="text" id="reference" placeholder="e.g. PROD-001"></div>
+          <div><label class="fld">Operator</label>
+            <select id="operator"><option value="">—</option><option>RIA</option><option>RM</option><option>RE</option></select></div>
+          <div><label class="fld">Run type</label>
+            <select id="mode"><option value="Blend">Blend / Premix (products in)</option><option value="Crush">Crush (Blast WIP in)</option><option value="Manual">Manual</option></select></div>
+        </div>
+
+        <div class="sec-head"><h2>Products Made (Output)</h2><span class="hint">One or more finished products from this run · <b id="outTonHint">0.00 t</b> total</span></div>
+        <table id="prodTable">
+          <thead><tr><th style="width:44%">Product Made</th><th class="r" style="width:16%">Tonnes</th><th style="width:34%">To location</th><th style="width:6%"></th></tr></thead>
+          <tbody id="prodBody"></tbody>
+        </table>
+        <div style="margin-top:8px"><button class="btn sm" onclick="addProduct()">+ Add product</button></div>
+
+        <div style="margin-top:20px">
+          <label class="fld">Notes about this run</label>
+          <textarea id="runNotes" rows="2" placeholder="Conditions, what was made, delivery pattern, anything worth recording…"></textarea>
+        </div>
+
+        <div class="ratebox" style="margin-top:20px">
+          <div class="note">✎ <b>Default rates — pre-filled from your live Production Rates.</b> Blast WIP rate applies to Blast WIP material lines. Edit for a "what-if".</div>
+          <div class="grid g3">
+            <div><label class="fld">Blast WIP Rate ($/t)</label><input type="number" step="0.01" id="wipRate" class="num" oninput="calc()"></div>
+            <div><label class="fld">Labour Rate ($/hr)</label><input type="number" step="0.01" id="labRate" class="num" oninput="calc()"></div>
+            <div><label class="fld">Fuel Rate ($/L)</label><input type="number" step="0.01" id="fuelRate" class="num" oninput="calc()"></div>
+          </div>
+        </div>
+
+        <div class="sec-head" style="margin-top:6px"><h2>Materials Consumed (Inputs)</h2><span class="hint">Products drawn from a source pile, or Blast WIP · cost/t auto-fills</span></div>
+        <table id="matTable">
+          <thead><tr>
+            <th style="width:28%">Material</th><th style="width:24%">From location</th><th class="r" style="width:14%">Tonnes</th>
+            <th class="r" style="width:14%">Cost / t</th><th class="r" style="width:14%">Line cost</th><th style="width:6%"></th>
+          </tr></thead>
+          <tbody id="matBody"></tbody>
+        </table>
+        <div class="subrow"><span>Input tonnes: <b id="inTon">0.00</b> t</span><span>Materials cost: <b id="matTot">$0.00</b></span></div>
+        <div style="margin-top:8px"><button class="btn sm" onclick="addMaterial()">+ Add material</button></div>
+
+        <div class="sec-head" style="margin-top:22px"><h2>Labour</h2></div>
+        <div class="grid g3">
+          <div><label class="fld">Man Hours <span class="muted">(all operators)</span></label>
+            <input type="number" step="0.01" id="manHours" class="num" value="0" oninput="calc()"></div>
+          <div><label class="fld">Labour cost</label>
+            <input type="text" class="num" id="labCostCell" value="$0.00" readonly></div>
+          <div></div>
+        </div>
+
+        <div class="sec-head" style="margin-top:22px"><h2>Overhead (Machines)</h2><span class="hint">Pick a machine — rate/maint/fuel auto-fill from the register. Hours for THIS RUN only.</span></div>
+        <table id="machTable">
+          <thead><tr><th style="width:28%">Machine</th><th class="r">Hours</th><th class="r">Rate/hr</th><th class="r">Maint/hr</th><th class="r">Fuel L/hr</th><th class="r">Total cost</th><th></th></tr></thead>
+          <tbody id="machBody"></tbody>
+        </table>
+        <div style="margin-top:8px"><button class="btn sm" onclick="addMachine()">+ Add machine</button></div>
+
+      </div>
+    </div>
+
+    <!-- COST SUMMARY -->
+    <div class="card">
+      <div class="head"><h2>Cost Summary</h2><span class="hint">Same cost/t applied to every product produced, split by weight</span></div>
+      <div class="body">
+        <div class="summary">
+          <div class="costlist">
+            <div class="r sub"><span class="lbl">Materials consumed</span><span class="tag-money" id="sumMat">$0.00</span></div>
+            <div class="r"><span class="lbl">Labour</span><span class="tag-money" id="sumLab">$0.00</span></div>
+            <div class="r"><span class="lbl">Machine operating</span><span class="tag-money" id="sumMachOp">$0.00</span></div>
+            <div class="r"><span class="lbl">Maintenance</span><span class="tag-money" id="sumMaint">$0.00</span></div>
+            <div class="r"><span class="lbl">Fuel</span><span class="tag-money" id="sumFuel">$0.00</span></div>
+            <div class="r total"><span>TOTAL RUN COST</span><span class="tag-money" id="sumTotal">$0.00</span></div>
+          </div>
+          <div class="cpt">
+            <div class="small">COST PER TONNE PRODUCED</div>
+            <div class="big" id="cptBig">$0.00</div>
+            <div class="row2">
+              <div><div class="n" id="cptTonnes">0.00 t</div><div class="l">Tonnes produced</div></div>
+              <div><div class="n tag-money" id="cptTotal">$0.00</div><div class="l">Total run cost</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="massbal">
+          <span>Mass balance — In: <b id="mbIn">0.00</b> t · Out: <b id="mbOut">0.00</b> t</span>
+          <span>Yield: <b id="mbYield">—</b> · Variance: <b id="mbVar">0.00</b> t</span>
+        </div>
+
+        <div class="splitwrap" id="splitSection" style="display:none">
+          <div class="sec-head"><h2>Product Split</h2><span class="hint">Shown when a run makes more than one product · Std cost = current book cost</span></div>
+          <table>
+            <thead><tr><th>Product</th><th>Location</th><th class="r">Tonnes</th><th class="r">Share</th><th class="r">Run cost/t</th><th class="r">Std cost/t</th><th class="r">vs std</th><th class="r">Product cost</th></tr></thead>
+            <tbody id="splitBody"><tr><td colspan="8" class="muted" style="padding:14px">Add output products and tonnes to see the split.</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="foot">
+        <div class="left" id="cptNote">Enter materials, labour, machines and output to calculate.</div>
+        <div class="rowbtns" id="formActions"></div>
+      </div>
+    </div>
+
+    <!-- SAVED COSTINGS (sandpit mode) -->
+    <div class="card" id="savedCard">
+      <div class="head">
+        <h2>Saved Costings <span class="muted" id="savedCount" style="font-weight:400">(0)</span></h2>
+        <div class="rowbtns">
+          <input type="text" id="savedSearch" placeholder="search saved…" style="max-width:220px;padding:6px 10px" oninput="debouncedSavedSearch()">
+        </div>
+      </div>
+      <div class="body" style="padding:0">
+        <table>
+          <thead><tr><th>Ref</th><th>Run date</th><th>Operator</th><th>Type</th><th class="r">Produced</th><th class="r">Total cost</th><th class="r">Cost/t</th><th>Status</th><th></th></tr></thead>
+          <tbody id="savedBody"></tbody>
+        </table>
+        <div id="savedEmpty" class="empty">No saved costings yet. Enter a run above and click <b>Save costing</b>.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Shared costing engine: same maths as the API -->
+<script src="/js/production-costing-engine.js"></script>
+<script>
+/* ============================================================
+   RAC PRODUCTION — unified screen (Sandpit + Production)
+   - ONE costing engine (window.RACCosting) shared with the API.
+   - Live master data from the app's own APIs.
+   - Sandpit mode: Save costing  -> POST /api/production-costings
+   - Production mode: import a costing, confirm, Post run -> POST /api/production-runs
+   ============================================================ */
+
+const API = '';                     // same-origin
+let MODE = 'sandpit';               // 'sandpit' | 'production'
+let IMPORTED_COSTING_ID = null;     // set when a costing has been imported
+
+/* master data (loaded live) */
+let PRODUCTS = [], MACHINES = [], LOCATIONS = [], RATES = { wip:45, labour:116, fuel:2.10 };
+let PRODUCT_BY_NAME = {}, LOCATION_BY_NAME = {}, MACHINE_BY_NAME = {};
+let PRODUCT_LOCATIONS = {};         // name -> [{location_name, location_id, qty, avg_cost}]
+const WIP_LABEL = 'Blast WIP (raw material)';
+
+/* helpers */
+const money = n => '$' + (isFinite(n)?n:0).toLocaleString('en-AU',{minimumFractionDigits:2,maximumFractionDigits:2});
+const t2 = n => (isFinite(n)?n:0).toLocaleString('en-AU',{minimumFractionDigits:2,maximumFractionDigits:2});
+const num = v => { const n=parseFloat(v); return isFinite(n)?n:0; };
+const esc = s => (s||'').toString().replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let toastTimer;
+function toast(msg, kind){ const el=document.getElementById('toast'); el.textContent=msg; el.className='toast show'+(kind?(' '+kind):''); clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.className='toast',3200); }
+async function api(path, opts){ const r = await fetch(API+path, opts); return r; }
+
+/* ---------- load live master data ---------- */
+async function loadMasterData(){
+  try {
+    const [pr, lo, ma, ra] = await Promise.all([
+      api('/api/products?is_active=true').then(r=>r.json()),
+      api('/api/locations?is_active=true').then(r=>r.json()),
+      api('/api/production-rates/machines').then(r=>r.json()),
+      api('/api/production-rates/current').then(r=>r.json()).catch(()=>({}))
+    ]);
+    PRODUCTS  = Array.isArray(pr) ? pr : [];
+    LOCATIONS = Array.isArray(lo) ? lo : [];
+    MACHINES  = Array.isArray(ma) ? ma : [];
+    // rates: {BLAST_WIP:{rate}, LABOUR:{rate}, FUEL:{rate}}
+    if (ra && ra.BLAST_WIP) RATES.wip    = num(ra.BLAST_WIP.rate);
+    if (ra && ra.LABOUR)    RATES.labour = num(ra.LABOUR.rate);
+    if (ra && ra.FUEL)      RATES.fuel   = num(ra.FUEL.rate);
+
+    PRODUCT_BY_NAME = {}; PRODUCTS.forEach(p=>PRODUCT_BY_NAME[(p.product_name||'').toLowerCase()]=p);
+    LOCATION_BY_NAME = {}; LOCATIONS.forEach(l=>LOCATION_BY_NAME[(l.location_name||'').toLowerCase()]=l);
+    MACHINE_BY_NAME = {}; MACHINES.forEach(m=>MACHINE_BY_NAME[(m.machine_name||'').toLowerCase()]=m);
+
+    // optional: current stock -> source pile + avg cost per product (best effort)
+    await loadStockMap();
+
+    const chip = document.getElementById('dataChip');
+    chip.className = 'livechip';
+    document.getElementById('dataChipText').textContent =
+      `Live master data · ${PRODUCTS.length} products · ${MACHINES.length} machines · ${LOCATIONS.length} locations`;
+    seedLists();
+    return true;
+  } catch (e) {
+    const chip = document.getElementById('dataChip');
+    chip.className = 'livechip bad';
+    document.getElementById('dataChipText').textContent = 'Could not load master data — is the server running?';
+    console.error('master data load failed', e);
+    return false;
+  }
+}
+
+async function loadStockMap(){
+  PRODUCT_LOCATIONS = {};
+  try {
+    const r = await api('/api/stock/summary');
+    if (!r.ok) return;
+    const rows = await r.json();
+    if (!Array.isArray(rows)) return;
+    rows.forEach(row => {
+      const name = (row.product_name||'').toLowerCase();
+      if (!name) return;
+      (PRODUCT_LOCATIONS[name] = PRODUCT_LOCATIONS[name] || []).push({
+        location_name: row.location_name, location_id: row.location_id,
+        qty: num(row.quantity), avg_cost: num(row.average_cost)
+      });
+    });
+    Object.values(PRODUCT_LOCATIONS).forEach(a => a.sort((x,y)=>y.qty-x.qty)); // [0] = biggest pile
+  } catch(e){ /* stock summary optional */ }
+}
+
+/* ---------- datalists ---------- */
+function seedLists(){
+  const setDL = (id, items) => {
+    let d = document.getElementById(id);
+    if (!d){ d = document.createElement('datalist'); d.id = id; document.body.appendChild(d); }
+    d.innerHTML = items.map(v=>`<option value="${esc(v)}">`).join('');
+  };
+  setDL('matList', [WIP_LABEL, ...PRODUCTS.map(p=>p.product_name)]);
+  setDL('prodList', PRODUCTS.map(p=>p.product_name));
+  setDL('locList', LOCATIONS.map(l=>l.location_name));
+  setDL('machList', MACHINES.map(m=>m.machine_name));
+}
+
+/* ---------- rows ---------- */
+function addMaterial(m={}){
+  const uid = 'm'+Math.random().toString(36).slice(2,8);
+  const tr=document.createElement('tr');
+  tr.innerHTML=`
+    <td><input type="text" class="x-name" list="matList" placeholder="e.g. 100 minus / Blast WIP" value="${esc(m.name)}" onchange="fillMaterial(this)" oninput="calc()"></td>
+    <td><input type="text" class="x-loc" list="loc_${uid}" placeholder="source location" value="${esc(m.location)}" oninput="calc()"><datalist id="loc_${uid}"></datalist></td>
+    <td class="r"><input type="number" step="0.01" class="x-ton num" value="${m.tonnes??''}" oninput="calc()"></td>
+    <td class="r"><input type="number" step="0.01" class="x-cost num" value="${m.costPerT??''}" oninput="calc()"></td>
+    <td class="r tag-money x-line">$0.00</td>
+    <td class="r"><button class="iconbtn" title="Remove" onclick="this.closest('tr').remove();calc()">🗑</button></td>`;
+  document.getElementById('matBody').appendChild(tr);
+  if(m.name) populateMatLoc(tr, m.name, m.location);
+}
+function populateMatLoc(tr, name, preset){
+  const locInput=tr.querySelector('.x-loc'); const dl=tr.querySelector('datalist');
+  const locs=PRODUCT_LOCATIONS[(name||'').trim().toLowerCase()]||[];
+  if(locs.length){ dl.innerHTML=locs.map(l=>`<option value="${esc(l.location_name)}">${t2(l.qty)} t on hand</option>`).join(''); }
+  else { dl.innerHTML=LOCATIONS.map(l=>`<option value="${esc(l.location_name)}">`).join(''); }
+  if(preset!=null && preset!==''){ locInput.value=preset; }
+  else if(locs.length){ locInput.value=locs[0].location_name; }
+}
+function fillMaterial(inp){
+  const v=inp.value.trim(); const tr=inp.closest('tr'); const cell=tr.querySelector('.x-cost');
+  if(/blast wip/i.test(v)){ cell.value=num(document.getElementById('wipRate').value); }
+  else {
+    const locs=PRODUCT_LOCATIONS[v.toLowerCase()];
+    if(locs && locs.length){ cell.value=locs[0].avg_cost.toFixed(2); }         // live avg cost at biggest pile
+    else { const p=PRODUCT_BY_NAME[v.toLowerCase()]; if(p && p.standard_cost!=null) cell.value=num(p.standard_cost).toFixed(2); }
+  }
+  populateMatLoc(tr, v, null);
+  calc();
+}
+function addProduct(p={}){
+  const tr=document.createElement('tr');
+  tr.innerHTML=`
+    <td><input type="text" class="p-name" list="prodList" placeholder="e.g. Concrete Premix 20mm Agg/Sand/Dust" value="${esc(p.product)}" oninput="calc()"></td>
+    <td class="r"><input type="number" step="0.01" class="p-ton num" value="${p.tonnes??''}" oninput="calc()"></td>
+    <td><input type="text" class="p-loc" list="locList" placeholder="e.g. WTD Products" value="${esc(p.location)}"></td>
+    <td class="r"><button class="iconbtn" title="Remove" onclick="this.closest('tr').remove();calc()">🗑</button></td>`;
+  document.getElementById('prodBody').appendChild(tr);
+}
+function addMachine(m={}){
+  const tr=document.createElement('tr');
+  tr.innerHTML=`
+    <td><input type="text" class="m-name" list="machList" placeholder="Pick a machine…" value="${esc(m.name)}" onchange="fillMachine(this)" oninput="calc()"></td>
+    <td class="r"><input type="number" step="0.01" class="m-hrs num" value="${m.hours??''}" oninput="calc()"></td>
+    <td class="r"><input type="number" step="0.01" class="m-rate num" value="${m.rate??''}" oninput="calc()"></td>
+    <td class="r"><input type="number" step="0.01" class="m-maint num" value="${m.maint??''}" oninput="calc()"></td>
+    <td class="r"><input type="number" step="0.01" class="m-fuel num" value="${m.fuelLhr??''}" oninput="calc()"></td>
+    <td class="r tag-money m-cost">$0.00</td>
+    <td class="r"><button class="iconbtn" title="Remove" onclick="this.closest('tr').remove();calc()">🗑</button></td>`;
+  document.getElementById('machBody').appendChild(tr);
+}
+function fillMachine(inp){
+  const m=MACHINE_BY_NAME[inp.value.trim().toLowerCase()];
+  if(m){ const tr=inp.closest('tr');
+    tr.querySelector('.m-rate').value=num(m.rate_per_hour);
+    tr.querySelector('.m-maint').value=num(m.maintenance_rate_per_hour);
+    tr.querySelector('.m-fuel').value=num(m.fuel_litres_per_hour); }
+  calc();
+}
+
+/* ---------- gather + compute (via shared engine) ---------- */
+function gather(){
+  const materials=[];
+  document.querySelectorAll('#matBody tr').forEach(tr=>{
+    const nm=tr.querySelector('.x-name').value.trim();
+    materials.push({ name:nm, isWip:/blast wip/i.test(nm),
+      location:tr.querySelector('.x-loc').value.trim(),
+      tonnes:num(tr.querySelector('.x-ton').value), costPerT:num(tr.querySelector('.x-cost').value) });
+  });
+  const products=[];
+  document.querySelectorAll('#prodBody tr').forEach(tr=>{
+    const nm=tr.querySelector('.p-name').value.trim(); const match=PRODUCT_BY_NAME[nm.toLowerCase()];
+    products.push({ product:nm, stdCost:match?num(match.standard_cost):null,
+      location:tr.querySelector('.p-loc').value.trim(), tonnes:num(tr.querySelector('.p-ton').value) });
+  });
+  const machines=[];
+  document.querySelectorAll('#machBody tr').forEach(tr=>{
+    machines.push({ name:tr.querySelector('.m-name').value.trim(), hours:num(tr.querySelector('.m-hrs').value),
+      rate:num(tr.querySelector('.m-rate').value), maint:num(tr.querySelector('.m-maint').value),
+      fuelLhr:num(tr.querySelector('.m-fuel').value) });
+  });
+  return { runDate:document.getElementById('runDate').value, reference:document.getElementById('reference').value.trim(),
+    operator:document.getElementById('operator').value, mode:document.getElementById('mode').value,
+    notes:document.getElementById('runNotes').value.trim(),
+    wipRate:num(document.getElementById('wipRate').value), labRate:num(document.getElementById('labRate').value),
+    fuelRate:num(document.getElementById('fuelRate').value), manHours:num(document.getElementById('manHours').value),
+    materials, products, machines };
+}
+function calc(){
+  const d=gather();
+  const r=window.RACCosting.compute(d);   // shared engine — same maths as the API
+  let i=0; document.querySelectorAll('#matBody tr').forEach(tr=>{ tr.querySelector('.x-line').textContent=money(r.matDetail[i]?r.matDetail[i].lineCost:0); i++; });
+  i=0; document.querySelectorAll('#machBody tr').forEach(tr=>{ tr.querySelector('.m-cost').textContent=money(r.machDetail[i]?r.machDetail[i].total:0); i++; });
+  document.getElementById('inTon').textContent=t2(r.inputTonnes);
+  document.getElementById('matTot').textContent=money(r.matTotal);
+  document.getElementById('labCostCell').value=money(r.labCost);
+  document.getElementById('outTonHint').textContent=t2(r.outputTonnes)+' t';
+  document.getElementById('sumMat').textContent=money(r.matTotal);
+  document.getElementById('sumLab').textContent=money(r.labCost);
+  document.getElementById('sumMachOp').textContent=money(r.machOp);
+  document.getElementById('sumMaint').textContent=money(r.maint);
+  document.getElementById('sumFuel').textContent=money(r.fuel);
+  document.getElementById('sumTotal').textContent=money(r.totalCost);
+  document.getElementById('cptBig').textContent=money(r.costPerTonne);
+  document.getElementById('cptTonnes').textContent=t2(r.outputTonnes)+' t';
+  document.getElementById('cptTotal').textContent=money(r.totalCost);
+  document.getElementById('mbIn').textContent=t2(r.inputTonnes);
+  document.getElementById('mbOut').textContent=t2(r.outputTonnes);
+  document.getElementById('mbYield').textContent=r.inputTonnes>0?(r.yield*100).toFixed(1)+'%':'—';
+  document.getElementById('mbVar').textContent=(r.variance>=0?'+':'')+t2(r.variance)+' t';
+  const producedLines=r.split.filter(s=>s.tonnes>0).length;
+  document.getElementById('splitSection').style.display = producedLines>1 ? 'block' : 'none';
+  const sb=document.getElementById('splitBody');
+  if(r.split.length && r.outputTonnes>0){
+    sb.innerHTML=r.split.map(s=>{
+      let stdCell='<span class="stdref">—</span>', vsCell='<span class="stdref">n/a</span>';
+      if(s.stdCost!=null){ stdCell=money(s.stdCost); const diff=s.costPerTonne-s.stdCost; vsCell=`<span class="${diff>0?'up':'down'}">${diff>0?'+':''}${money(diff)}</span>`; }
+      return `<tr>
+        <td>${esc(s.product)||'<span class="muted">(unnamed)</span>'}</td>
+        <td>${esc(s.location)||'<span class="muted">—</span>'}</td>
+        <td class="r">${t2(s.tonnes)}</td><td class="r">${(s.share*100).toFixed(1)}%</td>
+        <td class="r tag-money">${money(s.costPerTonne)}</td><td class="r tag-money">${stdCell}</td>
+        <td class="r tag-money">${vsCell}</td><td class="r tag-money">${money(s.productCost)}</td></tr>`;
+    }).join('');
+  } else { sb.innerHTML='<tr><td colspan="8" class="muted" style="padding:14px">Add output products and tonnes to see the split.</td></tr>'; }
+  document.getElementById('cptNote').textContent = r.outputTonnes>0
+    ? `${r.matDetail.length} material(s) in · ${d.products.length} product(s) out · ${money(r.costPerTonne)}/t · total ${money(r.totalCost)}`
+    : 'Enter materials, labour, machines and output to calculate.';
+  return {d,r};
+}
+
+/* ---------- mode / navigation ---------- */
+function enterMode(mode){
+  MODE = mode;
+  IMPORTED_COSTING_ID = null;
+  document.getElementById('landing').classList.add('hide');
+  document.getElementById('form').classList.remove('hide');
+  document.getElementById('importedNote').className='warnbox';
+  document.getElementById('negWarn').className='warnbox danger';
+
+  const bar=document.getElementById('modeBar'), tag=document.getElementById('modeTag'), msg=document.getElementById('modeMsg');
+  if(mode==='sandpit'){
+    bar.className='modebar sandpit'; tag.textContent='SANDPIT';
+    msg.innerHTML='<b>Costing only.</b> Nothing posts, no stock moves. Reads live master data, saves the costing to the shared list.';
+    document.getElementById('pageTitle').textContent='Cost a Run (Sandpit)';
+    document.getElementById('formCardTitle').textContent='Production Run — Costing';
+    document.getElementById('importBar').classList.add('hide');
+    document.getElementById('savedCard').classList.remove('hide');
+    document.getElementById('formActions').innerHTML=
+      '<button class="btn primary" onclick="saveCosting()">Save costing</button>';
+    loadSaved('');
+  } else {
+    bar.className='modebar production'; tag.textContent='PRODUCTION';
+    msg.innerHTML='<b>Records a real run.</b> Posting consumes input piles and creates product — this moves stock and cannot be undone from here.';
+    document.getElementById('pageTitle').textContent='Record a Run (Production)';
+    document.getElementById('formCardTitle').textContent='Production Run — Record & Post';
+    document.getElementById('importBar').classList.remove('hide');
+    document.getElementById('savedCard').classList.add('hide');
+    document.getElementById('formActions').innerHTML=
+      '<button class="btn" onclick="saveCosting()">Save as costing</button>' +
+      '<button class="btn post" onclick="postRun(false)">Post production run</button>';
+  }
+  newRun();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function goHome(){
+  document.getElementById('form').classList.add('hide');
+  document.getElementById('landing').classList.remove('hide');
+  loadRecent();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ---------- form setup ---------- */
+function newRun(){
+  document.getElementById('runDate').value=new Date().toISOString().slice(0,10);
+  ['reference','runNotes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('operator').value=''; document.getElementById('mode').value='Blend';
+  document.getElementById('wipRate').value=RATES.wip.toFixed(2);
+  document.getElementById('labRate').value=RATES.labour.toFixed(2);
+  document.getElementById('fuelRate').value=RATES.fuel.toFixed(2);
+  document.getElementById('manHours').value='0';
+  document.getElementById('matBody').innerHTML=''; addMaterial();
+  document.getElementById('prodBody').innerHTML=''; addProduct();
+  document.getElementById('machBody').innerHTML=''; addMachine();
+  document.getElementById('importedNote').className='warnbox';
+  document.getElementById('negWarn').className='warnbox danger';
+  IMPORTED_COSTING_ID=null;
+  calc();
+}
+
+/* ---------- SANDPIT: save costing to API ---------- */
+async function saveCosting(){
+  const {d,r}=calc();
+  if(r.outputTonnes<=0){ toast('Enter at least one output product with tonnes before saving.','err'); return; }
+  const body={
+    operator:d.operator||null, entry_mode:d.mode, notes:d.notes||null,
+    run_date:d.runDate||null, costing_ref:d.reference||null,
+    rates:{ wip:d.wipRate, labour:d.labRate, fuel:d.fuelRate }, manHours:d.manHours,
+    materials:d.materials, products:d.products, machines:d.machines
+  };
+  try{
+    const res=await api('/api/production-costings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const j=await res.json().catch(()=>({}));
+    if(res.ok && j.success){
+      toast('Saved '+j.costing_ref+' — '+money(num(j.cost_per_tonne))+'/t','ok');
+      if(MODE==='sandpit') loadSaved(document.getElementById('savedSearch').value||'');
+    } else {
+      toast('Save failed: '+(j.error||('HTTP '+res.status)),'err');
+    }
+  }catch(e){ toast('Save failed: '+e.message,'err'); }
+}
+
+/* ---------- SANDPIT: saved list ---------- */
+let savedTimer;
+function debouncedSavedSearch(){ clearTimeout(savedTimer); savedTimer=setTimeout(()=>loadSaved(document.getElementById('savedSearch').value||''),250); }
+async function loadSaved(q){
+  try{
+    const res=await api('/api/production-costings'+(q?('?q='+encodeURIComponent(q)):''));
+    const list=await res.json().catch(()=>[]);
+    const body=document.getElementById('savedBody'), empty=document.getElementById('savedEmpty');
+    document.getElementById('savedCount').textContent='('+(Array.isArray(list)?list.length:0)+')';
+    if(!Array.isArray(list)||!list.length){ body.innerHTML=''; empty.style.display='block'; return; }
+    empty.style.display='none';
+    body.innerHTML=list.map(c=>rowForCosting(c,true)).join('');
+  }catch(e){ /* ignore */ }
+}
+function rowForCosting(c, withLoad){
+  const st=(c.status||'DRAFT').toLowerCase();
+  return `<tr>
+    <td>${esc(c.costing_ref||'—')}</td>
+    <td>${esc((c.run_date||'').slice(0,10))||'—'}</td>
+    <td>${esc(c.operator)||'<span class="muted">—</span>'}</td>
+    <td>${esc(c.entry_mode)||'—'}</td>
+    <td class="r">${t2(num(c.output_tonnes))}</td>
+    <td class="r tag-money">${money(num(c.total_run_cost))}</td>
+    <td class="r tag-money"><b>${money(num(c.cost_per_tonne))}</b></td>
+    <td><span class="pill ${st}">${esc((c.status||'DRAFT'))}</span></td>
+    <td class="r">${withLoad?`<button class="btn sm" onclick="loadCosting(${c.costing_id})">Load</button>`:''}</td>
+  </tr>`;
+}
+async function loadCosting(id){
+  try{
+    const res=await api('/api/production-costings/'+id);
+    const c=await res.json().catch(()=>({}));
+    if(!c || !c.payload){ toast('Could not load that costing.','err'); return; }
+    prefillFromPayload(c.payload, c);
+    toast('Loaded '+(c.costing_ref||('#'+id))+' — editing a copy.','ok');
+    window.scrollTo({top:0,behavior:'smooth'});
+  }catch(e){ toast('Load failed: '+e.message,'err'); }
+}
+
+/* ---------- PRODUCTION: import search ---------- */
+let impTimer;
+function debouncedImpSearch(){ clearTimeout(impTimer); impTimer=setTimeout(runImpSearch,250); }
+async function runImpSearch(){
+  const q=document.getElementById('impSearch').value||'';
+  try{
+    const res=await api('/api/production-costings?q='+encodeURIComponent(q)+'&status=DRAFT');
+    const list=await res.json().catch(()=>[]);
+    const box=document.getElementById('impResults');
+    if(!Array.isArray(list)||!list.length){ box.innerHTML='<div class="muted" style="padding:8px 2px">No draft costings match.</div>'; return; }
+    box.innerHTML='<table><thead><tr><th>Ref</th><th>Date</th><th>Operator</th><th class="r">Cost/t</th><th></th></tr></thead><tbody>'+
+      list.map(c=>`<tr>
+        <td>${esc(c.costing_ref||'—')}</td>
+        <td>${esc((c.run_date||'').slice(0,10))||'—'}</td>
+        <td>${esc(c.operator)||'—'}</td>
+        <td class="r tag-money">${money(num(c.cost_per_tonne))}</td>
+        <td class="r"><button class="btn sm primary" onclick="importCosting(${c.costing_id})">Import</button></td>
+      </tr>`).join('')+'</tbody></table>';
+  }catch(e){ /* ignore */ }
+}
+async function importCosting(id){
+  try{
+    const res=await api('/api/production-costings/'+id);
+    const c=await res.json().catch(()=>({}));
+    if(!c || !c.payload){ toast('Could not import that costing.','err'); return; }
+    prefillFromPayload(c.payload, c);
+    IMPORTED_COSTING_ID = c.costing_id;
+    const note=document.getElementById('importedNote');
+    note.className='warnbox show';
+    note.innerHTML=`Imported <b>${esc(c.costing_ref||('#'+id))}</b> (built ${esc((c.created_at||'').slice(0,10))}). This is a <b>starting template</b> — confirm the real machine hours, tonnes and source piles before posting. Posting will stamp this costing <b>POSTED</b> and link it to the run.`;
+    document.getElementById('impResults').innerHTML='';
+    toast('Imported '+(c.costing_ref||('#'+id))+' — confirm actuals, then Post.','ok');
+    window.scrollTo({top:0,behavior:'smooth'});
+  }catch(e){ toast('Import failed: '+e.message,'err'); }
+}
+
+/* prefill the form from a costing payload {rates,manHours,materials,products,machines} */
+function prefillFromPayload(p, meta){
+  document.getElementById('runDate').value=(meta&&meta.run_date? meta.run_date.slice(0,10):new Date().toISOString().slice(0,10));
+  document.getElementById('reference').value=(meta&&meta.costing_ref)||'';
+  document.getElementById('operator').value=(meta&&meta.operator)||'';
+  document.getElementById('mode').value=(meta&&meta.entry_mode)||'Blend';
+  document.getElementById('runNotes').value=(meta&&meta.notes)||'';
+  const rates=p.rates||{};
+  document.getElementById('wipRate').value=num(rates.wip!=null?rates.wip:RATES.wip).toFixed(2);
+  document.getElementById('labRate').value=num(rates.labour!=null?rates.labour:RATES.labour).toFixed(2);
+  document.getElementById('fuelRate').value=num(rates.fuel!=null?rates.fuel:RATES.fuel).toFixed(2);
+  document.getElementById('manHours').value=num(p.manHours);
+  document.getElementById('matBody').innerHTML=''; (p.materials||[]).forEach(addMaterial);
+  document.getElementById('prodBody').innerHTML=''; (p.products||[]).forEach(addProduct);
+  document.getElementById('machBody').innerHTML=''; (p.machines||[]).forEach(addMachine);
+  if(!(p.materials||[]).length) addMaterial();
+  if(!(p.products||[]).length) addProduct();
+  if(!(p.machines||[]).length) addMachine();
+  calc();
+}
+
+/* ---------- PRODUCTION: post a real run ---------- */
+function buildRunPayload(d, allowNegative){
+  const errors=[];
+  const products=d.products.filter(p=>p.product||p.tonnes>0).map((p,idx)=>{
+    const pid=(PRODUCT_BY_NAME[(p.product||'').toLowerCase()]||{}).product_id;
+    const lid=(LOCATION_BY_NAME[(p.location||'').toLowerCase()]||{}).location_id;
+    if(!pid) errors.push(`Output product "${p.product||'(blank)'}" isn't in master data — pick it from the list.`);
+    if(!lid) errors.push(`Output "${p.product||'(blank)'}" needs a valid "to location" from the list.`);
+    return { product_id:pid, to_location_id:lid, tonnes_produced:num(p.tonnes), is_by_product:false };
+  });
+  const inputs=d.materials.filter(m=>m.name||m.tonnes>0).map(m=>{
+    if(m.isWip){ return { is_wip:true, tonnes:num(m.tonnes), cost_per_tonne:num(d.wipRate) }; }
+    const pid=(PRODUCT_BY_NAME[(m.name||'').toLowerCase()]||{}).product_id;
+    const lid=(LOCATION_BY_NAME[(m.location||'').toLowerCase()]||{}).location_id;
+    if(!pid) errors.push(`Input "${m.name||'(blank)'}" isn't in master data — pick it from the list (or use "${WIP_LABEL}").`);
+    if(!lid) errors.push(`Input "${m.name||'(blank)'}" needs a valid "from location" from the list.`);
+    return { is_wip:false, product_id:pid, from_location_id:lid, tonnes:num(m.tonnes), cost_per_tonne:num(m.costPerT) };
+  });
+  const machines=d.machines.filter(mc=>mc.name||mc.hours>0).map(mc=>{
+    const mid=(MACHINE_BY_NAME[(mc.name||'').toLowerCase()]||{}).machine_id;
+    if(!mid) errors.push(`Machine "${mc.name||'(blank)'}" isn't in the register — pick it from the list.`);
+    return { machine_id:mid, hours_used:num(mc.hours), rate_per_hour:num(mc.rate),
+             maintenance_rate_per_hour:num(mc.maint), fuel_litres_per_hour:num(mc.fuelLhr) };
+  });
+  if(!products.length) errors.push('Add at least one output product.');
+  if(!machines.length) errors.push('Add at least one machine.');
+  const body={
+    run_date:d.runDate, operator:d.operator||null, reference_number:d.reference||null,
+    entry_mode:'MANUAL', notes:d.notes||null,
+    wip_rate_per_tonne:num(d.wipRate),
+    labour_hours:num(d.manHours), labour_rate_per_hour:num(d.labRate),
+    fuel_rate_per_litre:num(d.fuelRate),
+    machines, products, inputs,
+    costing_id:IMPORTED_COSTING_ID||null,
+    allow_negative:!!allowNegative
+  };
+  return { body, errors };
+}
+
+async function postRun(allowNegative){
+  const {d,r}=calc();
+  if(!d.runDate){ toast('Pick a production date first.','err'); return; }
+  const {body,errors}=buildRunPayload(d, allowNegative);
+  const neg=document.getElementById('negWarn');
+  if(errors.length){
+    neg.className='warnbox danger show';
+    neg.innerHTML='<b>Can\'t post yet — please fix:</b><ul style="margin:8px 0 0 18px">'+errors.map(e=>`<li>${esc(e)}</li>`).join('')+'</ul>';
+    window.scrollTo({top:0,behavior:'smooth'});
+    return;
+  }
+  neg.className='warnbox danger';
+  try{
+    const res=await api('/api/production-runs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const j=await res.json().catch(()=>({}));
+    if(res.ok && j.success){
+      toast('Posted run #'+j.run_id+' — '+money(num(j.cost_per_tonne))+'/t · '+t2(num(j.total_tonnes))+' t'+(j.posted_with_negative?' (with negative stock)':''),'ok');
+      IMPORTED_COSTING_ID=null;
+      document.getElementById('importedNote').className='warnbox';
+      newRun();
+      window.scrollTo({top:0,behavior:'smooth'});
+    } else if(res.status===409 && j.error==='INSUFFICIENT_INPUT_STOCK'){
+      const lines=(j.shortfalls||[]).map(s=>{
+        const pn=(PRODUCTS.find(p=>p.product_id===s.product_id)||{}).product_name||('product #'+s.product_id);
+        const ln=(LOCATIONS.find(l=>l.location_id===s.from_location_id)||{}).location_name||('loc #'+s.from_location_id);
+        return `<li>${esc(pn)} at ${esc(ln)}: need ${t2(s.requested)} t, only ${t2(s.available)} t on hand</li>`;
+      }).join('');
+      neg.className='warnbox danger show';
+      neg.innerHTML='<b>Not enough input stock to post:</b><ul style="margin:8px 0 8px 18px">'+lines+'</ul>'+
+        'You can post anyway and let those piles go negative (they\'ll show a shortfall to fix at stocktake).'+
+        '<div style="margin-top:10px"><button class="btn post sm" onclick="postRun(true)">Post anyway (allow negative)</button> '+
+        '<button class="btn sm" onclick="document.getElementById(\'negWarn\').className=\'warnbox danger\'">Cancel</button></div>';
+      window.scrollTo({top:0,behavior:'smooth'});
+    } else {
+      toast('Post failed: '+(j.error||('HTTP '+res.status)),'err');
+    }
+  }catch(e){ toast('Post failed: '+e.message,'err'); }
+}
+
+/* ---------- landing lists ---------- */
+async function loadRecent(){
+  try{
+    const list=await api('/api/production-costings').then(r=>r.json()).catch(()=>[]);
+    const body=document.getElementById('recentCostBody'), empty=document.getElementById('recentCostEmpty');
+    if(Array.isArray(list)&&list.length){ empty.style.display='none'; body.innerHTML=list.slice(0,8).map(c=>rowForCosting(c,false)).join(''); }
+    else { body.innerHTML=''; empty.style.display='block'; }
+  }catch(e){}
+  try{
+    const runs=await api('/api/production-runs?limit=8').then(r=>r.json()).catch(()=>[]);
+    const body=document.getElementById('recentRunBody'), empty=document.getElementById('recentRunEmpty');
+    if(Array.isArray(runs)&&runs.length){
+      empty.style.display='none';
+      body.innerHTML=runs.map(x=>`<tr>
+        <td>#${esc(x.run_id)}</td>
+        <td>${esc((x.run_date||'').slice(0,10))}</td>
+        <td>${esc(x.operator)||'<span class="muted">—</span>'}</td>
+        <td>${esc(x.products_made)||'<span class="muted">—</span>'}</td>
+        <td class="r">${t2(num(x.total_tonnes))}</td>
+        <td class="r tag-money">${money(num(x.cost_per_tonne))}</td>
+      </tr>`).join('');
+    } else { body.innerHTML=''; empty.style.display='block'; }
+  }catch(e){}
+}
+
+/* ---------- init ---------- */
+(async function init(){
+  if(!window.RACCosting){ document.getElementById('dataChipText').textContent='Costing engine failed to load (/js/production-costing-engine.js).'; return; }
+  await loadMasterData();
+  loadRecent();
+})();
+</script>
+</body>
+</html>
