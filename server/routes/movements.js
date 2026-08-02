@@ -501,6 +501,7 @@ router.get("/", async (req, res) => {
       movement_type,
       product_id,
       customer_id,
+      customer_name,
       date_from,
       date_to,
       search,
@@ -547,6 +548,13 @@ router.get("/", async (req, res) => {
     if (customer_id) {
       sql += ` AND sm.customer_id = $${paramCount}`;
       params.push(customer_id);
+      paramCount++;
+    }
+
+    // Filter by customer NAME (the Operations dropdown sends a name, not an id)
+    if (customer_name) {
+      sql += ` AND UPPER(c.customer_name) LIKE UPPER($${paramCount})`;
+      params.push(`%${customer_name}%`);
       paramCount++;
     }
 

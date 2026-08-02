@@ -11,6 +11,7 @@ let driversData = [];
 document.addEventListener("DOMContentLoaded", async function () {
   setDefaultDate();
   await loadDropdowns();
+  populateCustomerFilter();
   await loadStats();
   await loadRecentMovementsWithFilter();
   setupSaleProductListener();
@@ -720,16 +721,25 @@ async function loadRecentMovementsWithFilter(page = 1) {
     currentPage = page;
     const dateFrom = document.getElementById("movDateFrom")?.value || "";
     const dateTo = document.getElementById("movDateTo")?.value || "";
+    const customer = document.getElementById("customerFilter")?.value || "";
+    const type = document.getElementById("typeFilter")?.value || "";
+    const search = document.getElementById("searchMovements")?.value.trim() || "";
     const offset = (page - 1) * PAGE_SIZE;
 
+    // Send ALL filters to the server so filtering happens BEFORE the page
+    // limit is applied. If we filter in the browser after fetching only one
+    // page, any match sitting beyond the first PAGE_SIZE rows is never fetched
+    // and looks like it's "missing" from the results.
     let url = `/api/movements?limit=${PAGE_SIZE}&offset=${offset}`;
     if (dateFrom) url += `&date_from=${dateFrom}`;
     if (dateTo) url += `&date_to=${dateTo}`;
+    if (customer) url += `&customer_name=${encodeURIComponent(customer)}`;
+    if (type) url += `&movement_type=${encodeURIComponent(type)}`;
+    if (search) url += `&search=${encodeURIComponent(search)}`;
 
     const response = await fetch(url);
     allMovements = await response.json();
-    populateCustomerFilter();
-    filterMovements();
+    displayMovements(allMovements);
   } catch (error) {
     console.error("Error loading recent movements:", error);
   }
@@ -817,8 +827,12 @@ function populateCustomerFilter() {
   const customerFilter = document.getElementById("customerFilter");
   if (!customerFilter) return;
 
+  // Build from the FULL customer list (loaded once in loadDropdowns), not from
+  // the movements currently on screen — otherwise the dropdown only ever lists
+  // customers that happen to appear on the current page.
+  const previous = customerFilter.value;
   const customers = [
-    ...new Set(allMovements.filter((m) => m.customer_name).map((m) => m.customer_name)),
+    ...new Set((customersData || []).map((c) => c.customer_name).filter(Boolean)),
   ].sort();
 
   customerFilter.innerHTML = '<option value="">All Customers</option>';
@@ -828,25 +842,16 @@ function populateCustomerFilter() {
     option.textContent = customer;
     customerFilter.appendChild(option);
   });
+  customerFilter.value = previous; // keep the user's current selection
 }
 
+// Filtering now runs on the SERVER (see loadRecentMovementsWithFilter), so a
+// change to any filter just re-fetches page 1 with those filters applied.
+// Debounced so typing in the search box doesn't fire one request per keystroke.
+let _filterDebounce = null;
 function filterMovements() {
-  const customerFilter = document.getElementById("customerFilter")?.value.toLowerCase();
-  const typeFilter = document.getElementById("typeFilter")?.value.toUpperCase();
-  const searchText = document.getElementById("searchMovements")?.value.toLowerCase();
-
-  let filtered = allMovements.filter((movement) => {
-    if (customerFilter && (!movement.customer_name || !movement.customer_name.toLowerCase().includes(customerFilter))) return false;
-    if (typeFilter && movement.movement_type !== typeFilter) return false;
-    if (searchText) {
-      const searchableText = [movement.product_name, movement.customer_name, movement.docket_number, movement.reference_number, movement.to_location_name, movement.from_location_name]
-        .filter(Boolean).join(" ").toLowerCase();
-      if (!searchableText.includes(searchText)) return false;
-    }
-    return true;
-  });
-
-  displayMovements(filtered);
+  clearTimeout(_filterDebounce);
+  _filterDebounce = setTimeout(() => loadRecentMovementsWithFilter(1), 300);
 }
 
 function displayMovements(movements) {
@@ -937,7 +942,9 @@ function displayMovements(movements) {
   }
 
   const hasPrev = currentPage > 1;
-  const hasNext = movements.length === PAGE_SIZE;
+  // A full page came back (=PAGE_SIZE rows) means there is very likely a next
+  // page. Base this on what the SERVER returned, not a client-side subset.
+  const hasNext = allMovements.length === PAGE_SIZE;
 
   paginationDiv.innerHTML = `
     <button onclick="loadRecentMovementsWithFilter(${currentPage - 1})"
