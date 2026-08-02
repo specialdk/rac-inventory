@@ -8,6 +8,7 @@
 
   let lastData = null;
   let showingAll = false;
+  let currentProduct = ""; // "" = all products; otherwise a nominated product_name
 
   async function loadHeaderValue() {
     try {
@@ -35,16 +36,47 @@
     document.getElementById("bannerSub").textContent = sub;
   }
 
+  // Narrow a set of lines to the nominated product (or return all).
+  function forProduct(lines) {
+    return currentProduct
+      ? lines.filter((r) => r.product_name === currentProduct)
+      : lines;
+  }
+
+  // Populate the product dropdown from the reconciliation lines (once per load),
+  // keeping the user's current selection.
+  function populateProductFilter(data) {
+    const sel = document.getElementById("productFilter");
+    if (!sel) return;
+    const previous = sel.value;
+    const names = [
+      ...new Set(data.lines.map((r) => r.product_name).filter(Boolean)),
+    ].sort();
+    sel.innerHTML = '<option value="">All products</option>';
+    names.forEach((n) => {
+      const o = document.createElement("option");
+      o.value = n;
+      o.textContent = n;
+      sel.appendChild(o);
+    });
+    sel.value = previous; // keep selection across refreshes (blanks if it's gone)
+    currentProduct = sel.value;
+  }
+
   function renderExceptions(data) {
     const body = document.getElementById("exceptionsBody");
     body.innerHTML = "";
-    if (!data.exceptions.length) {
+    const rows = forProduct(data.exceptions);
+    if (!rows.length) {
+      const msg = currentProduct
+        ? "✓ " + currentProduct + " reconciles — SOH matches the ledger."
+        : "✓ Every line reconciles — SOH matches the ledger.";
       body.innerHTML =
         '<tr><td colspan="6" style="text-align:center;color:#16a34a;padding:18px">' +
-        "✓ Every line reconciles — SOH matches the ledger.</td></tr>";
+        msg + "</td></tr>";
       return;
     }
-    data.exceptions.forEach((r) => {
+    rows.forEach((r) => {
       const tr = document.createElement("tr");
       tr.innerHTML =
         `<td>${r.product_name}</td>` +
@@ -60,7 +92,7 @@
   function renderAllLines(data) {
     const body = document.getElementById("allLinesBody");
     body.innerHTML = "";
-    data.lines.forEach((r) => {
+    forProduct(data.lines).forEach((r) => {
       const tr = document.createElement("tr");
       const off = Math.abs(r.gap) > data.tolerance;
       tr.innerHTML =
@@ -83,6 +115,8 @@
 
     const when = new Date(data.as_at).toLocaleString("en-AU");
     document.getElementById("asAt").textContent = "Checked " + when;
+
+    populateProductFilter(data);
 
     if (data.balanced) {
       setBanner("ok", "✓ Stock Balanced", `All ${s.lines_checked} lines reconcile — checked ${when}`);
@@ -114,6 +148,19 @@
     document.getElementById("allLinesWrap").style.display = showingAll ? "block" : "none";
     document.getElementById("exceptionsWrap").style.display = showingAll ? "none" : "block";
     this.textContent = showingAll ? "Show exceptions only" : "Show all lines";
+  });
+
+  // Nominated-item filter. Picking a product switches to the full-detail view
+  // so the item shows even when it's balanced (and therefore not an exception).
+  document.getElementById("productFilter").addEventListener("change", function () {
+    currentProduct = this.value;
+    if (currentProduct) {
+      showingAll = true;
+      document.getElementById("allLinesWrap").style.display = "block";
+      document.getElementById("exceptionsWrap").style.display = "none";
+      document.getElementById("toggleAll").textContent = "Show exceptions only";
+    }
+    if (lastData) render(lastData);
   });
 
   loadHeaderValue();

@@ -765,6 +765,10 @@ function openMovementReview(movementId) {
   const money = (v) => (v === null || v === undefined || v === "") ? "-" : `$${parseFloat(v).toFixed(2)}`;
   const num = (v) => (v === null || v === undefined || v === "") ? "-" : parseFloat(v).toFixed(2);
   const txt = (v) => (v === null || v === undefined || v === "") ? "-" : v;
+  // Show adjustments with their direction sign (from-only = decrease).
+  const qtyText = (m.movement_type === "ADJUSTMENT" && m.quantity !== null && m.quantity !== undefined)
+    ? ((m.from_location_id && !m.to_location_id ? "−" : "+") + num(m.quantity))
+    : num(m.quantity);
 
   const rows = [
     ["RefNo", txt(m.docket_number)],
@@ -773,7 +777,7 @@ function openMovementReview(movementId) {
     ["Product", txt(m.product_name)],
     ["From location", txt(m.from_location_name)],
     ["To location", txt(m.to_location_name)],
-    ["Quantity (t)", num(m.quantity)],
+    ["Quantity (t)", qtyText],
     ["Unit cost", money(m.unit_cost)],
     ["Total cost", money(m.total_cost)],
     ["Customer", txt(m.customer_name)],
@@ -904,6 +908,17 @@ function displayMovements(movements) {
     if (movement.movement_type === "CANCEL") badgeClass = "badge-danger";
     if (movement.movement_type === "TRANSFER") badgeClass = "badge-info-dark";
 
+    // For ADJUSTMENTs the quantity is stored as an absolute value; the
+    // direction lives in from/to location (from-only = decrease, to-only =
+    // increase). Show an explicit +/− so a −600 can't be mistaken for a +600.
+    let qtyDisplay = `${parseFloat(movement.quantity).toFixed(1)}t`;
+    if (movement.movement_type === "ADJUSTMENT") {
+      const isDecrease = movement.from_location_id && !movement.to_location_id;
+      const sign = isDecrease ? "−" : "+";
+      const qtyColor = isDecrease ? "#dc2626" : "#16a34a";
+      qtyDisplay = `<span style="color:${qtyColor};font-weight:600;">${sign}${parseFloat(movement.quantity).toFixed(1)}t</span>`;
+    }
+
     row.innerHTML = `
       <td>${dateStr} <small class="text-muted">${timeStr}</small></td>
       <td><small style="${isLateEntry ? 'color:#e67e22;font-weight:600;' : 'color:#999;'}">${movement.movement_type === 'SALES' ? enteredDateStr : '-'}</small></td>
@@ -919,7 +934,7 @@ function displayMovements(movements) {
           : "-"
       }</td>
       <td>${movement.to_location_name || movement.from_location_name || "-"}</td>
-      <td class="text-right">${parseFloat(movement.quantity).toFixed(1)}t</td>
+      <td class="text-right">${qtyDisplay}</td>
       <td class="text-muted">${movement.reference_number || "-"}</td>
       <td>${movement.movement_type === 'SALES' && movement.del_ct === 'HOURS' && !movement.del_hours
         ? `<button class="btn-sm" style="background:#ff9800;color:#fff;border:none;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:11px;" onclick="openHoursModal(${movement.movement_id}, '${movement.docket_number || ""}')">⏱️ Hours</button>`
