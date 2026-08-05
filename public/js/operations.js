@@ -51,17 +51,10 @@ document.addEventListener("DOMContentLoaded", async function () {
   }
 });
 
-// Get a YYYY-MM-DD string in LOCAL time (Darwin), not UTC.
-// toISOString() gives the UTC date, which is still "yesterday" until 9:30am
-// Darwin time each morning — that was the Sales Entry wrong-date bug.
-function localDateStr(d = new Date()) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-
 // Set default dates to today
 function setDefaultDate() {
-  const today = localDateStr();
-  const sevenDaysAgo = localDateStr(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
+  const today = new Date().toISOString().split("T")[0];
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
   const movDateFrom = document.getElementById("movDateFrom");
   const movDateTo = document.getElementById("movDateTo");
   if (movDateFrom && !movDateFrom.value) movDateFrom.value = sevenDaysAgo;
@@ -79,8 +72,10 @@ function setDefaultDate() {
 // Load all dropdowns
 async function loadDropdowns() {
   try {
-    // Load products
-    const productsRes = await fetch("/api/products");
+    // Load products (active only — "deleted" items are soft-deleted with
+    // is_active=false so old dockets keep their history; without this filter
+    // deactivated entries still appear in the entry dropdowns)
+    const productsRes = await fetch("/api/products?is_active=true");
     productsData = await productsRes.json();
     const productSelects = [
       document.getElementById("productionProduct"),
@@ -118,8 +113,8 @@ async function loadDropdowns() {
     // Load sale locations using the smart function
     await loadStockpileDropdown(null, "saleLocation");
 
-    // Load customers
-    const customersRes = await fetch("/api/customers");
+    // Load customers (active only)
+    const customersRes = await fetch("/api/customers?is_active=true");
     customersData = await customersRes.json();
     const customerSelects = [document.getElementById("saleCustomer")];
     if (document.getElementById("demandCustomer")) {
@@ -134,8 +129,8 @@ async function loadDropdowns() {
       });
     });
 
-    // Load vehicles
-    const vehiclesRes = await fetch("/api/vehicles");
+    // Load vehicles (active only)
+    const vehiclesRes = await fetch("/api/vehicles?is_active=true");
     vehiclesData = await vehiclesRes.json();
     const saleVehicleSelect = document.getElementById("saleVehicle");
 
@@ -150,8 +145,8 @@ async function loadDropdowns() {
       });
     }
 
-    // Load drivers
-    const driversRes = await fetch("/api/drivers");
+    // Load drivers (active only)
+    const driversRes = await fetch("/api/drivers?is_active=true");
     driversData = await driversRes.json();
     const prodOperatorSelect = document.getElementById("productionOperator");
     const saleDriverSelect = document.getElementById("saleDriver");
@@ -173,8 +168,8 @@ async function loadDropdowns() {
       });
     }
 
-    // Load carriers
-    const carriersResponse = await fetch("/api/carriers");
+    // Load carriers (active only — this was the "two Ben Halls" bug)
+    const carriersResponse = await fetch("/api/carriers?is_active=true");
     const carriers = await carriersResponse.json();
     const carrierSelect = document.getElementById("saleCarrier");
     if (carrierSelect) {
@@ -296,7 +291,7 @@ function setupSaleProductListener() {
 // Load today's stats
 async function loadStats() {
   try {
-    const today = localDateStr();
+    const today = new Date().toISOString().split("T")[0];
 
     const prodRes = await fetch(
       `/api/movements?movement_type=PRODUCTION&date_from=${today}&date_to=${today}`
@@ -989,7 +984,7 @@ async function refreshMovements() {
 function openAdjustmentModal() {
   document.getElementById("adjustmentModal").style.display = "flex";
   document.getElementById("adjustmentForm").reset();
-  const today = localDateStr();
+  const today = new Date().toISOString().split("T")[0];
   document.getElementById("adjustmentDate").value = today;
   loadAdjustmentProducts();
   loadAdjustmentLocations();
@@ -1018,7 +1013,7 @@ function toggleAdjustmentType() {
 
 async function loadAdjustmentProducts() {
   try {
-    const response = await fetch("/api/products");
+    const response = await fetch("/api/products?is_active=true");
     const products = await response.json();
     const adjustmentProductSelect = document.getElementById("adjustmentProduct");
     const transferProductSelect = document.getElementById("transferProduct");
@@ -1171,7 +1166,7 @@ function closeTareWeightModal() {
 
 async function loadTareWeightDropdowns() {
   try {
-    const vehiclesRes = await fetch("/api/vehicles");
+    const vehiclesRes = await fetch("/api/vehicles?is_active=true");
     const vehicles = await vehiclesRes.json();
     const tareVehicleSelect = document.getElementById("tareVehicle");
     tareVehicleSelect.innerHTML = '<option value="">Select Vehicle</option>';
@@ -1179,7 +1174,7 @@ async function loadTareWeightDropdowns() {
       tareVehicleSelect.add(new Option(`${vehicle.registration} - ${vehicle.vehicle_type}`, vehicle.vehicle_id));
     });
 
-    const carriersRes = await fetch("/api/carriers");
+    const carriersRes = await fetch("/api/carriers?is_active=true");
     const carriers = await carriersRes.json();
     const tareCarrierSelect = document.getElementById("tareCarrier");
     tareCarrierSelect.innerHTML = '<option value="">Select Carrier</option>';
