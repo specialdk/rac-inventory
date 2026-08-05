@@ -180,10 +180,11 @@ async function openDemandOrderForm() {
   document.getElementById("demandFormTitle").textContent =
     "➕ New Demand Order";
 
-  // Set default dates
+  // Set default dates (build the string from LOCAL time, not toISOString/UTC —
+  // UTC is still on yesterday's date until 9:30am Darwin time each morning)
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
-  const tomorrowStr = tomorrow.toISOString().split("T")[0];
+  const tomorrowStr = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, "0")}-${String(tomorrow.getDate()).padStart(2, "0")}`;
 
   document.getElementById("demandRequiredDate").value = tomorrowStr;
 
@@ -541,7 +542,7 @@ function exportDemandOrders() {
   const url = window.URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `demand-orders-${new Date().toISOString().split("T")[0]}.csv`;
+  a.download = `demand-orders-${(() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}-${String(n.getDate()).padStart(2, "0")}`; })()}.csv`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);

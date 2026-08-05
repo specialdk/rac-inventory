@@ -710,7 +710,8 @@
         _runProducts  = [];
         _runMachines  = [];
         _runRowCounter = 0;
-        document.getElementById("runDate").value      = new Date().toISOString().split("T")[0];
+        // Local (Darwin) date, not toISOString/UTC — UTC is yesterday until 9:30am
+        document.getElementById("runDate").value      = (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}-${String(n.getDate()).padStart(2, "0")}`; })();
         document.getElementById("runReference").value = "";
         document.getElementById("runOperator").value  = "";
         document.getElementById("runNotes").value     = "";

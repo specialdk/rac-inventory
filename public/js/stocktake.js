@@ -9,10 +9,17 @@ let stocktakeRows = []; // Track all rendered rows
 let manualRowCounter = 0;
 let currentDraftId = null; // set when we save a draft or resume one
 
+// Get a YYYY-MM-DD string in LOCAL time (Darwin), not UTC.
+// toISOString()/valueAsDate use the UTC date, which is still "yesterday"
+// until 9:30am Darwin time each morning.
+function localDateStr(d = new Date()) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 // Initialize page
 document.addEventListener("DOMContentLoaded", function () {
   // Default to today - operator will change to as-at date
-  document.getElementById("stocktakeDate").valueAsDate = new Date();
+  document.getElementById("stocktakeDate").value = localDateStr();
 
   // Load data for today by default
   loadStocktakeData();
@@ -58,7 +65,7 @@ async function loadStocktakeData() {
     locations = await locationsResponse.json();
 
     // Default to today's stock on page load
-    const today = new Date().toISOString().split("T")[0];
+    const today = localDateStr();
     const stockResponse = await fetch(`/api/stock/as-at?date=${today}`);
     currentStock = await stockResponse.json();
 

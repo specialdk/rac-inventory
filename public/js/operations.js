@@ -51,10 +51,17 @@ document.addEventListener("DOMContentLoaded", async function () {
   }
 });
 
+// Get a YYYY-MM-DD string in LOCAL time (Darwin), not UTC.
+// toISOString() gives the UTC date, which is still "yesterday" until 9:30am
+// Darwin time each morning — that was the Sales Entry wrong-date bug.
+function localDateStr(d = new Date()) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 // Set default dates to today
 function setDefaultDate() {
-  const today = new Date().toISOString().split("T")[0];
-  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+  const today = localDateStr();
+  const sevenDaysAgo = localDateStr(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
   const movDateFrom = document.getElementById("movDateFrom");
   const movDateTo = document.getElementById("movDateTo");
   if (movDateFrom && !movDateFrom.value) movDateFrom.value = sevenDaysAgo;
@@ -289,7 +296,7 @@ function setupSaleProductListener() {
 // Load today's stats
 async function loadStats() {
   try {
-    const today = new Date().toISOString().split("T")[0];
+    const today = localDateStr();
 
     const prodRes = await fetch(
       `/api/movements?movement_type=PRODUCTION&date_from=${today}&date_to=${today}`
@@ -982,7 +989,7 @@ async function refreshMovements() {
 function openAdjustmentModal() {
   document.getElementById("adjustmentModal").style.display = "flex";
   document.getElementById("adjustmentForm").reset();
-  const today = new Date().toISOString().split("T")[0];
+  const today = localDateStr();
   document.getElementById("adjustmentDate").value = today;
   loadAdjustmentProducts();
   loadAdjustmentLocations();

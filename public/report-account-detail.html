@@ -459,10 +459,12 @@
       let customerEmailData = null; // Store customer email/CC for email feature
 
       document.addEventListener("DOMContentLoaded", function () {
-        const today = new Date();
-        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-        document.getElementById("dateFrom").valueAsDate = today;
-        document.getElementById("dateTo").valueAsDate = today;
+        // Local (Darwin) date string, not valueAsDate/toISOString — those use the
+        // UTC date, which is still "yesterday" until 9:30am Darwin time
+        const now = new Date();
+        const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+        document.getElementById("dateFrom").value = todayStr;
+        document.getElementById("dateTo").value = todayStr;
         loadCustomers();
         loadProducts();
         showEmptyState();
